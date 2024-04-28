@@ -1,33 +1,27 @@
 using UnityEngine;
 using Firebase;
 using Firebase.Database;
-using UnityEngine.SceneManagement;
 
 public class MultiplayerManager : MonoBehaviour
 {
-    DatabaseReference sessionRef;
+    DatabaseReference dbRef;
 
     void Start()
     {
-        // Inicjalizacja Firebase
-        FirebaseApp.CheckAndFixDependenciesAsync().ContinueWith(task => {
-            var dependencyStatus = task.Result;
-            if (dependencyStatus == DependencyStatus.Available)
+        // Sprawdü, czy Firebase jest juø zainicjalizowany
+        if (FirebaseApp.DefaultInstance == null)
+        {
+            // Jeúli nie, inicjalizuj Firebase
+            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
+            if (firebaseInitializer == null)
             {
-                Debug.Log("Firebase is ready to use!");
-                InitializeFirebase();
+                Debug.LogError("FirebaseInitializer not found in the scene!");
+                return;
             }
-            else
-            {
-                Debug.LogError($"Could not resolve all Firebase dependencies: {dependencyStatus}");
-            }
-        });
-    }
+        }
 
-    void InitializeFirebase()
-    {
         // Inicjalizacja referencji do bazy danych Firebase
-        sessionRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
+        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
     }
 
     public void JoinSession()
@@ -35,26 +29,39 @@ public class MultiplayerManager : MonoBehaviour
         // Po klikniÍciu przycisku do≥πczania, prÛbujemy do≥πczyÊ do sesji
         string sessionId = "lobby_1"; // Zdefiniuj unikalny identyfikator sesji
         string playerId = System.Guid.NewGuid().ToString(); // Generujemy unikalny identyfikator gracza
-        Color playerColor = GetRandomColor(); // Generujemy losowy kolor dla gracza
 
-        sessionRef.Child(sessionId).Child(playerId).SetValueAsync(playerColor.ToString()).ContinueWith(task => {
+        dbRef.Child(sessionId).Child(playerId).SetValueAsync(null).ContinueWith(task =>
+        {
             if (task.IsFaulted || task.IsCanceled)
             {
                 Debug.LogError("Failed to join session.");
                 return;
             }
-            Debug.Log("Joined session successfully!");
-            changeScene();
+
+            dbRef.Child(sessionId).GetValueAsync().ContinueWith(snapshotTask =>
+            {
+                if (snapshotTask.IsFaulted || snapshotTask.IsCanceled)
+                {
+                    Debug.LogError("Failed to retrieve session data.");
+                    return;
+                }
+
+                DataSnapshot snapshot = snapshotTask.Result;
+                int playerCount = (int)snapshot.ChildrenCount; // Zlicz istniejπcych graczy w danej sesji
+
+                string playerName = $"Gracz {playerCount + 1}"; // UtwÛrz nazwÍ gracza z numerem kolejnoúci
+
+                dbRef.Child(sessionId).Child(playerId).Child("name").SetValueAsync(playerName).ContinueWith(nameTask =>
+                {
+                    if (nameTask.IsFaulted || nameTask.IsCanceled)
+                    {
+                        Debug.LogError("Failed to set player name.");
+                        return;
+                    }
+
+                    Debug.Log("Joined session successfully! Player name: " + playerName);
+                });
+            });
         });
-    }
-
-    Color GetRandomColor()
-    {
-        return new Color(Random.value, Random.value, Random.value);
-    }
-
-    private void changeScene()
-    {
-        SceneManager.LoadSceneAsync("Lobby");
     }
 }
