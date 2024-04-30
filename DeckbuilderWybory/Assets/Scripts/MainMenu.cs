@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class CreateLobby : MonoBehaviour
+public class MainMenu : MonoBehaviour
 {
-    public void BackToMainMenu2()
+    public void QuitGame()
     {
-        SceneManager.LoadSceneAsync("Main Menu");
+        Application.Quit();
     }
+
 }
