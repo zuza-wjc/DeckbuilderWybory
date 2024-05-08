@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using TMPro;
 using Firebase;
 using System.Threading.Tasks;
+using UnityEngine.SceneManagement;
 
 public class CreateLobbyManager : MonoBehaviour
 {
@@ -51,12 +52,13 @@ public class CreateLobbyManager : MonoBehaviour
 
         // Pobieranie nazwy gracza z PlayerPrefs
         string playerId = SystemInfo.deviceUniqueIdentifier;
-        string playerName = "Gracz 1";
+        string playerName = "Some Gracz";
+        string lobbyName = lobbyNameInput.text;
 
         // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
         {
-            { "lobbyName", lobbyNameInput.text },
+            { "lobbyName", lobbyName },
             { "isPublic", isPublic },
             { "lobbySize", Convert.ToInt32(lobbySize.text) },
             { "players", new Dictionary<string, string> { { playerId, playerName } } }
@@ -66,6 +68,11 @@ public class CreateLobbyManager : MonoBehaviour
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
 
         Debug.Log("Lobby created with ID: " + lobbyId);
+
+        // Przejœcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
+        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+        PlayerPrefs.SetString("LobbyName", lobbyName);
+        PlayerPrefs.SetString("LobbyId", lobbyId);
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
