@@ -1,5 +1,6 @@
 using Firebase;
 using Firebase.Database;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,8 +13,10 @@ public class LobbySceneController : MonoBehaviour
 
     DatabaseReference dbRef;
 
+
     void Start()
     {
+
         // Pobierz nazwê lobby przekazan¹ z poprzedniej sceny
         string lobbyName = PlayerPrefs.GetString("LobbyName");
         // Pobierz lobbyId przekazane z poprzedniej sceny
@@ -39,6 +42,15 @@ public class LobbySceneController : MonoBehaviour
 
         // Ustaw nas³uchiwanie zmian w strukturze bazy danych (dodanie/usuniêcie ga³êzi)
         dbRef.ChildAdded += HandleChildAdded;
+        dbRef.ChildRemoved += HandleChildRemoved;
+
+        Application.quitting += OnApplicationQuit;
+    }
+
+    void OnApplicationQuit()
+    {
+        // Wywo³aj funkcjê opuszczaj¹cej lobby
+        LeaveLobby();
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -53,10 +65,42 @@ public class LobbySceneController : MonoBehaviour
         CreateText(playerName);
     }
 
+    void HandleChildRemoved(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        string playerName = args.Snapshot.GetValue(true).ToString();
+        RemoveText(playerName);
+    }
+
     void CreateText(string playerName)
     {
         GameObject text = Instantiate(textTemplate, scrollViewContent.transform);
         text.SetActive(true);
         text.GetComponentInChildren<Text>().text = playerName;
     }
+
+    void RemoveText(string playerName)
+    {
+        foreach (Transform child in scrollViewContent.transform)
+        {
+            if (child.GetComponentInChildren<Text>().text == playerName)
+            {
+                Destroy(child.gameObject);
+                return;
+            }
+        }
+    }
+    public void LeaveLobby()
+    {
+        string playerId = PlayerPrefs.GetString("PlayerId");
+
+        // Usuñ gracza z bazy danych na podstawie playerId
+        dbRef.Child(playerId).RemoveValueAsync();
+    }
+
 }
