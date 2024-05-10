@@ -86,11 +86,21 @@ public class DragController : MonoBehaviour
                 else
                 {
                     StartCoroutine(RemoveAfterDelay(_lastDragged.gameObject, 2f));
+
+                    string cardTag = _lastDragged.gameObject.tag;
+
                     if (textToChange != null)
                     {
                         if (int.TryParse(textToChange.text, out int currentNumber))
                         {
-                            currentNumber += 5;
+                            if (cardTag == "PlusFive")
+                            {
+                                currentNumber += 5;
+                            }
+                            else if (cardTag == "MinusTwo")
+                            {
+                                currentNumber -= 2;
+                            }
                             textToChange.text = currentNumber.ToString();
                         }
                     }
@@ -100,6 +110,7 @@ public class DragController : MonoBehaviour
 
         UpdateDragStatus(false);
     }
+
 
     private IEnumerator RemoveAfterDelay(GameObject obj, float delay)
     {
