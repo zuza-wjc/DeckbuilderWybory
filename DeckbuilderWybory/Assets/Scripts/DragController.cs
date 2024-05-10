@@ -97,9 +97,9 @@ public class DragController : MonoBehaviour
                             {
                                 currentNumber += 5;
                             }
-                            else if (cardTag == "MinusTwo")
+                            else if (cardTag == "MinusThree")
                             {
-                                currentNumber -= 2;
+                                currentNumber -= 3;
                             }
                             textToChange.text = currentNumber.ToString();
                         }
