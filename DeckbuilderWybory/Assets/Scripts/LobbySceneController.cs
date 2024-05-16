@@ -12,6 +12,7 @@ public class LobbySceneController : MonoBehaviour
     public GameObject textTemplate;
 
     DatabaseReference dbRef;
+    string lobbyId;
 
 
     void Start()
@@ -20,7 +21,7 @@ public class LobbySceneController : MonoBehaviour
         // Pobierz nazwê lobby przekazan¹ z poprzedniej sceny
         string lobbyName = PlayerPrefs.GetString("LobbyName");
         // Pobierz lobbyId przekazane z poprzedniej sceny
-        string lobbyId = PlayerPrefs.GetString("LobbyId");
+        lobbyId = PlayerPrefs.GetString("LobbyId");
 
         // Ustaw nazwê lobby jako tekst do wyœwietlenia
         lobbyNameText.text = lobbyName;
@@ -99,8 +100,37 @@ public class LobbySceneController : MonoBehaviour
     {
         string playerId = PlayerPrefs.GetString("PlayerId");
 
-        // Usuñ gracza z bazy danych na podstawie playerId
-        dbRef.Child(playerId).RemoveValueAsync();
+        // SprawdŸ aktualn¹ liczbê graczy w lobby
+        dbRef.GetValueAsync().ContinueWith(countTask =>
+        {
+            if (countTask.IsCompleted && !countTask.IsFaulted)
+            {
+                DataSnapshot snapshot = countTask.Result;
+                if (snapshot != null)
+                {
+                    // SprawdŸ iloœæ dzieci (graczy) w ga³êzi "players"
+                    if (snapshot.ChildrenCount == 1)
+                    {
+                        // Jeœli pozosta³ tylko jeden gracz, usuñ ca³e lobby
+                        FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).RemoveValueAsync();
+                    }
+                    else
+                    {
+                        // Usuñ tylko gracza z bazy danych na podstawie playerId
+                        dbRef.Child(playerId).RemoveValueAsync();
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Failed to get lobby player count: snapshot is null");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to get lobby player count: " + countTask.Exception);
+            }
+        });
     }
+
 
 }
