@@ -87,7 +87,7 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
-    public void AddPlayer(string playerName, string lobbyId)
+    public string AddPlayer(string playerName, string lobbyId)
     {
         
             // Wygeneruj unikalny identyfikator gracza
@@ -96,16 +96,19 @@ public class LobbyListManager : MonoBehaviour
             // Dodaj nowego gracza do bazy danych Firebase
             dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerName);
 
+            return playerId;
+
     }
 
     void TaskOnClick(string lobbyName, string lobbyId)
     {
-        AddPlayer("some_Gracz", lobbyId);
+        string playerId = AddPlayer("some_Gracz", lobbyId);
 
         // Przejœcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
+        PlayerPrefs.SetString("PlayerId", playerId);
     }
 
 }
