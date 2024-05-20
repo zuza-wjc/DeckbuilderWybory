@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase.Database;
-using System;
 using System.Collections.Generic;
 using TMPro;
 using Firebase;
@@ -13,10 +12,13 @@ public class CreateLobbyManager : MonoBehaviour
     public TMP_InputField lobbyNameInput;
     public Button publicButton;
     public Button privateButton;
-    public TextMeshProUGUI lobbySize;
+    public TextMeshProUGUI lobbySizeText;
+    public Button plusButton;
+    public Button minusButton;
 
     DatabaseReference dbRef;
     bool isPublic = true; // Pocz¹tkowo ustaw na publiczne
+    int lobbySize = 2;
 
     void Start()
     {
@@ -39,6 +41,10 @@ public class CreateLobbyManager : MonoBehaviour
         // Dodaj nas³uchiwacze na klikniêcia przycisków
         publicButton.onClick.AddListener(() => TogglePublic(true));
         privateButton.onClick.AddListener(() => TogglePublic(false));
+        plusButton.onClick.AddListener(IncreaseLobbySize);
+        minusButton.onClick.AddListener(DecreaseLobbySize);
+
+        UpdateLobbySizeText();
     }
 
     public void TogglePublic(bool isPublicLobby)
@@ -46,11 +52,37 @@ public class CreateLobbyManager : MonoBehaviour
         isPublic = isPublicLobby;
     }
 
+    public void IncreaseLobbySize()
+    {
+        if (lobbySize < 8)  // Upewnij siê, ¿e rozmiar lobby nie jest wiêkszy ni¿ 8
+        {
+            lobbySize++;
+            UpdateLobbySizeText();
+        }
+    }
+
+    public void DecreaseLobbySize()
+    {
+        if (lobbySize > 2)  // Upewnij siê, ¿e rozmiar lobby nie jest mniejszy ni¿ 2
+        {
+            lobbySize--;
+            UpdateLobbySizeText();
+        }
+    }
+
+    void UpdateLobbySizeText()
+    {
+        lobbySizeText.text = lobbySize.ToString();
+
+        // Dezaktywuj przyciski, gdy rozmiar lobby osi¹gnie granice
+        plusButton.interactable = lobbySize < 8;
+        minusButton.interactable = lobbySize > 2;
+    }
+
     public async void CreateLobby()
     {
         string lobbyId = await GenerateUniqueLobbyIdAsync();
 
-        // Pobieranie nazwy gracza z PlayerPrefs
         string playerId = SystemInfo.deviceUniqueIdentifier;
         string playerName = "Some Gracz";
         string lobbyName = lobbyNameInput.text;
@@ -60,7 +92,7 @@ public class CreateLobbyManager : MonoBehaviour
         {
             { "lobbyName", lobbyName },
             { "isPublic", isPublic },
-            { "lobbySize", Convert.ToInt32(lobbySize.text) },
+            { "lobbySize", lobbySize },
             { "players", new Dictionary<string, string> { { playerId, playerName } } }
         };
 
