@@ -45,13 +45,13 @@ public class LobbySceneController : MonoBehaviour
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
 
-        Application.quitting += OnApplicationQuit;
+        // Application.quitting += OnApplicationQuit; NA CZAS TESTOWANIA APLIKACJI ZAKOMENTOWUJE TE LINIJKE
     }
 
     void OnApplicationQuit()
     {
         // Wywo³aj funkcjê opuszczaj¹cej lobby
-        LeaveLobby();
+        // LeaveLobby();  NA CZAS TESTOWANIA APLIKACJI ZAKOMENTOWUJE TE LINIJKE
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)

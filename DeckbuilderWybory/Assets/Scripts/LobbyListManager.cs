@@ -3,6 +3,7 @@ using Firebase;
 using Firebase.Database;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class LobbyListManager : MonoBehaviour
 {
@@ -11,10 +12,8 @@ public class LobbyListManager : MonoBehaviour
 
     DatabaseReference dbRef;
 
-
     void Start()
     {
-
         // SprawdŸ, czy Firebase jest ju¿ zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
@@ -48,10 +47,12 @@ public class LobbyListManager : MonoBehaviour
         {
             string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
             string lobbyId = args.Snapshot.Key;
-            CreateButton(lobbyName, lobbyId);
+            int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
+            int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
+
+            CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
         }
     }
-
 
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
     {
@@ -65,11 +66,11 @@ public class LobbyListManager : MonoBehaviour
         DestroyButton(lobbyName);
     }
 
-    void CreateButton(string lobbyName, string lobbyId)
+    void CreateButton(string lobbyName, string lobbyId, int playerCount, int lobbySize)
     {
         GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
         button.SetActive(true);
-        button.GetComponentInChildren<UnityEngine.UI.Text>().text = lobbyName;
+        button.GetComponentInChildren<UnityEngine.UI.Text>().text = $"{lobbyName} {playerCount}/{lobbySize}";
 
         // Dodanie funkcji obs³ugi zdarzenia dla klikniêcia w przycisk
         button.GetComponent<Button>().onClick.AddListener(delegate { TaskOnClick(lobbyName, lobbyId); });
@@ -79,7 +80,7 @@ public class LobbyListManager : MonoBehaviour
     {
         foreach (Transform child in scrollViewContent.transform)
         {
-            if (child.GetComponentInChildren<UnityEngine.UI.Text>().text == lobbyName)
+            if (child.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains(lobbyName))
             {
                 Destroy(child.gameObject);
                 return;
@@ -89,15 +90,13 @@ public class LobbyListManager : MonoBehaviour
 
     public string AddPlayer(string playerName, string lobbyId)
     {
-        
-            // Wygeneruj unikalny identyfikator gracza
-            string playerId = System.Guid.NewGuid().ToString();
+        // Wygeneruj unikalny identyfikator gracza
+        string playerId = System.Guid.NewGuid().ToString();
 
-            // Dodaj nowego gracza do bazy danych Firebase
-            dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerName);
+        // Dodaj nowego gracza do bazy danych Firebase
+        dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerName);
 
-            return playerId;
-
+        return playerId;
     }
 
     void TaskOnClick(string lobbyName, string lobbyId)
@@ -110,5 +109,4 @@ public class LobbyListManager : MonoBehaviour
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetString("PlayerId", playerId);
     }
-
 }
