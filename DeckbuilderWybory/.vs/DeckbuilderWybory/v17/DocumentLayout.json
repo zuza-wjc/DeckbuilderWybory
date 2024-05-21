@@ -7,8 +7,16 @@
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\in\u017C\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\in\u017C\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\in\u017C\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\lobbylistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbylistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\in\u017C\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\createlobbymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\createlobbymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,8 +26,34 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 3,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LobbyListManager.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\in\u017C\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbyListManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LobbyListManager.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\in\u017C\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbyListManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LobbyListManager.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAADgAAABGAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-20T10:08:19.693Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CreateLobbyManager.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\in\u017C\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\CreateLobbyManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\CreateLobbyManager.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\in\u017C\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\CreateLobbyManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\CreateLobbyManager.cs",
+              "ViewState": "AQIAABEAAAAAAAAAAAAQwE0AAAAwAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-05-20T09:56:02.564Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
@@ -41,7 +75,7 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\LobbySceneController.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\in\u017C\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
               "RelativeToolTip": "Assets\\Scripts\\LobbySceneController.cs",
-              "ViewState": "AQIAAFoAAAAAAAAAAAAmwG0AAAARAAAA",
+              "ViewState": "AQIAABYAAAAAAAAAAAAgwCQAAAAXAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-05-16T13:18:03.188Z",
               "EditorCaption": ""
