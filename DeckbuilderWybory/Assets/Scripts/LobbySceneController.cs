@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class LobbySceneController : MonoBehaviour
 {
     public Text lobbyNameText;
+    public Text lobbyCodeText;
 
     public GameObject scrollViewContent;
     public GameObject textTemplate;
@@ -25,6 +26,7 @@ public class LobbySceneController : MonoBehaviour
 
         // Ustaw nazwê lobby jako tekst do wyœwietlenia
         lobbyNameText.text = lobbyName;
+        lobbyCodeText.text = "Kod do gry: " + lobbyId;
 
         // SprawdŸ, czy Firebase jest ju¿ zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)

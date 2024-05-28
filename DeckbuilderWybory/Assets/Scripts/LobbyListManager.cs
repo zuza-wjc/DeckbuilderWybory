@@ -32,6 +32,7 @@ public class LobbyListManager : MonoBehaviour
         // Nas³uchiwanie zmian w strukturze bazy danych (dodanie/usuniêcie ga³êzi)
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
+        dbRef.ChildChanged += HandleChildChanged;
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -50,7 +51,50 @@ public class LobbyListManager : MonoBehaviour
             int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
             int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
 
-            CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
+            // SprawdŸ, czy liczba graczy jest mniejsza od rozmiaru lobby
+            if (playerCount < lobbySize)
+            {
+                CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
+            }
+        }
+    }
+
+    void HandleChildChanged(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        string lobbyId = args.Snapshot.Key;
+        int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
+        int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
+
+        // SprawdŸ, czy liczba graczy jest mniejsza od rozmiaru lobby
+        if (playerCount >= lobbySize)
+        {
+            string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
+            DestroyButton(lobbyName);
+        }
+        else
+        {
+            // Optional: handle case where players leave and lobby is no longer full
+            string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
+            bool buttonExists = false;
+            foreach (Transform child in scrollViewContent.transform)
+            {
+                if (child.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains(lobbyName))
+                {
+                    buttonExists = true;
+                    child.GetComponentInChildren<UnityEngine.UI.Text>().text = $"{lobbyName} {playerCount}/{lobbySize}";
+                    break;
+                }
+            }
+            if (!buttonExists)
+            {
+                CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
+            }
         }
     }
 
