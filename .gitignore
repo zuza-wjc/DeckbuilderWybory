@@ -12,7 +12,8 @@
 sysinfo.txt
 # Unity3D generated meta files
 *.pidb.meta
-
+# Ignore log files
+*.log
 ###
 # VS/MD solution and project files
 ###
