@@ -3,7 +3,6 @@ using Firebase;
 using Firebase.Database;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 public class LobbyListManager : MonoBehaviour
 {
@@ -14,10 +13,10 @@ public class LobbyListManager : MonoBehaviour
 
     void Start()
     {
-        // SprawdŸ, czy Firebase jest ju¿ zainicjalizowany
+        // SprawdÅ¸, czy Firebase jest juÂ¿ zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
-            // Jeœli nie, inicjalizuj Firebase
+            // JeÅ“li nie, inicjalizuj Firebase
             FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
             if (firebaseInitializer == null)
             {
@@ -29,10 +28,11 @@ public class LobbyListManager : MonoBehaviour
         // Inicjalizacja referencji do bazy danych Firebase
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
 
-        // Nas³uchiwanie zmian w strukturze bazy danych (dodanie/usuniêcie ga³êzi)
+        // NasÂ³uchiwanie zmian w strukturze bazy danych (dodanie/usuniÃªcie gaÂ³Ãªzi)
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
         dbRef.ChildChanged += HandleChildChanged;
+
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -51,11 +51,12 @@ public class LobbyListManager : MonoBehaviour
             int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
             int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
 
-            // SprawdŸ, czy liczba graczy jest mniejsza od rozmiaru lobby
+            // SprawdÅ¸, czy liczba graczy jest mniejsza od rozmiaru lobby
             if (playerCount < lobbySize)
             {
                 CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
             }
+
         }
     }
 
@@ -71,7 +72,7 @@ public class LobbyListManager : MonoBehaviour
         int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
         int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
 
-        // SprawdŸ, czy liczba graczy jest mniejsza od rozmiaru lobby
+        // SprawdÅ¸, czy liczba graczy jest mniejsza od rozmiaru lobby
         if (playerCount >= lobbySize)
         {
             string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
@@ -98,6 +99,7 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
+
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -116,7 +118,7 @@ public class LobbyListManager : MonoBehaviour
         button.SetActive(true);
         button.GetComponentInChildren<UnityEngine.UI.Text>().text = $"{lobbyName} {playerCount}/{lobbySize}";
 
-        // Dodanie funkcji obs³ugi zdarzenia dla klikniêcia w przycisk
+        // Dodanie funkcji obsÂ³ugi zdarzenia dla klikniÃªcia w przycisk
         button.GetComponent<Button>().onClick.AddListener(delegate { TaskOnClick(lobbyName, lobbyId); });
     }
 
@@ -147,7 +149,7 @@ public class LobbyListManager : MonoBehaviour
     {
         string playerId = AddPlayer("some_Gracz", lobbyId);
 
-        // Przejœcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
+        // PrzejÅ“cie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
