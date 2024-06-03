@@ -6,6 +6,7 @@ using Firebase.Database;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class JoinLobbyByCode : MonoBehaviour
 {
@@ -20,6 +21,7 @@ public class JoinLobbyByCode : MonoBehaviour
     string playerId;
     string lobbyName;
     string lobbyId;
+    string playerName = "code_player";
 
     bool isPlayerAdded;
 
@@ -79,7 +81,7 @@ public class JoinLobbyByCode : MonoBehaviour
             if (!lobbyStatus.isFull)
             {
                 Debug.Log("Lobby exists and is not full. Adding player...");
-                await AddPlayerAsync("by_Code_player");
+                await AddPlayerAsync();
             }
             else
             {
@@ -117,11 +119,17 @@ public class JoinLobbyByCode : MonoBehaviour
         }
     }
 
-    async Task AddPlayerAsync(string playerName)
+    async Task AddPlayerAsync()
     {
         playerId = System.Guid.NewGuid().ToString();
 
-        var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerName);
+        Dictionary<string, object> playerData = new Dictionary<string, object>
+        {
+            { "playerName", playerName },
+            { "ready", false }
+        };
+
+        var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
         await task;
 
         if (task.IsCompletedSuccessfully)
@@ -144,5 +152,6 @@ public class JoinLobbyByCode : MonoBehaviour
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetString("PlayerId", playerId);
+        PlayerPrefs.SetString("PlayerName", playerName);
     }
 }

@@ -22,7 +22,6 @@ public class CreateLobbyManager : MonoBehaviour
 
     void Start()
     {
-
         // Sprawdü, czy Firebase jest juø zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
@@ -83,7 +82,7 @@ public class CreateLobbyManager : MonoBehaviour
     {
         string lobbyId = await GenerateUniqueLobbyIdAsync();
 
-        string playerId = SystemInfo.deviceUniqueIdentifier;
+        string playerId = System.Guid.NewGuid().ToString();
         string playerName = "Some Gracz";
         string lobbyName = lobbyNameInput.text;
 
@@ -93,7 +92,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "lobbyName", lobbyName },
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
-            { "players", new Dictionary<string, string> { { playerId, playerName } } }
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false } } } } }
         };
 
         // Dodawanie danych do bazy Firebase
@@ -101,10 +100,11 @@ public class CreateLobbyManager : MonoBehaviour
 
         Debug.Log("Lobby created with ID: " + lobbyId);
 
-        // Przejúcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
+        PlayerPrefs.SetString("PlayerId", playerId);
+        PlayerPrefs.SetString("PlayerName", playerName);
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
