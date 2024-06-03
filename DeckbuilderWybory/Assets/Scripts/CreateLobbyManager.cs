@@ -100,11 +100,11 @@ public class CreateLobbyManager : MonoBehaviour
 
         Debug.Log("Lobby created with ID: " + lobbyId);
 
-        // Przejœcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetString("PlayerId", playerId);
+        PlayerPrefs.SetString("PlayerName", playerName);
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()

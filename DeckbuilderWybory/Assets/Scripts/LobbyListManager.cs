@@ -12,6 +12,8 @@ public class LobbyListManager : MonoBehaviour
 
     DatabaseReference dbRef;
 
+    string playerName = "list_player";
+
     void Start()
     {
         // Sprawdź, czy Firebase jest już zainicjalizowany
@@ -132,7 +134,7 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
-    public string AddPlayer(string playerName, string lobbyId)
+    public string AddPlayer(string lobbyId)
     {
         // Wygeneruj unikalny identyfikator gracza
         string playerId = System.Guid.NewGuid().ToString();
@@ -152,12 +154,13 @@ public class LobbyListManager : MonoBehaviour
 
     void TaskOnClick(string lobbyName, string lobbyId)
     {
-        string playerId = AddPlayer("some_Gracz", lobbyId);
+        string playerId = AddPlayer(lobbyId);
 
         // Przejście do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetString("PlayerId", playerId);
+        PlayerPrefs.SetString("PlayerName", playerName);
     }
 }

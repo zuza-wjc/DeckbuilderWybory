@@ -21,6 +21,7 @@ public class JoinLobbyByCode : MonoBehaviour
     string playerId;
     string lobbyName;
     string lobbyId;
+    string playerName = "code_player";
 
     bool isPlayerAdded;
 
@@ -80,7 +81,7 @@ public class JoinLobbyByCode : MonoBehaviour
             if (!lobbyStatus.isFull)
             {
                 Debug.Log("Lobby exists and is not full. Adding player...");
-                await AddPlayerAsync("by_Code_player");
+                await AddPlayerAsync();
             }
             else
             {
@@ -118,7 +119,7 @@ public class JoinLobbyByCode : MonoBehaviour
         }
     }
 
-    async Task AddPlayerAsync(string playerName)
+    async Task AddPlayerAsync()
     {
         playerId = System.Guid.NewGuid().ToString();
 
@@ -151,5 +152,6 @@ public class JoinLobbyByCode : MonoBehaviour
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetString("PlayerId", playerId);
+        PlayerPrefs.SetString("PlayerName", playerName);
     }
 }

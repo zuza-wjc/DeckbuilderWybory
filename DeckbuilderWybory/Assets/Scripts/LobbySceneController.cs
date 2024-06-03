@@ -15,6 +15,7 @@ public class LobbySceneController : MonoBehaviour
     DatabaseReference dbRef;
     string lobbyId;
     string playerId;
+    string playerName;
 
     bool readyState = false;
 
@@ -29,6 +30,7 @@ public class LobbySceneController : MonoBehaviour
         // Pobierz lobbyId przekazane z poprzedniej sceny
         lobbyId = PlayerPrefs.GetString("LobbyId");
         playerId = PlayerPrefs.GetString("PlayerId");
+        playerName = PlayerPrefs.GetString("PlayerName");
 
         // Ustaw nazwê lobby jako tekst do wyœwietlenia
         lobbyNameText.text = lobbyName;
@@ -70,7 +72,7 @@ public class LobbySceneController : MonoBehaviour
         // Pobierz nazwê gracza z danych snapshot
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         bool readyStatus = (bool)args.Snapshot.Child("ready").Value;
-        CreateText(playerName, readyStatus.ToString());
+        CreateText(playerName, readyStatus);
         totalPlayersCount++;
 
         // SprawdŸ, czy gracz jest gotowy i zwiêksz odpowiednio licznik
@@ -129,33 +131,63 @@ public class LobbySceneController : MonoBehaviour
                     readyPlayersCount--;
                 }
 
-                string playerName = args.Snapshot.Child("playerName").Value.ToString();
+                string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
 
                 // Aktualizuj tekst wyœwietlaj¹cy liczbê graczy
                 UpdatePlayerCountsText();
+                UpdateText(playerNameChange, isReady);
 
             }
         }
     }
 
-    void CreateText(string playerName, string readyStatus)
+    void CreateText(string playerName, bool readyStatus)
     {
-        if (readyStatus == "true")
+        string playerInfo;
+
+        if (readyStatus)
         {
-            readyStatus = "GOTOWY";
+            playerInfo = playerName + "    GOTOWY";
         }
         else
         {
-            readyStatus = "NIEGOTOWY";
+            playerInfo = playerName + "    NIEGOTOWY";
         }
 
         GameObject text = Instantiate(textTemplate, scrollViewContent.transform);
         text.SetActive(true);
-        text.GetComponentInChildren<Text>().text = playerName+"   "+readyStatus;
+        text.GetComponentInChildren<Text>().text = playerInfo;
+    }
+
+    void UpdateText(string playerName, bool readyStatus)
+    {
+        // Przeszukaj wszystkie teksty w scrollViewContent
+        Text[] texts = scrollViewContent.GetComponentsInChildren<Text>();
+
+        foreach (Text text in texts)
+        {
+            // SprawdŸ czy tekst zawiera imiê gracza
+            if (text.text.Contains(playerName))
+            {
+                // Zaktualizuj zawartoœæ tekstu na podstawie nowego statusu gotowoœci
+                if (readyStatus)
+                {
+                    text.text = playerName + "    GOTOWY";
+                }
+                else
+                {
+                    text.text = playerName + "    NIEGOTOWY";
+                }
+                return; // Zakoñcz pêtlê po znalezieniu odpowiedniego tekstu
+            }
+        }
+
+        // Jeœli nie znaleziono tekstu dla danego gracza, utwórz nowy
+        CreateText(playerName, readyStatus);
     }
 
     void RemoveText(string playerName)
-    {
+       {
         foreach (Transform child in scrollViewContent.transform)
         {
             if (child.GetComponentInChildren<Text>().text == playerName)
@@ -166,7 +198,7 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
-    void ToggleReady()
+   void ToggleReady()
     {
         readyState = !readyState;
         UpdateImageColor();
@@ -175,7 +207,7 @@ public class LobbySceneController : MonoBehaviour
 
         readyPlayersCount += readyState ? 1 : -1;
         UpdatePlayerCountsText();
- 
+        UpdateText(playerName,readyState);
     }
 
     void UpdateImageColor()
