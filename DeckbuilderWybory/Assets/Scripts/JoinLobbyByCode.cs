@@ -6,6 +6,7 @@ using Firebase.Database;
 using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class JoinLobbyByCode : MonoBehaviour
 {
@@ -121,7 +122,13 @@ public class JoinLobbyByCode : MonoBehaviour
     {
         playerId = System.Guid.NewGuid().ToString();
 
-        var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerName);
+        Dictionary<string, object> playerData = new Dictionary<string, object>
+        {
+            { "playerName", playerName },
+            { "ready", false }
+        };
+
+        var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
         await task;
 
         if (task.IsCompletedSuccessfully)
