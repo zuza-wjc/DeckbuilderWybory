@@ -3,15 +3,14 @@ using Firebase;
 using Firebase.Database;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-// linia dodana
 using System.Collections.Generic;
 
-using System.Linq;
 using System;
-
 using TMPro;
 using System.Threading.Tasks;
 using Unity.VisualScripting;
+
+
 
 public class LobbyListManager : MonoBehaviour
 {
@@ -20,90 +19,13 @@ public class LobbyListManager : MonoBehaviour
 
     DatabaseReference dbRef;
 
+    string playerName = "list_player";
+
 
     private List<string> availableNames = new List<string>() { "Gracz1", "Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8" };
-    //zmien nazwy
-
     private List<string> gracze = new List<string>();
+    private Dictionary<string, object> players = new Dictionary<string, object>() { { "playerName", null }, { "ready", false } };
 
-    private Dictionary<string, string> players = new Dictionary<string, string>();
-
-    public async void AssignName(string playerId, string lobbyId)
-    {
-        Dictionary<string, object> lobbyData;
-
-        Debug.Log("jestem w AssignName" + "lobbyId = " + lobbyId + "playerId = " + playerId);
-
-        gracze.Clear();
-
-        // odczyt availableNames z bazydanych
-
-        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
-        lobbyData = lobbyInfo.Value as Dictionary<string, object>;
-
-        Debug.Log("dotychczasowi gracze");
-        foreach (var name in lobbyData)
-        {
-            if (name.Key == "players")
-            {
-                var players = name.Value as Dictionary<string, object>;
-                foreach (var player in players)
-                {
-                    Debug.Log(player.Value);
-                    gracze.Add((string)player.Value);
-                }
-            }
-        }
-        // koniec odczytu z bazydanych
-
-        var random = new System.Random();
-        if (players.ContainsKey(playerId))
-        {
-            string te = "gracza już ma przypisane imię";
-            return; // Gracz już ma przypisane imię.
-        }
-
-        List<string> namesToAssign = availableNames;
-        //foreach (var i in namesToAssign) { Debug.Log(i); }
-        foreach (var name in gracze)
-        {
-          namesToAssign.Remove(name); // Usuń imiona, które są już używane.
-        }
-
-        Debug.Log("nazwy pozostałe do przydzielenia:");
-        foreach (var i in namesToAssign) { Debug.Log(i); }
-
-        Debug.Log("pozostałe tyle imion: " + namesToAssign.Count);
-
-        if (namesToAssign.Count > 0)
-        {
-                int index = random.Next(namesToAssign.Count);
-                var playerName = namesToAssign[index];
-                //players[playerId] = namesToAssign[index];
-                Debug.Log("nazwa dodanego wylosowanego Gracza = " + playerName);
-                availableNames.Remove(namesToAssign[index]); // Usuń z puli dostępnych, aby nie było duplikatów.
-                Debug.Log("wielkość puli zasobów" + availableNames.Count);
-                await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerName);
-
-        }
-        else
-        {
-             Debug.LogError("Brak dostępnych imion.");
-        }
-        Debug.Log("wychodzę :)");
-
-        //return playerName;
-
-    }
-
-    public void ReleaseName(string playerId)
-    {
-        if (players.TryGetValue(playerId, out string name))
-        {
-            availableNames.Add(name); // Dodaj imię z powrotem do puli dostępnych.
-            players.Remove(playerId);
-        }
-    }
 
 
     void Start()
@@ -127,10 +49,30 @@ public class LobbyListManager : MonoBehaviour
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
         dbRef.ChildChanged += HandleChildChanged;
+    }
 
+    void HandleChildAdded(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
 
-        // Assume dbRef is already initialized and points to the Firebase database
+        bool isPublic = bool.Parse(args.Snapshot.Child("isPublic").GetValue(true).ToString());
+        if (isPublic)
+        {
+            string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
+            string lobbyId = args.Snapshot.Key;
+            int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
+            int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
 
+            // Sprawdź, czy liczba graczy jest mniejsza od rozmiaru lobby
+            if (playerCount < lobbySize)
+            {
+                CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
+            }
+        }
     }
 
     void HandleChildChanged(object sender, ChildChangedEventArgs args)
@@ -142,7 +84,6 @@ public class LobbyListManager : MonoBehaviour
         }
 
         string lobbyId = args.Snapshot.Key;
-        Debug.Log("lobbyId z HCChanged = " + lobbyId);
         int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
         int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
 
@@ -173,31 +114,6 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
-    void HandleChildAdded(object sender, ChildChangedEventArgs args)
-    {
-        if (args.DatabaseError != null)
-        {
-            Debug.LogError(args.DatabaseError.Message);
-            return;
-        }
-
-        bool isPublic = bool.Parse(args.Snapshot.Child("isPublic").GetValue(true).ToString());
-        if (isPublic)
-        {
-            string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
-            string lobbyId = args.Snapshot.Key;
-            int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
-            int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
-
-            // Sprawdź, czy liczba graczy jest mniejsza od rozmiaru lobby
-            if (playerCount < lobbySize)
-            {
-                CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
-            }
-        }
-    }
-
-
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -217,7 +133,7 @@ public class LobbyListManager : MonoBehaviour
         button.GetComponentInChildren<UnityEngine.UI.Text>().text = $"{lobbyName} {playerCount}/{lobbySize}";
 
         // Dodanie funkcji obsługi zdarzenia dla kliknięcia w przycisk
-        button.GetComponent<Button>().onClick.AddListener(delegate { TaskOnClickAsync(lobbyName, lobbyId); });
+        button.GetComponent<Button>().onClick.AddListener(delegate { TaskOnClick(lobbyName, lobbyId, playerName ); });
     }
 
     void DestroyButton(string lobbyName)
@@ -232,36 +148,122 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
-    public async Task<string> AddPlayerAsync(string lobbyId)
-    {
 
-        Debug.Log(" jestem w AddPlayers");
+    public async void AssignName(string playerId, string lobbyId)
+    {
+        Dictionary<string, object> lobbyData;
+        gracze.Clear();
+
+        // odczyt z lobbyInfo z bazy
+        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
+        lobbyData = lobbyInfo.Value as Dictionary<string, object>;
+
+        foreach (var name in lobbyData)
+        {
+            if (name.Key == "players")
+            {
+                Debug.Log(" gdy Key = players to name.Key = " + name.Key + " a name.Value = " + name.Value);
+
+                players = name.Value as Dictionary<string, object>;
+
+                foreach (var player in players)
+                {
+                    Debug.Log(" player Key = " + player.Key + "a player.Value = " + player.Value);
+                    var gracz = player.Value as Dictionary<string, object>;
+
+
+                    foreach (var gra in gracz )
+                    {
+                        var a = gra.Key;
+                        if (a == "playerName")
+                        {
+                            var b = gra.Value;
+                            Debug.Log("playerKey = " + a + "playerName = " + b);
+                            gracze.Add((string)b);
+
+                        }
+
+                    };
+
+
+                };
+            };
+        };
+        // koniec odczytu z bazydanych
+
+        var random = new System.Random();
+        if (players.ContainsKey(playerId))
+        {
+            string te = "gracza już ma przypisane imię";
+            return;
+        }
+
+        List<string> namesToAssign = availableNames;
+        foreach (var name in gracze)
+        {
+            namesToAssign.Remove(name); // Usuń imiona, które są już używane.
+        }
+
+        if (namesToAssign.Count > 0)
+        {
+            int index = random.Next(namesToAssign.Count);
+            playerName = namesToAssign[index];
+            availableNames.Remove(namesToAssign[index]); // Usuń z puli dostępnych, aby nie było duplikatów.
+
+
+
+            Dictionary<string, object> playerData = new Dictionary<string, object>
+        {
+            { "playerName", playerName },
+            { "ready", false }
+        };
+
+            await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+        }
+        else
+        {
+            Debug.LogError("Brak dostępnych imion.");
+        }
+
+        PlayerPrefs.SetString("PlayerName", playerName);
+    }
+
+
+    public async Task<string> AddPlayerAsync(string lobbyId, string playerName)
+    {
         // Wygeneruj unikalny identyfikator gracza
         string playerId = System.Guid.NewGuid().ToString();
-        Debug.Log("dotarłam do AddPlayer i nadałam unikalne playerId = " + playerId);
+        Debug.Log("wygenerowany playerID = " + playerId);
 
+        // wylosuj unikalną nazwę gracza
         AssignName(playerId, lobbyId);
 
-        Debug.Log("wyszłam z AssigneName i playerId jest to samo ?= " + playerId );
 
-        // Dodaj nowego gracza do bazy danych Firebase
+        // Przygotuj dane gracza jako słownik
+        //Dictionary<string, object> playerData = new Dictionary<string, object>
+        //{
+        //    { "playerName", playerName },
+        //    { "ready", false }
+        //};
+
+
+
+        // Dodaj nowego gracza do bazy danych Firebase - przeniesione do Assing Name
+        //dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+
         return playerId;
     }
 
-    async Task TaskOnClickAsync(string lobbyName, string lobbyId )
+    async Task TaskOnClick(string lobbyName, string lobbyId, string playerName)
     {
-        //AssignName(playerId);
-
-        string playerId = await AddPlayerAsync(lobbyId);
-        //string playerId = await AddPlayerAsync(playerName, lobbyId);
-
-        Debug.Log("wróciłem z AddPlayer :)");
+        string playerId = await AddPlayerAsync(lobbyId, playerName);
+        Debug.Log("powrót z AddPlayer z sukcesem :), lobbyId = " + lobbyId + " playerName = " + playerName + " playerId = " + playerId);
 
         // Przejście do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetString("PlayerId", playerId);
-
+        //PlayerPrefs.SetString("PlayerName", playerName);
     }
 }

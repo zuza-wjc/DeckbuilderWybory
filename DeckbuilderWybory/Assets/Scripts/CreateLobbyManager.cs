@@ -6,44 +6,6 @@ using TMPro;
 using Firebase;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
-using System.Linq;
-using Unity.VisualScripting;
-
-
-//public class AvailableNames
-//{
-//    private List<string> names;
-//    public AvailableNames()
-//    {
-//        names = new List<string>() { "Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8" };
-//    }
-
-//public void AddName(string name)
-//{
-//    // Add validation or other logic here
-//    names.Add(name);
-//}
-
-//public bool RemoveName(string name)
-//{
-//    return names.Remove(name);
-//}
-
-//public List<string> GetNames()
-//{
-//    return names;
-//}
-//}
-//public class LobbyData
-//{
-//    public string LobbyName { get; set; }
-//    public bool IsPublic { get; set; }
-//    public int LobbySize { get; set; }
-//    public Dictionary<string, string> Players { get; set; }
-//    public List<string> AvailableNames { get; set; }
-//}
-
-
 
 public class CreateLobbyManager : MonoBehaviour
 {
@@ -55,17 +17,17 @@ public class CreateLobbyManager : MonoBehaviour
     public Button minusButton;
 
     DatabaseReference dbRef;
-    bool isPublic = true; // Początkowo ustaw na publiczne
+    bool isPublic = true; // Pocz�tkowo ustaw na publiczne
     int lobbySize = 2;
-    private List<string> availableNames;
 
-        void Start()
+    private List<string> availableNames = new List<string>() { "Gracz1", "Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8" };
+
+    void Start()
     {
-
-        // Sprawdź, czy Firebase jest już zainicjalizowany
+        // Sprawd�, czy Firebase jest ju� zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
-            // Jeśli nie, inicjalizuj Firebase
+            // Je�li nie, inicjalizuj Firebase
             FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
             if (firebaseInitializer == null)
             {
@@ -77,7 +39,7 @@ public class CreateLobbyManager : MonoBehaviour
         // Inicjalizacja referencji do bazy danych Firebase
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
 
-        // Dodaj nasłuchiwacze na kliknięcia przycisków
+        // Dodaj nas�uchiwacze na klikni�cia przycisk�w
         publicButton.onClick.AddListener(() => TogglePublic(true));
         privateButton.onClick.AddListener(() => TogglePublic(false));
         plusButton.onClick.AddListener(IncreaseLobbySize);
@@ -93,7 +55,7 @@ public class CreateLobbyManager : MonoBehaviour
 
     public void IncreaseLobbySize()
     {
-        if (lobbySize < 8)  // Upewnij się, że rozmiar lobby nie jest większy niż 8
+        if (lobbySize < 8)  // Upewnij si�, �e rozmiar lobby nie jest wi�kszy ni� 8
         {
             lobbySize++;
             UpdateLobbySizeText();
@@ -102,7 +64,7 @@ public class CreateLobbyManager : MonoBehaviour
 
     public void DecreaseLobbySize()
     {
-        if (lobbySize > 2)  // Upewnij się, że rozmiar lobby nie jest mniejszy niż 2
+        if (lobbySize > 2)  // Upewnij si�, �e rozmiar lobby nie jest mniejszy ni� 2
         {
             lobbySize--;
             UpdateLobbySizeText();
@@ -113,7 +75,7 @@ public class CreateLobbyManager : MonoBehaviour
     {
         lobbySizeText.text = lobbySize.ToString();
 
-        // Dezaktywuj przyciski, gdy rozmiar lobby osiągnie granice
+        // Dezaktywuj przyciski, gdy rozmiar lobby osi�gnie granice
         plusButton.interactable = lobbySize < 8;
         minusButton.interactable = lobbySize > 2;
     }
@@ -122,97 +84,38 @@ public class CreateLobbyManager : MonoBehaviour
     {
         string lobbyId = await GenerateUniqueLobbyIdAsync();
 
-        string playerId = SystemInfo.deviceUniqueIdentifier;
-        string playerName = "Gracz1";
+        string playerId = System.Guid.NewGuid().ToString();
+
+
+
+        //        string playerName = "Gracz1";
+        var random = new System.Random();
+        int index = random.Next(8);
+        string playerName = availableNames[index];
+
+
+
         string lobbyName = lobbyNameInput.text;
 
+        // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
         {
             { "lobbyName", lobbyName },
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
-            { "players", new Dictionary<string, string> { { playerId, playerName } } },
-            { "availableNames", availableNames = new List<string>(){"Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8"} }
-
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false } } } } }
         };
-
-        //lobbyData = new lobbyData;
-
-
-        // próbny odczyt
-        //if (lobbyData.TryGetValue("availableNames", out object availableNamesObj))
-        //{
-        //    var availableNamesList = availableNamesObj as List<string>;
-        //    foreach (var name in availableNamesList)
-        //        Debug.Log(name + "  ");
-        //}
-
 
         // Dodawanie danych do bazy Firebase
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
 
         Debug.Log("Lobby created with ID: " + lobbyId);
 
-        // odczyt sprawdzający
-        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
-        //var lobbyInfo = await dbRef.GetValueAsync();
-
-
-        if (lobbyInfo.Exists && lobbyInfo.Value != null)
-        {
-            lobbyData = lobbyInfo.Value as Dictionary<string, object>;
-            //Debug.Log("lobbyData =" + lobbyData);
-
-            ////    // lobbyData = lobbyInfo;
-
-            ////    //Debug.Log(lobbyData.TryGetValue("availableNames", out object availableNamesObj));
-
-            if (lobbyData.TryGetValue("availableNames", out object availableNamesObj))
-            {
-                Debug.Log("Są jakieś availableNames = True");
-                var availableNamesList = availableNamesObj as List<string>;
-                Debug.Log("Lista availableNames = " + availableNamesList);
-                Debug.Log("coś jest ?");
-
-                if (availableNamesList != null && availableNamesList.Count == 0)
-                {
-                    // The list is empty
-                    Debug.Log("Empty !");
-                }
-
-                Debug.Log(" availableNamesList istnieje, jeżeli linia wyżej nie jest Empty !");
-                //Debug.Log(availableNamesList);
-
-                //Debug.Log("pojedynczy rekord loobyID =" + lobbyData[lobbyId]);
-
-                foreach (var name in lobbyData)
-                {
-                    if (name.Key == "availableNames")
-                    {
-                        Debug.Log(name.Key);
-                        Debug.Log(name.Value);
-
-                        var availableNames1 = name.Value as List<object>;
-
-                        foreach (var name2 in availableNames1)
-                        {
-                            Debug.Log(name2.ToString());
-                            //Debug.Log(name2);
-                        }
-
-                    }
-
-
-                }
-
-            }
-        }
-
-        // Przejście do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
-
+        PlayerPrefs.SetString("PlayerId", playerId);
+        PlayerPrefs.SetString("PlayerName", playerName);
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
@@ -221,10 +124,10 @@ public class CreateLobbyManager : MonoBehaviour
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         System.Random random = new System.Random();
 
-        // Sprawdzanie czy wygenerowane ID już istnieje w bazie danych
+        // Sprawdzanie czy wygenerowane ID ju� istnieje w bazie danych
         DataSnapshot snapshot = await dbRef.GetValueAsync();
 
-        // Lista istniejących lobby ID
+        // Lista istniej�cych lobby ID
         List<string> existingIds = new List<string>();
 
         foreach (DataSnapshot childSnapshot in snapshot.Children)
