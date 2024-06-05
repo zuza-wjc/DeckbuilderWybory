@@ -59,32 +59,6 @@ public class CreateLobbyManager : MonoBehaviour
     int lobbySize = 2;
     private List<string> availableNames;
 
-        //public class AvailableNames
-        //{
-        //    private List<string> names;
-        //    public AvailableNames()
-        //    {
-        //        names = new List<string>() { "Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8" };
-        //    }
-
-        //public void AddName(string name)
-        //{
-        //    // Add validation or other logic here
-        //    names.Add(name);
-        //}
-
-        //public bool RemoveName(string name)
-        //{
-        //    return names.Remove(name);
-        //}
-
-        //public List<string> GetNames()
-        //{
-        //    return names;
-        //}
-        //}
-
-
         void Start()
     {
 
@@ -151,20 +125,6 @@ public class CreateLobbyManager : MonoBehaviour
         string playerId = SystemInfo.deviceUniqueIdentifier;
         string playerName = "Gracz1";
         string lobbyName = lobbyNameInput.text;
-        //availableNames = new List<string>(){"Gracz1", "Gracz2" };
-
-        //Tworzenie danych lobby
-
-        //LobbyData lobbyData = new LobbyData;
-
-        //Dictionary<string, object> LobbyData
-        //{
-        //    { "lobbyName", lobbyName },
-        //    { "isPublic", isPublic },
-        //    { "lobbySize", lobbySize },
-        //    { "players", new Dictionary<string, string> { { playerId, playerName } } },
-        //    { "availableNames", availableNames = new List<string>(){"Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8"} },
-        //};
 
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
         {
@@ -200,11 +160,6 @@ public class CreateLobbyManager : MonoBehaviour
 
         if (lobbyInfo.Exists && lobbyInfo.Value != null)
         {
-            //lobbyData = lobbyInfo;
-            //lobbyData = lobbyInfo.Value as LobbyData;
-
-
-            //lobbyData = lobbyInfo.Value as LobbyData(lobbyId) ;
             lobbyData = lobbyInfo.Value as Dictionary<string, object>;
             //Debug.Log("lobbyData =" + lobbyData);
 
@@ -222,40 +177,16 @@ public class CreateLobbyManager : MonoBehaviour
                 if (availableNamesList != null && availableNamesList.Count == 0)
                 {
                     // The list is empty
-                    // You can perform your logic here, such as logging a message or handling the empty state
                     Debug.Log("Empty !");
                 }
 
                 Debug.Log(" availableNamesList istnieje, jeżeli linia wyżej nie jest Empty !");
                 //Debug.Log(availableNamesList);
 
-
                 //Debug.Log("pojedynczy rekord loobyID =" + lobbyData[lobbyId]);
 
                 foreach (var name in lobbyData)
-                //foreach (var name in availableNamesList)
                 {
-                    //if (name.Key == "players")
-                    //{
-                    //    //var i = name.Value as Dictionary<string, string>;
-                    //    //foreach (var j in i)
-                    //    {
-                    //        //if (j != null)
-                    //        {
-                    //            //Debug.Log(name + "  ");
-                    //            var gracze = name.Value as Dictionary<string, object>;
-                    //            //Debug.Log(gracze);
-
-                    //            foreach (var gracz in gracze) { Debug.Log(gracz.Value); }
-
-                    //        }
-                    //    }
-                    //}
-
-                    //Debug.Log(name.Key + "  " + name.Value);
-
-
-
                     if (name.Key == "availableNames")
                     {
                         Debug.Log(name.Key);

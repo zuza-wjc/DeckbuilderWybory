@@ -20,7 +20,9 @@ public class LobbyListManager : MonoBehaviour
 
     DatabaseReference dbRef;
 
+
     private List<string> availableNames = new List<string>() { "Gracz1", "Gracz2", "Gracz3", "Gracz4", "Gracz5", "Gracz6", "Gracz7", "Gracz8" };
+    //zmien nazwy
 
     private List<string> gracze = new List<string>();
 
@@ -59,7 +61,6 @@ public class LobbyListManager : MonoBehaviour
         {
             string te = "gracza już ma przypisane imię";
             return; // Gracz już ma przypisane imię.
-
         }
 
         List<string> namesToAssign = availableNames;
@@ -187,17 +188,12 @@ public class LobbyListManager : MonoBehaviour
             string lobbyId = args.Snapshot.Key;
             int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
             int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
-            // dodane
-
-            //List<string> availableNames = (List<string>)args.Snapshot.Child("availableNames").GetValue(true);
-            //private Dictionary<string, string> players = (string)args.Snapshot.Child("players").GetValue(true);
 
             // Sprawdź, czy liczba graczy jest mniejsza od rozmiaru lobby
             if (playerCount < lobbySize)
             {
                 CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
             }
-
         }
     }
 
@@ -255,7 +251,6 @@ public class LobbyListManager : MonoBehaviour
     async Task TaskOnClickAsync(string lobbyName, string lobbyId )
     {
         //AssignName(playerId);
-
 
         string playerId = await AddPlayerAsync(lobbyId);
         //string playerId = await AddPlayerAsync(playerName, lobbyId);
