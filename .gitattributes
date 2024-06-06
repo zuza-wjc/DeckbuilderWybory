@@ -1,1 +1,2 @@
 DeckbuilderWybory/Assets/Firebase/Plugins/x86_64/FirebaseCppApp-11_8_1.bundle filter=lfs diff=lfs merge=lfs -text
+*.bundle filter=lfs diff=lfs merge=lfs -text
