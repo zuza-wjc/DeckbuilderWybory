@@ -86,6 +86,8 @@ public class CreateLobbyManager : MonoBehaviour
         string playerName = "Some Gracz";
         string lobbyName = lobbyNameInput.text;
         int isStarted = 0;
+        int money = 0;
+        int support = 0;
 
         // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
@@ -94,7 +96,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "isStarted", isStarted },
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
-            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false } } } } }
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } }  } } } } }
         };
 
         // Dodawanie danych do bazy Firebase
