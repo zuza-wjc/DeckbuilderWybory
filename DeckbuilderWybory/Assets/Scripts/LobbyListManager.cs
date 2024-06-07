@@ -13,6 +13,8 @@ public class LobbyListManager : MonoBehaviour
     DatabaseReference dbRef;
 
     string playerName = "list_player";
+    int money = 0;
+    int support = 0;
 
     void Start()
     {
@@ -143,7 +145,8 @@ public class LobbyListManager : MonoBehaviour
         Dictionary<string, object> playerData = new Dictionary<string, object>
         {
             { "playerName", playerName },
-            { "ready", false }
+            { "ready", false },
+            { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } }  }
         };
 
         // Dodaj nowego gracza do bazy danych Firebase

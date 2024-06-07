@@ -284,6 +284,7 @@ public class LobbySceneController : MonoBehaviour
             isStarted = int.Parse(args.Snapshot.Value.ToString());
             if (isStarted == 1)
             {
+                dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
                 SceneManager.LoadScene("Game", LoadSceneMode.Single);
             }
         }
