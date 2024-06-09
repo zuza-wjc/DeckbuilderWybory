@@ -26,7 +26,7 @@ public class GameSceneExitListener : MonoBehaviour
                 return;
             }
         }
-        lobbyId = PlayerPrefs.GetString("LobbyId");
+        lobbyId = DataTransfer.LobbyId;
 
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
         dbRefPlayers = dbRef.Child("players");

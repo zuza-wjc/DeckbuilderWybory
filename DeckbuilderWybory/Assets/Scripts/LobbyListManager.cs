@@ -161,10 +161,12 @@ public class LobbyListManager : MonoBehaviour
 
         // Przejście do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
-        PlayerPrefs.SetString("LobbyName", lobbyName);
-        PlayerPrefs.SetString("LobbyId", lobbyId);
-        PlayerPrefs.SetInt("LobbySize", lobbySize);
+
+        //pobieranie danych z dataTransfer
+        DataTransfer.LobbyName = lobbyName;
+        DataTransfer.LobbyId = lobbyId;
+        DataTransfer.LobbySize = lobbySize;
         DataTransfer.PlayerId = playerId;
-        PlayerPrefs.SetString("PlayerName", playerName);
+        DataTransfer.PlayerName = playerName;
     }
 }

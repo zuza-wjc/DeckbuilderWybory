@@ -33,7 +33,7 @@ public class NewBehaviourScript : MonoBehaviour
             }
         }
 
-        lobbyId = PlayerPrefs.GetString("LobbyId");
+        lobbyId = DataTransfer.LobbyId;
 
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
 

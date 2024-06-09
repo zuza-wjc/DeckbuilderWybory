@@ -30,13 +30,13 @@ public class LobbySceneController : MonoBehaviour
     void Start()
     {
         // Pobierz nazwê lobby przekazan¹ z poprzedniej sceny
-        string lobbyName = PlayerPrefs.GetString("LobbyName");
+        string lobbyName = DataTransfer.LobbyName;
         // Pobierz lobbyId przekazane z poprzedniej sceny
-        lobbyId = PlayerPrefs.GetString("LobbyId");
-        isStarted = PlayerPrefs.GetInt("IsStarted");
+        isStarted = DataTransfer.IsStarted;
+        lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
-        playerName = PlayerPrefs.GetString("PlayerName");
-        lobbySize = PlayerPrefs.GetInt("LobbySize");
+        playerName = DataTransfer.PlayerName;
+        lobbySize = DataTransfer.LobbySize;
 
         // Ustaw nazwê lobby jako tekst do wyœwietlenia
         lobbyNameText.text = lobbyName;
