@@ -149,9 +149,9 @@ public class JoinLobbyByCode : MonoBehaviour
 
         // Przejœcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
-        PlayerPrefs.SetString("LobbyName", lobbyName);
-        PlayerPrefs.SetString("LobbyId", lobbyId);
-        PlayerPrefs.SetString("PlayerId", playerId);
-        PlayerPrefs.SetString("PlayerName", playerName);
+        DataTransfer.LobbyName = lobbyName;
+        DataTransfer.LobbyId = lobbyId;
+        DataTransfer.PlayerId = playerId;
+        DataTransfer.PlayerName = playerName;
     }
 }

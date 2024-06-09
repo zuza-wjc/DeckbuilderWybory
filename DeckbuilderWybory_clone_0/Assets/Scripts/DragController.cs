@@ -32,8 +32,8 @@ public class DragController : MonoBehaviour
             }
         }
 
-        lobbyId = PlayerPrefs.GetString("LobbyId");
-        playerId = PlayerPrefs.GetString("PlayerId");
+        lobbyId = DataTransfer.LobbyId;
+        playerId = DataTransfer.PlayerId;
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
 
         DragController[] controllers = FindObjectsOfType<DragController>();

@@ -105,12 +105,14 @@ public class CreateLobbyManager : MonoBehaviour
         Debug.Log("Lobby created with ID: " + lobbyId);
 
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
-        PlayerPrefs.SetString("LobbyName", lobbyName);
-        PlayerPrefs.SetString("LobbyId", lobbyId);
-        PlayerPrefs.SetInt("LobbySize", lobbySize);
-        PlayerPrefs.SetInt("IsStarted", isStarted);
-        PlayerPrefs.SetString("PlayerId", playerId);
-        PlayerPrefs.SetString("PlayerName", playerName);
+        
+        //pobieranie danych z data transfer
+        DataTransfer.LobbyName = lobbyName;
+        DataTransfer.LobbyId = lobbyId;
+        DataTransfer.LobbySize = lobbySize;
+        DataTransfer.IsStarted = isStarted;
+        DataTransfer.PlayerId = playerId;
+        DataTransfer.PlayerName = playerName;
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
