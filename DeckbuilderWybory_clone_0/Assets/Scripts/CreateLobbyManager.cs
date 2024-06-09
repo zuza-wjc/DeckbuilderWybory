@@ -109,7 +109,7 @@ public class CreateLobbyManager : MonoBehaviour
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetInt("LobbySize", lobbySize);
         PlayerPrefs.SetInt("IsStarted", isStarted);
-        PlayerPrefs.SetString("PlayerId", playerId);
+        DataTransfer.PlayerId = playerId;
         PlayerPrefs.SetString("PlayerName", playerName);
     }
 

@@ -34,7 +34,7 @@ public class LobbySceneController : MonoBehaviour
         // Pobierz lobbyId przekazane z poprzedniej sceny
         lobbyId = PlayerPrefs.GetString("LobbyId");
         isStarted = PlayerPrefs.GetInt("IsStarted");
-        playerId = PlayerPrefs.GetString("PlayerId");
+        playerId = DataTransfer.PlayerId;
         playerName = PlayerPrefs.GetString("PlayerName");
         lobbySize = PlayerPrefs.GetInt("LobbySize");
 

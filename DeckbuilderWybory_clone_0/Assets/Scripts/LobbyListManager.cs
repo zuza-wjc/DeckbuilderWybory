@@ -164,7 +164,7 @@ public class LobbyListManager : MonoBehaviour
         PlayerPrefs.SetString("LobbyName", lobbyName);
         PlayerPrefs.SetString("LobbyId", lobbyId);
         PlayerPrefs.SetInt("LobbySize", lobbySize);
-        PlayerPrefs.SetString("PlayerId", playerId);
+        DataTransfer.PlayerId = playerId;
         PlayerPrefs.SetString("PlayerName", playerName);
     }
 }

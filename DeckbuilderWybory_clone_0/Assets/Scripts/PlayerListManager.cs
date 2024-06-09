@@ -56,7 +56,8 @@ public class NewBehaviourScript : MonoBehaviour
                 if (snapshot.Exists)
                 {
                     // Pobierz playerId z klucza w g³ównym s³owniku players
-                    playerId = snapshot.Child("players").Children.First().Key;
+                    //playerId = snapshot.Child("players").Children.First().Key;
+                    playerId = DataTransfer.PlayerId;
                     Debug.Log("PlayerId: " + playerId);
                     playerName = snapshot.Child("players").Child(playerId).Child("playerName").Value.ToString();
                     int.TryParse(snapshot.Child("lobbySize").Value.ToString(), out lobbySize);
