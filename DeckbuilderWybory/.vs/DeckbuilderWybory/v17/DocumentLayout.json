@@ -1,104 +1,12 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\lobbylistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbylistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\joinlobbybycode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\joinlobbybycode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\createlobbymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\createlobbymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "WorkspaceRootPath": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\",
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": [
-        {
-          "DockedWidth": 200,
-          "SelectedChildIndex": 4,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "ExitButtonHandler.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ExitButtonHandler.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\ExitButtonHandler.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ExitButtonHandler.cs",
-              "RelativeToolTip": "Assets\\Scripts\\ExitButtonHandler.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-31T10:19:19.767Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "CreateLobbyManager.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\CreateLobbyManager.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\CreateLobbyManager.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\CreateLobbyManager.cs",
-              "RelativeToolTip": "Assets\\Scripts\\CreateLobbyManager.cs",
-              "ViewState": "AQIAAEQAAAAAAAAAAAAqwF8AAAAKAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-21T15:20:41.062Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "JoinLobbyByCode.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\JoinLobbyByCode.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\JoinLobbyByCode.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\JoinLobbyByCode.cs",
-              "RelativeToolTip": "Assets\\Scripts\\JoinLobbyByCode.cs",
-              "ViewState": "AQIAAHIAAAAAAAAAAAAmwJUAAABZAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-21T11:52:53.278Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "LobbyListManager.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbyListManager.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\LobbyListManager.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbyListManager.cs",
-              "RelativeToolTip": "Assets\\Scripts\\LobbyListManager.cs",
-              "ViewState": "AQIAAHkAAAAAAAAAAAAcwJUAAABYAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-21T11:03:25.575Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "LobbySceneController.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\LobbySceneController.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
-              "RelativeToolTip": "Assets\\Scripts\\LobbySceneController.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABkAAAAQAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-05-16T13:18:03.188Z",
-              "EditorCaption": ""
-            }
-          ]
-        }
-      ]
+      "DocumentGroups": []
     }
   ]
 }

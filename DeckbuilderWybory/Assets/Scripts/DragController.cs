@@ -12,12 +12,10 @@ public class DragController : MonoBehaviour
     private Vector2 _screenPosition;
     private Vector3 _worldPosition;
     private Draggable _lastDragged;
-    public TextMeshProUGUI textToChange;
 
     DatabaseReference dbRef;
     string playerId;
     string lobbyId;
-    int money;
 
     private void Awake()
     {
@@ -32,8 +30,8 @@ public class DragController : MonoBehaviour
             }
         }
 
-        lobbyId = PlayerPrefs.GetString("LobbyId");
-        playerId = PlayerPrefs.GetString("PlayerId");
+        lobbyId = DataTransfer.LobbyId;
+        playerId = DataTransfer.PlayerId;
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
 
         DragController[] controllers = FindObjectsOfType<DragController>();
@@ -88,20 +86,6 @@ public class DragController : MonoBehaviour
     {
         _lastDragged.LastPosition = _lastDragged.transform.position;
         UpdateDragStatus(true);
-        dbRef.Child(playerId).Child("stats").Child("money").GetValueAsync().ContinueWith(task =>
-        {
-            if (task.IsFaulted)
-            {
-                Debug.Log("Error getting data from Firebase: " + task.Exception);
-                return;
-            }
-
-            if (task.IsCompleted)
-            {
-                DataSnapshot snapshot = task.Result;
-                money = int.Parse(snapshot.Value.ToString());
-            }
-        });
     }
 
     void Drag()
@@ -121,27 +105,12 @@ public class DragController : MonoBehaviour
                 }
                 else
                 {
-                    StartCoroutine(RemoveAfterDelay(_lastDragged.gameObject, 2f));
+                    // Usuwanie karty po zagraniu i wczytanie tagu z Unity
+                    //StartCoroutine(RemoveAfterDelay(_lastDragged.gameObject, 2f));
+                    //string cardTag = _lastDragged.gameObject.tag;
 
-                    string cardTag = _lastDragged.gameObject.tag;
-
-                    if (textToChange != null)
-                    {
-                        if (int.TryParse(textToChange.text, out int currentNumber))
-                        {
-                            if (cardTag == "PlusFive")
-                            {
-                                money += 500;
-                                dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(money);
-                                currentNumber = 0;
-                            }
-                            else if (cardTag == "MinusThree")
-                            {
-                                currentNumber -= 3;
-                            }
-                            textToChange.text = currentNumber.ToString();
-                        }
-                    }
+                    // Resetowanie pozycji karty po zagraniu 
+                    _lastDragged.transform.position = _lastDragged.OriginalPosition;
                 }
             }
         }
@@ -150,11 +119,11 @@ public class DragController : MonoBehaviour
     }
 
 
-    private IEnumerator RemoveAfterDelay(GameObject obj, float delay)
+    /*private IEnumerator RemoveAfterDelay(GameObject obj, float delay)
     {
         yield return new WaitForSeconds(delay);
         Destroy(obj);
-    }
+    }*/
 
 
 
