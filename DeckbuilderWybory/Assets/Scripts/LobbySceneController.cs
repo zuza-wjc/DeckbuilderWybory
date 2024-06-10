@@ -25,7 +25,6 @@ public class LobbySceneController : MonoBehaviour
     bool readyState = false;
 
     private int readyPlayersCount = 0;
-    private int totalPlayersCount = 0;
     public Text playerCountsText; // Tekst do wyswietlania liczby graczy
 
     void Start()
@@ -82,10 +81,18 @@ public class LobbySceneController : MonoBehaviour
         // Pobierz nazwe gracza z danych snapshot
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         CreateText(playerName, false);
-        totalPlayersCount++;
+
+        // Pobierz jego status ready i uaktualnij licznik gotowych graczy
+        bool isReady = (bool)args.Snapshot.Child("ready").Value;
+        if (isReady)
+        {
+            readyPlayersCount += 1;
+        }
 
         // Aktualizuj tekst
         UpdatePlayerCountsText();
+        UpdateText(playerName, isReady);
+
         StartingGame(lobbyId);
     }
 
@@ -101,46 +108,57 @@ public class LobbySceneController : MonoBehaviour
         // Pobierz nazwe gracza z danych snapshot
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         RemoveText(playerName);
-        totalPlayersCount--;
+
+        // Zmien licznik gotowych graczy po wyjsciu
+        bool isReady = (bool)args.Snapshot.Child("ready").Value;
+        if (isReady)
+        {
+            readyPlayersCount -= 1;
+        }
+
         // Aktualizuj tekst
         UpdatePlayerCountsText();
+        UpdateText(playerName, isReady);
     }
 
     void HandleChildChanged(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
         {
-            Debug.Log(args.DatabaseError.Message);
+            Debug.LogError(args.DatabaseError.Message);
             return;
         }
 
-        // Pobierz ID gracza, ktory zmienil stan
-        string playerChanged = args.Snapshot.Key;
-
-
-        // Jesli zmiana pochodzi od innego gracza niz my, zaktualizuj licznik gotowych graczy
-        if (playerId != playerChanged)
+        // Jezeli zmienila sie wartosc ready dla jakiegokolwiek gracza
+        foreach (var child in args.Snapshot.Children)
         {
-
-            // Sprawdz, czy zmienil sie stan gotowosci gracza
-            if (args.Snapshot.Child("ready").Exists)
+            if (child.Key == "ready")
             {
-                bool isReady = (bool)args.Snapshot.Child("ready").Value;
-                if (isReady)
+                // Pobierz ID gracza, ktory zmienil stan
+                string playerChanged = args.Snapshot.Key;
+
+
+                // Jesli zmiana pochodzi od innego gracza niz my, zaktualizuj licznik gotowych graczy
+                if (playerId != playerChanged)
                 {
-                    readyPlayersCount++;
+                    bool isReady = (bool)child.Value;
+                    Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
+
+                    if (isReady)
+                    {
+                        readyPlayersCount += 1;
+                    }
+                    else
+                    {
+                        readyPlayersCount -= 1;
+                    }
+
+                    string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
+
+                    // Aktualizuj tekst wyswietlajacy liczbe graczy
+                    UpdatePlayerCountsText();
+                    UpdateText(playerNameChange, isReady);
                 }
-                else
-                {
-                    readyPlayersCount--;
-                }
-
-                string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
-
-                // Aktualizuj tekst wyswietlajacy liczbe graczy
-                UpdatePlayerCountsText();
-                UpdateText(playerNameChange, isReady);
-
             }
         }
         StartingGame(lobbyId);
@@ -214,7 +232,14 @@ public class LobbySceneController : MonoBehaviour
         // Aktualizacja wartosci "ready" w bazie danych
         dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
-        readyPlayersCount += readyState ? 1 : -1;
+        if (readyState)
+        {
+            readyPlayersCount += 1;
+        }
+        else
+        {
+            readyPlayersCount -= 1;
+        }
         UpdatePlayerCountsText();
         UpdateText(playerName, readyState);
     }
@@ -255,12 +280,12 @@ public class LobbySceneController : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogError("Failed to get lobby player count: snapshot is null");
+                    Debug.Log("Failed to get lobby player count: snapshot is null");
                 }
             }
             else
             {
-                Debug.LogError("Failed to get lobby player count: " + countTask.Exception);
+                Debug.Log("Failed to get lobby player count: " + countTask.Exception);
             }
         });
     }
@@ -269,7 +294,7 @@ public class LobbySceneController : MonoBehaviour
     {
         if (args.DatabaseError != null)
         {
-            Debug.LogError(args.DatabaseError.Message);
+            Debug.Log(args.DatabaseError.Message);
             return;
         }
 
@@ -288,7 +313,7 @@ public class LobbySceneController : MonoBehaviour
     void StartingGame(string lobbyId)
     {
         //sprawdz czy liczba graczy i liczba gotowych graczy jest rowna rozmiarowi lobby
-        if (readyPlayersCount == lobbySize && totalPlayersCount == lobbySize)
+        if (readyPlayersCount == lobbySize)
         {
             //zmiana statusu lobby na started(zaczecie gry) i update bazy danych
             isStarted = 1;
