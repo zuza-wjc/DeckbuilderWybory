@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\lobbylistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbylistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\createlobbymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\createlobbymanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -26,24 +34,50 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "LobbySceneController.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LobbySceneController.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LobbySceneController.cs",
+              "ViewState": "AQIAABcAAAAAAAAAAAAAwPMAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-11T18:07:08.916Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "LobbyListManager.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbyListManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LobbyListManager.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbyListManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LobbyListManager.cs",
+              "ViewState": "AQIAAIgAAAAAAAAAAAAQwJ4AAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-06-11T17:13:20.893Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "CreateLobbyManager.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\CreateLobbyManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\CreateLobbyManager.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\CreateLobbyManager.cs",
               "RelativeToolTip": "Assets\\Scripts\\CreateLobbyManager.cs",
-              "ViewState": "AQIAAAMAAAAAAAAAAAAAAA0AAAAgAAAA",
+              "ViewState": "AQIAACUAAAAAAAAAAAAUwDUAAAAIAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-06-11T13:40:57.357Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "SectionsManager.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\SectionsManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\SectionsManager.cs",
@@ -55,7 +89,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "SettingsButtonsHandler.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\SettingsButtonsHandler.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\SettingsButtonsHandler.cs",
@@ -67,7 +101,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "ButtonImageChanger.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageChanger.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\ButtonImageChanger.cs",

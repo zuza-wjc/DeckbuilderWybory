@@ -13,6 +13,10 @@ public class LobbySceneController : MonoBehaviour
     public GameObject scrollViewContent;
     public GameObject textTemplate;
     public Button readyButton;  // Przycisk gotowosci
+    private Image readyButtonImage;
+
+    public Sprite readySprite;
+    public Sprite notReadySprite;
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
@@ -40,7 +44,7 @@ public class LobbySceneController : MonoBehaviour
 
         // Ustaw nazwe lobby jako tekst do wyswietlenia
         lobbyNameText.text = lobbyName;
-        lobbyCodeText.text = "Kod do gry: " + lobbyId;
+        lobbyCodeText.text = "KOD: " + lobbyId;
 
         // Sprawdz, czy Firebase jest juz zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
@@ -65,6 +69,8 @@ public class LobbySceneController : MonoBehaviour
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
         dbRef.ChildChanged += HandleChildChanged;
+
+        readyButtonImage = readyButton.GetComponentInChildren<Image>();
 
         // Dodaj listener do przycisku gotowosci
         readyButton.onClick.AddListener(ToggleReady);
@@ -228,7 +234,7 @@ public class LobbySceneController : MonoBehaviour
     void ToggleReady()
     {
         readyState = !readyState;
-        UpdateImageColor();
+        UpdateImage();
         // Aktualizacja wartosci "ready" w bazie danych
         dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
@@ -244,16 +250,15 @@ public class LobbySceneController : MonoBehaviour
         UpdateText(playerName, readyState);
     }
 
-    void UpdateImageColor()
+    void UpdateImage()
     {
-        Image buttonImage = readyButton.GetComponent<Image>();
-        buttonImage.color = readyState ? Color.green : Color.red;
+        readyButtonImage.sprite = readyState ? readySprite : notReadySprite;
     }
 
     void UpdatePlayerCountsText()
     {
         // Aktualizuj tekst wyswietlajacy liczbe graczy
-        playerCountsText.text = "Gotowi gracze: " + readyPlayersCount + " / " + lobbySize;
+        playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
     }
 
     public void LeaveLobby()
