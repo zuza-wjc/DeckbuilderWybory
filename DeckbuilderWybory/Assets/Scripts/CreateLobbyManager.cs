@@ -9,12 +9,26 @@ using UnityEngine.SceneManagement;
 
 public class CreateLobbyManager : MonoBehaviour
 {
-    public TMP_InputField lobbyNameInput;
+    public InputField lobbyNameInput;
     public Button publicButton;
     public Button privateButton;
-    public TextMeshProUGUI lobbySizeText;
+    public Text lobbySizeText;
     public Button plusButton;
     public Button minusButton;
+
+    private Image publicButtonImage; // Dodaj referencje do Image przycisku public
+    private Image privateButtonImage; // Dodaj referencje do Image przycisku private
+    public Sprite publicActiveSprite; // Sprite do wyœwietlenia, gdy przycisk public jest aktywny
+    public Sprite publicInactiveSprite; // Sprite do wyœwietlenia, gdy przycisk public jest nieaktywny
+    public Sprite privateActiveSprite; // Sprite do wyœwietlenia, gdy przycisk private jest aktywny
+    public Sprite privateInactiveSprite; // Sprite do wyœwietlenia, gdy przycisk private jest nieaktywny
+
+    private Image addButtonImage;
+    private Image minusButtonImage;
+    public Sprite addButtonActiveSprite;
+    public Sprite minusButtonActiveSprite;
+    public Sprite minusButtonInactiveSprite;
+    public Sprite addButtonInactiveSprite;
 
     DatabaseReference dbRef;
     bool isPublic = true; // Pocz¹tkowo ustaw na publiczne
@@ -37,6 +51,11 @@ public class CreateLobbyManager : MonoBehaviour
         // Inicjalizacja referencji do bazy danych Firebase
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
 
+        publicButtonImage = publicButton.GetComponentInChildren<Image>();
+        privateButtonImage = privateButton.GetComponentInChildren<Image>();
+        addButtonImage = plusButton.GetComponentInChildren<Image>();
+        minusButtonImage = minusButton. GetComponentInChildren<Image>();
+
         // Dodaj nas³uchiwacze na klikniêcia przycisków
         publicButton.onClick.AddListener(() => TogglePublic(true));
         privateButton.onClick.AddListener(() => TogglePublic(false));
@@ -49,6 +68,16 @@ public class CreateLobbyManager : MonoBehaviour
     public void TogglePublic(bool isPublicLobby)
     {
         isPublic = isPublicLobby;
+        if (isPublic)
+        {
+            publicButtonImage.sprite = publicActiveSprite;
+            privateButtonImage.sprite = privateInactiveSprite;
+        }
+        else
+        {
+            publicButtonImage.sprite = publicInactiveSprite;
+            privateButtonImage.sprite = privateActiveSprite;
+        }
     }
 
     public void IncreaseLobbySize()
@@ -76,6 +105,29 @@ public class CreateLobbyManager : MonoBehaviour
         // Dezaktywuj przyciski, gdy rozmiar lobby osi¹gnie granice
         plusButton.interactable = lobbySize < 8;
         minusButton.interactable = lobbySize > 2;
+
+        UpdateButtonSprites();
+    }
+
+    void UpdateButtonSprites()
+    {
+        if (plusButton.interactable)
+        {
+            addButtonImage.sprite = addButtonActiveSprite;
+        }
+        else
+        {
+            addButtonImage.sprite = addButtonInactiveSprite;
+        }
+
+        if (minusButton.interactable)
+        {
+            minusButtonImage.sprite = minusButtonActiveSprite;
+        }
+        else
+        {
+            minusButtonImage.sprite = minusButtonInactiveSprite;
+        }
     }
 
     public async void CreateLobby()
