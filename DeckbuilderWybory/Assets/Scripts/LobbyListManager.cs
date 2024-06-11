@@ -88,10 +88,15 @@ public class LobbyListManager : MonoBehaviour
             bool buttonExists = false;
             foreach (Transform child in scrollViewContent.transform)
             {
-                if (child.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains(lobbyName))
+                // Znajdź komponenty tekstowe w prefabrykacie przycisku
+                Text[] texts = child.GetComponentsInChildren<Text>();
+                Text text1 = texts[0]; // Pierwszy tekst
+                Text text2 = texts[1]; // Drugi tekst
+
+                if (text1.text == lobbyName)
                 {
                     buttonExists = true;
-                    child.GetComponentInChildren<UnityEngine.UI.Text>().text = $"{lobbyName} {playerCount}/{lobbySize}";
+                    text2.text = $"{playerCount}/{lobbySize}";
                     break;
                 }
             }
@@ -118,7 +123,15 @@ public class LobbyListManager : MonoBehaviour
     {
         GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
         button.SetActive(true);
-        button.GetComponentInChildren<UnityEngine.UI.Text>().text = $"{lobbyName} {playerCount}/{lobbySize}";
+
+        // Znajdź komponenty tekstowe w instancji prefabrykatu
+        Text[] texts = button.GetComponentsInChildren<Text>();
+        Text text1 = texts[0]; // Pierwszy tekst
+        Text text2 = texts[1]; // Drugi tekst
+
+        // Ustaw wartości tekstów
+        text1.text = lobbyName;
+        text2.text = $"{playerCount}/{lobbySize}";
 
         // Dodanie funkcji obsługi zdarzenia dla kliknięcia w przycisk
         button.GetComponent<Button>().onClick.AddListener(delegate { TaskOnClick(lobbyName, lobbyId, lobbySize); });

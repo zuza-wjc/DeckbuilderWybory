@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 public class JoinLobbyByCode : MonoBehaviour
 {
-    public TMP_InputField lobbyCodeInputField;
+    public InputField lobbyCodeInputField;
     public Button joinButton;
 
     public GameObject dialogBox;
