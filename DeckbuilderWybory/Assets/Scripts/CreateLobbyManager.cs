@@ -18,10 +18,10 @@ public class CreateLobbyManager : MonoBehaviour
 
     private Image publicButtonImage; // Dodaj referencje do Image przycisku public
     private Image privateButtonImage; // Dodaj referencje do Image przycisku private
-    public Sprite publicActiveSprite; // Sprite do wyœwietlenia, gdy przycisk public jest aktywny
-    public Sprite publicInactiveSprite; // Sprite do wyœwietlenia, gdy przycisk public jest nieaktywny
-    public Sprite privateActiveSprite; // Sprite do wyœwietlenia, gdy przycisk private jest aktywny
-    public Sprite privateInactiveSprite; // Sprite do wyœwietlenia, gdy przycisk private jest nieaktywny
+    public Sprite publicActiveSprite; // Sprite do wyï¿½wietlenia, gdy przycisk public jest aktywny
+    public Sprite publicInactiveSprite; // Sprite do wyï¿½wietlenia, gdy przycisk public jest nieaktywny
+    public Sprite privateActiveSprite; // Sprite do wyï¿½wietlenia, gdy przycisk private jest aktywny
+    public Sprite privateInactiveSprite; // Sprite do wyï¿½wietlenia, gdy przycisk private jest nieaktywny
 
     private Image addButtonImage;
     private Image minusButtonImage;
@@ -31,15 +31,18 @@ public class CreateLobbyManager : MonoBehaviour
     public Sprite addButtonInactiveSprite;
 
     DatabaseReference dbRef;
-    bool isPublic = true; // Pocz¹tkowo ustaw na publiczne
+    bool isPublic = true; // Poczï¿½tkowo ustaw na publiczne
     int lobbySize = 2;
+
+    private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "PrzemysÅ‚aw", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
+
 
     void Start()
     {
-        // SprawdŸ, czy Firebase jest ju¿ zainicjalizowany
+        // Sprawdï¿½, czy Firebase jest juï¿½ zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
-            // Jeœli nie, inicjalizuj Firebase
+            // Jeï¿½li nie, inicjalizuj Firebase
             FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
             if (firebaseInitializer == null)
             {
@@ -56,7 +59,7 @@ public class CreateLobbyManager : MonoBehaviour
         addButtonImage = plusButton.GetComponentInChildren<Image>();
         minusButtonImage = minusButton. GetComponentInChildren<Image>();
 
-        // Dodaj nas³uchiwacze na klikniêcia przycisków
+        // Dodaj nasï¿½uchiwacze na klikniï¿½cia przyciskï¿½w
         publicButton.onClick.AddListener(() => TogglePublic(true));
         privateButton.onClick.AddListener(() => TogglePublic(false));
         plusButton.onClick.AddListener(IncreaseLobbySize);
@@ -82,7 +85,7 @@ public class CreateLobbyManager : MonoBehaviour
 
     public void IncreaseLobbySize()
     {
-        if (lobbySize < 8)  // Upewnij siê, ¿e rozmiar lobby nie jest wiêkszy ni¿ 8
+        if (lobbySize < 8)  // Upewnij siï¿½, ï¿½e rozmiar lobby nie jest wiï¿½kszy niï¿½ 8
         {
             lobbySize++;
             UpdateLobbySizeText();
@@ -91,7 +94,7 @@ public class CreateLobbyManager : MonoBehaviour
 
     public void DecreaseLobbySize()
     {
-        if (lobbySize > 2)  // Upewnij siê, ¿e rozmiar lobby nie jest mniejszy ni¿ 2
+        if (lobbySize > 2)  // Upewnij siï¿½, ï¿½e rozmiar lobby nie jest mniejszy niï¿½ 2
         {
             lobbySize--;
             UpdateLobbySizeText();
@@ -102,7 +105,7 @@ public class CreateLobbyManager : MonoBehaviour
     {
         lobbySizeText.text = lobbySize.ToString();
 
-        // Dezaktywuj przyciski, gdy rozmiar lobby osi¹gnie granice
+        // Dezaktywuj przyciski, gdy rozmiar lobby osiï¿½gnie granice
         plusButton.interactable = lobbySize < 8;
         minusButton.interactable = lobbySize > 2;
 
@@ -135,7 +138,11 @@ public class CreateLobbyManager : MonoBehaviour
         string lobbyId = await GenerateUniqueLobbyIdAsync();
 
         string playerId = System.Guid.NewGuid().ToString();
-        string playerName = "Some Gracz";
+
+        var random = new System.Random();
+        int index = random.Next(8);
+        string playerName = availableNames[index];
+
         string lobbyName = lobbyNameInput.text;
         int isStarted = 0;
         int money = 0;
@@ -173,10 +180,10 @@ public class CreateLobbyManager : MonoBehaviour
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         System.Random random = new System.Random();
 
-        // Sprawdzanie czy wygenerowane ID ju¿ istnieje w bazie danych
+        // Sprawdzanie czy wygenerowane ID juï¿½ istnieje w bazie danych
         DataSnapshot snapshot = await dbRef.GetValueAsync();
 
-        // Lista istniej¹cych lobby ID
+        // Lista istniejï¿½cych lobby ID
         List<string> existingIds = new List<string>();
 
         foreach (DataSnapshot childSnapshot in snapshot.Children)

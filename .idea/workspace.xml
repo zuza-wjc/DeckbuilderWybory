@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8c850f2d-f4a0-4c5d-9c82-7f137fcf5a7a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/AfterImported.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/ScreenShot 1.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/ScreenShot 2.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/Showcase 1.gif.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/UPM_1.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/UPM_2.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/doc.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/doc/Argument.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/ParrelSync-master/Images/doc/UpdateButton.png.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker0.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker1.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-AssetImportWorker0.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe1.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe2.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe3.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe4.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe5.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe6.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe7.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory_clone_0/.vsconfig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory_clone_0/Logs/shadercompiler-UnityShaderCompiler.exe0.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory_clone_0/Packages/manifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory_clone_0/Packages/packages-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/CreateLobbyManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/CreateLobbyManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/JoinLobbyByCode.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/JoinLobbyByCode.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/LobbyListManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/LobbyListManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe0.log" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe0.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2hpfbwobPgLVQIFKTUpuzOzJJKi" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/2002a/Documents/GitHub/DeckbuilderWybory"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8c850f2d-f4a0-4c5d-9c82-7f137fcf5a7a" name="Changes" comment="" />
+      <created>1718296027947</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1718296027947</updated>
+    </task>
+    <servers />
+  </component>
+</project>

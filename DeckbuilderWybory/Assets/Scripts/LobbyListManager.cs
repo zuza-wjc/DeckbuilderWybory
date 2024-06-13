@@ -4,6 +4,7 @@ using Firebase.Database;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 public class LobbyListManager : MonoBehaviour
 {
@@ -12,7 +13,9 @@ public class LobbyListManager : MonoBehaviour
 
     DatabaseReference dbRef;
 
-    string playerName = "list_player";
+    private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
+    private List<string> gracze = new List<string>();
+
     int money = 0;
     int support = 0;
 
@@ -149,28 +152,73 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
-    public string AddPlayer(string lobbyId)
+    public async Task AssignName(string playerId, string lobbyId)
     {
-        // Wygeneruj unikalny identyfikator gracza
+        gracze.Clear();
+
+        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
+        var lobbyData = lobbyInfo.Value as Dictionary<string, object>;
+
+        foreach (var name in lobbyData)
+        {
+            if (name.Key == "players")
+            {
+                var players = name.Value as Dictionary<string, object>;
+
+                foreach (var player in players)
+                {
+                    var gracz = player.Value as Dictionary<string, object>;
+                    if (gracz.ContainsKey("playerName"))
+                    {
+                        gracze.Add(gracz["playerName"].ToString());
+                    }
+                }
+            }
+        }
+
+        var random = new System.Random();
+
+        List<string> namesToAssign = new List<string>(availableNames);
+        foreach (var name in gracze)
+        {
+            namesToAssign.Remove(name);
+        }
+
+        if (namesToAssign.Count > 0)
+        {
+            int index = random.Next(namesToAssign.Count);
+            string playerName = namesToAssign[index];
+            availableNames.Remove(playerName);
+
+            Dictionary<string, object> playerData = new Dictionary<string, object>
+            {
+                { "playerName", playerName },
+                { "ready", false },
+                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } } }
+            };
+
+            await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+
+            PlayerPrefs.SetString("PlayerName", playerName);
+        }
+        else
+        {
+            Debug.LogError("Brak dostępnych imion.");
+        }
+    }
+
+    public async Task<string> AddPlayerAsync(string lobbyId)
+    {
         string playerId = System.Guid.NewGuid().ToString();
 
-        // Przygotuj dane gracza jako słownik
-        Dictionary<string, object> playerData = new Dictionary<string, object>
-        {
-            { "playerName", playerName },
-            { "ready", false },
-            { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } }  }
-        };
-
-        // Dodaj nowego gracza do bazy danych Firebase
-        dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+        await AssignName(playerId, lobbyId);
 
         return playerId;
     }
 
-    void TaskOnClick(string lobbyName, string lobbyId, int lobbySize)
+    async Task TaskOnClick(string lobbyName, string lobbyId, int lobbySize)
     {
-        string playerId = AddPlayer(lobbyId);
+        string playerId = await AddPlayerAsync(lobbyId);
 
         // Przejście do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
@@ -180,6 +228,8 @@ public class LobbyListManager : MonoBehaviour
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = playerName;
+        DataTransfer.PlayerName = PlayerPrefs.GetString("PlayerName");
     }
+
+
 }
