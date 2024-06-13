@@ -106,7 +106,7 @@ public class CreateLobbyManager : MonoBehaviour
 
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         
-        //pobieranie danych z data transfer
+        //wsadzanie danych do data transfer
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;

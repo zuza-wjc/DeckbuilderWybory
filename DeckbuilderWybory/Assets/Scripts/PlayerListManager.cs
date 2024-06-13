@@ -14,6 +14,7 @@ public class NewBehaviourScript : MonoBehaviour
     string playerId;
     string playerName;
     int lobbySize;
+    public GameObject playerListPanel;
 
     public GameObject buttonTemplate;
     public GameObject scrollViewContent;
@@ -97,6 +98,7 @@ public class NewBehaviourScript : MonoBehaviour
     void TaskOnClick(string otherPlayerName)
     {
         Debug.Log("Clicked on " + otherPlayerName);
+        playerListPanel.SetActive(false);
         // Mo¿esz dodaæ tutaj swoj¹ logikê, co ma siê staæ po klikniêciu przycisku
     }
 }
