@@ -10,7 +10,27 @@ public class DeckController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    // Start is called before the first frame update
+    public TextAsset cardDataJsonFile; // Referencja do pliku JSON zawieraj¹cego dane kart
+
+    [System.Serializable]
+    public class CardData
+    {
+        public string cardName;
+        public string cardType;
+        public int cardValue;
+        public int cardCost;
+        public bool onHand;
+        public bool played;
+    }
+
+    [System.Serializable]
+    public class CardsList
+    {
+        public CardData[] cardData;
+    }
+
+    public CardsList myCardsList = new CardsList();
+
     void Start()
     {
         lobbyId = DataTransfer.LobbyId;
@@ -31,29 +51,25 @@ public class DeckController : MonoBehaviour
         // Inicjalizacja referencji do bazy danych Firebase
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
 
-        // Dodanie deckow graczowi
-        dbRef.Child(playerId).Child("deck");
-        string cardName = "nazwa";
-        string cardType = "typ";
-        int cardValue = 0;
-        int cardCost = 0;
-        bool onHand = true;
-        bool played = false;
+        //CardsList cardsList = JsonUtility.FromJson<CardsList>(cardDataJsonFile.text);
+        myCardsList = JsonUtility.FromJson<CardsList>(cardDataJsonFile.text);
 
-        Dictionary<string, object> cardData = new Dictionary<string, object>
+        // Dodanie kart do bazy Firebase
+        for (int i = 0; i < myCardsList.cardData.Length; i++)
         {
-            { "cardName", cardName },
-            { "cardType", cardType },
-            { "cardValue", cardValue },
-            { "cardCost", cardCost },
-            { "onHand", onHand },
-            { "played", played }
-        };
+            // Konwertuj obiekt CardData na s³ownik
+            Dictionary<string, object> cardDataDict = new Dictionary<string, object>
+            {
+                { "cardName", myCardsList.cardData[i].cardName },
+                { "cardType", myCardsList.cardData[i].cardType },
+                { "cardValue", myCardsList.cardData[i].cardValue },
+                { "cardCost", myCardsList.cardData[i].cardCost },
+                { "onHand", myCardsList.cardData[i].onHand },
+                { "played", myCardsList.cardData[i].played }
+            };
 
-        for (int i = 1; i < 5; i++)
-        {
-            // Dodawanie 4 kart do bazy Firebase
-            dbRef.Child(playerId).Child("deck").Child(i.ToString()).SetValueAsync(cardData);
-        };
+            // Dodaj kartê do bazy Firebase
+            dbRef.Child(playerId).Child("deck").Child(i.ToString()).SetValueAsync(cardDataDict);
+        }
     }
 }

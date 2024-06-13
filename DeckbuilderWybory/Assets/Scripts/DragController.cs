@@ -13,9 +13,11 @@ public class DragController : MonoBehaviour
     private Vector3 _worldPosition;
     private Draggable _lastDragged;
 
+    public GameObject playerListPanel;
     DatabaseReference dbRef;
     string playerId;
     string lobbyId;
+    string cardId;
 
     private void Awake()
     {
@@ -30,9 +32,11 @@ public class DragController : MonoBehaviour
             }
         }
 
+        playerListPanel.SetActive(false);
+
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
+        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
 
         DragController[] controllers = FindObjectsOfType<DragController>();
         if (controllers.Length > 1)
@@ -108,6 +112,49 @@ public class DragController : MonoBehaviour
                     // Usuwanie karty po zagraniu i wczytanie tagu z Unity
                     //StartCoroutine(RemoveAfterDelay(_lastDragged.gameObject, 2f));
                     //string cardTag = _lastDragged.gameObject.tag;
+
+                    cardId = _lastDragged.gameObject.tag;
+                    dbRef.Child(cardId).Child("played").SetValueAsync(true);
+
+                    if (int.Parse(cardId) == 0)
+                    {
+                        CardTypeOnMe cardTypeOnMe = FindObjectOfType<CardTypeOnMe>();
+                        if (cardTypeOnMe != null)
+                        {
+                            cardTypeOnMe.OnCardDropped(cardId);
+                        }
+                        else
+                        {
+                            Debug.LogError("CardTypeOnMe component not found in the scene!");
+                        }
+                    }
+                    if (int.Parse(cardId) == 1 || int.Parse(cardId) == 3)
+                    {
+                        playerListPanel.SetActive(true);
+
+                        CardTypeOnEnemy cardTypeOnEnemy = FindObjectOfType<CardTypeOnEnemy>();
+                        if (cardTypeOnEnemy != null)
+                        {
+                            cardTypeOnEnemy.OnCardDropped(cardId);
+                        }
+                        else
+                        {
+                            Debug.LogError("CardTypeOnMe component not found in the scene!");
+                        }
+                    }
+                    if (int.Parse(cardId) == 2)
+                    {
+                        CardTypeOnMap cardTypeOnMap = FindObjectOfType<CardTypeOnMap>();
+                        if (cardTypeOnMap != null)
+                        {
+                            cardTypeOnMap.OnCardDropped(cardId);
+                        }
+                        else
+                        {
+                            Debug.LogError("CardTypeOnMe component not found in the scene!");
+                        }
+                    }
+
 
                     // Resetowanie pozycji karty po zagraniu 
                     _lastDragged.transform.position = _lastDragged.OriginalPosition;
