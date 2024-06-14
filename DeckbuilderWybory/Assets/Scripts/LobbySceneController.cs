@@ -1,22 +1,22 @@
+using System.Collections;
+using System.Collections.Generic; // Added for Dictionary
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
 public class LobbySceneController : MonoBehaviour
 {
     public Text lobbyNameText;
     public Text lobbyCodeText;
-
     public GameObject scrollViewContent;
     public GameObject textTemplate;
     public Button readyButton;  // Przycisk gotowosci
     private Image readyButtonImage;
-
     public Sprite readySprite;
     public Sprite notReadySprite;
+    public Text playerCountsText; // Tekst do wyswietlania liczby graczy
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
@@ -27,29 +27,22 @@ public class LobbySceneController : MonoBehaviour
     int lobbySize;
 
     bool readyState = false;
-
     private int readyPlayersCount = 0;
-    public Text playerCountsText; // Tekst do wyswietlania liczby graczy
 
     void Start()
     {
-        // Pobierz nazwe lobby przekazana z poprzedniej sceny
         string lobbyName = DataTransfer.LobbyName;
-        // Pobierz lobbyId przekazane z poprzedniej sceny
         isStarted = DataTransfer.IsStarted;
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
         playerName = DataTransfer.PlayerName;
         lobbySize = DataTransfer.LobbySize;
 
-        // Ustaw nazwe lobby jako tekst do wyswietlenia
         lobbyNameText.text = lobbyName;
         lobbyCodeText.text = "KOD: " + lobbyId;
 
-        // Sprawdz, czy Firebase jest juz zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
-            // Jesli nie, inicjalizuj Firebase
             FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
             if (firebaseInitializer == null)
             {
@@ -58,21 +51,15 @@ public class LobbySceneController : MonoBehaviour
             }
         }
 
-        // Inicjalizacja referencji do bazy danych Firebase
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
         dbRefLobby = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
 
-        // Ustaw nasluchiwanie zaminy zmiennej isStarted
         dbRefLobby.Child("isStarted").ValueChanged += HandleIsStartedChanged;
-
-        // Ustaw nasluchiwanie zmian w strukturze bazy danych (dodanie/usuniecie galezi)
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
         dbRef.ChildChanged += HandleChildChanged;
 
         readyButtonImage = readyButton.GetComponentInChildren<Image>();
-
-        // Dodaj listener do przycisku gotowosci
         readyButton.onClick.AddListener(ToggleReady);
     }
 
@@ -84,24 +71,20 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
-        // Pobierz nazwe gracza z danych snapshot
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         CreateText(playerName, false);
 
-        // Pobierz jego status ready i uaktualnij licznik gotowych graczy
         bool isReady = (bool)args.Snapshot.Child("ready").Value;
         if (isReady)
         {
             readyPlayersCount += 1;
         }
 
-        // Aktualizuj tekst
         UpdatePlayerCountsText();
         UpdateText(playerName, isReady);
 
         StartingGame(lobbyId);
     }
-
 
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
     {
@@ -111,18 +94,15 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
-        // Pobierz nazwe gracza z danych snapshot
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         RemoveText(playerName);
 
-        // Zmien licznik gotowych graczy po wyjsciu
         bool isReady = (bool)args.Snapshot.Child("ready").Value;
         if (isReady)
         {
             readyPlayersCount -= 1;
         }
 
-        // Aktualizuj tekst
         UpdatePlayerCountsText();
         UpdateText(playerName, isReady);
     }
@@ -135,16 +115,12 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
-        // Jezeli zmienila sie wartosc ready dla jakiegokolwiek gracza
         foreach (var child in args.Snapshot.Children)
         {
             if (child.Key == "ready")
             {
-                // Pobierz ID gracza, ktory zmienil stan
                 string playerChanged = args.Snapshot.Key;
 
-
-                // Jesli zmiana pochodzi od innego gracza niz my, zaktualizuj licznik gotowych graczy
                 if (playerId != playerChanged)
                 {
                     bool isReady = (bool)child.Value;
@@ -161,7 +137,6 @@ public class LobbySceneController : MonoBehaviour
 
                     string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
 
-                    // Aktualizuj tekst wyswietlajacy liczbe graczy
                     UpdatePlayerCountsText();
                     UpdateText(playerNameChange, isReady);
                 }
@@ -172,17 +147,7 @@ public class LobbySceneController : MonoBehaviour
 
     void CreateText(string playerName, bool readyStatus)
     {
-        string playerInfo;
-
-        if (readyStatus)
-        {
-            playerInfo = playerName + "    GOTOWY";
-        }
-        else
-        {
-            playerInfo = playerName + "    NIEGOTOWY";
-        }
-
+        string playerInfo = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
         GameObject text = Instantiate(textTemplate, scrollViewContent.transform);
         if (text != null)
         {
@@ -193,28 +158,17 @@ public class LobbySceneController : MonoBehaviour
 
     void UpdateText(string playerName, bool readyStatus)
     {
-        // Przeszukaj wszystkie teksty w scrollViewContent
         Text[] texts = scrollViewContent.GetComponentsInChildren<Text>();
 
         foreach (Text text in texts)
         {
-            // Sprawdz czy tekst zawiera imie gracza
             if (text.text.Contains(playerName))
             {
-                // Zaktualizuj zawartosc tekstu na podstawie nowego statusu gotowosci
-                if (readyStatus)
-                {
-                    text.text = playerName + "    GOTOWY";
-                }
-                else
-                {
-                    text.text = playerName + "    NIEGOTOWY";
-                }
-                return; // Zakoncz petle po znalezieniu odpowiedniego tekstu
+                text.text = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
+                return;
             }
         }
 
-        // Jesli nie znaleziono tekstu dla danego gracza, utworz nowy
         CreateText(playerName, readyStatus);
     }
 
@@ -235,17 +189,9 @@ public class LobbySceneController : MonoBehaviour
     {
         readyState = !readyState;
         UpdateImage();
-        // Aktualizacja wartosci "ready" w bazie danych
         dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
-        if (readyState)
-        {
-            readyPlayersCount += 1;
-        }
-        else
-        {
-            readyPlayersCount -= 1;
-        }
+        readyPlayersCount += readyState ? 1 : -1;
         UpdatePlayerCountsText();
         UpdateText(playerName, readyState);
     }
@@ -257,13 +203,11 @@ public class LobbySceneController : MonoBehaviour
 
     void UpdatePlayerCountsText()
     {
-        // Aktualizuj tekst wyswietlajacy liczbe graczy
         playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
     }
 
     public void LeaveLobby()
     {
-        // Sprawdz aktualna liczbe graczy w lobby
         dbRef.GetValueAsync().ContinueWith(countTask =>
         {
             if (countTask.IsCompleted && !countTask.IsFaulted)
@@ -271,15 +215,12 @@ public class LobbySceneController : MonoBehaviour
                 DataSnapshot snapshot = countTask.Result;
                 if (snapshot != null)
                 {
-                    // Sprawdz ilosc dzieci (graczy) w galezi "players"
                     if (snapshot.ChildrenCount == 1)
                     {
-                        // Jesli pozostal tylko jeden gracz, usun cale lobby
                         FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).RemoveValueAsync();
                     }
                     else
                     {
-                        // Usun tylko gracza z bazy danych na podstawie playerId
                         dbRef.Child(playerId).RemoveValueAsync();
                     }
                 }
@@ -303,27 +244,77 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
-        // Sprawdz, czy zmienil sie stan isStarted
         if (args.Snapshot.Exists)
         {
             isStarted = int.Parse(args.Snapshot.Value.ToString());
             if (isStarted == 1)
             {
                 dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
+
+                dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
+                {
+                    if (mapTask.IsCompleted && !mapTask.IsFaulted)
+                    {
+                        DataSnapshot mapSnapshot = mapTask.Result;
+                        if (mapSnapshot.Exists)
+                        {
+                            Debug.Log("Map data already exists in the database.");
+                        }
+                        else
+                        {
+                            CheckAndSetMapData();
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("Failed to fetch map data: " + mapTask.Exception);
+                    }
+                });
+
                 SceneManager.LoadScene("Game", LoadSceneMode.Single);
             }
         }
     }
 
+    void CheckAndSetMapData()
+    {
+        dbRefLobby.GetValueAsync().ContinueWith(sessionTask =>
+        {
+            if (sessionTask.IsCompleted && !sessionTask.IsFaulted)
+            {
+                DataSnapshot sessionSnapshot = sessionTask.Result;
+                if (sessionSnapshot.Exists)
+                {
+                    Dictionary<string, object> mapData = new Dictionary<string, object>
+                    {
+                        { "region1", 15 },
+                        { "region2", 19 },
+                        { "region3", 16 },
+                        { "region4", 18 },
+                        { "region5", 16 },
+                        { "region6", 16 }
+                    };
+
+                    dbRefLobby.Child("map").SetValueAsync(mapData);
+                }
+                else
+                {
+                    Debug.Log("Session has been removed. Not setting map data.");
+                }
+            }
+            else
+            {
+                Debug.Log("Failed to fetch session data: " + sessionTask.Exception);
+            }
+        });
+    }
+
     void StartingGame(string lobbyId)
     {
-        //sprawdz czy liczba graczy i liczba gotowych graczy jest rowna rozmiarowi lobby
         if (readyPlayersCount == lobbySize)
         {
-            //zmiana statusu lobby na started(zaczecie gry) i update bazy danych
             isStarted = 1;
             dbRefLobby.Child("isStarted").SetValueAsync(isStarted);
         }
-
     }
 }

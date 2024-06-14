@@ -46,15 +46,28 @@ public class CardTypeOnMe : MonoBehaviour
             return;
         }
 
-        await GetCardValue();
-        await GetMoney();
+        if (await SessionExists())
+        {
+            await GetCardValue();
+            await GetMoney();
 
-        //zaktualizuj wartoœæ i wsadz do bazy danych
-        money += moneyAddValue;
-        Debug.Log("FINAL Money to be added: " + moneyAddValue);
-        Debug.Log("FINAL Money player has: " + money);
+            //zaktualizuj wartoœæ i wsadz do bazy danych
+            money += moneyAddValue;
+            Debug.Log("FINAL Money to be added: " + moneyAddValue);
+            Debug.Log("FINAL Money player has: " + money);
 
-        await dbRef.Child("stats").Child("money").SetValueAsync(money);
+            await dbRef.Child("stats").Child("money").SetValueAsync(money);
+        }
+        else
+        {
+            Debug.Log("Session does not exist. No update will be performed.");
+        }
+    }
+
+    async Task<bool> SessionExists()
+    {
+        var sessionCheck = await dbRef.Parent.Parent.GetValueAsync();
+        return sessionCheck.Exists;
     }
 
     async Task GetCardValue()
@@ -63,7 +76,7 @@ public class CardTypeOnMe : MonoBehaviour
         var task = await dbRef.Child("deck").Child(cardId).Child("cardValue").GetValueAsync();
         if (task == null || task.Value == null)
         {
-            Debug.Log("Error fetching money value");
+            Debug.Log("Error fetching card money value");
             return;
         }
 
