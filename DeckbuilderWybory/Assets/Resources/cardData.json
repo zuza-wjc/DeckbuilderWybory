@@ -19,7 +19,7 @@
     {
       "cardName": "Wiec wyborczy",
       "cardType": "onMap",
-      "cardValue": 20,
+      "cardValue": 5,
       "cardCost": 250,
       "onHand": true,
       "played": false

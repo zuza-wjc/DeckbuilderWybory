@@ -12,8 +12,10 @@ public class DragController : MonoBehaviour
     private Vector2 _screenPosition;
     private Vector3 _worldPosition;
     private Draggable _lastDragged;
-
+    
     public GameObject playerListPanel;
+    public GameObject mapPanel;
+
     DatabaseReference dbRef;
     string playerId;
     string lobbyId;
@@ -42,6 +44,12 @@ public class DragController : MonoBehaviour
         if (controllers.Length > 1)
         {
             Destroy(gameObject);
+        }
+
+        MapManager mapManager = FindObjectOfType<MapManager>();
+        if (mapManager != null)
+        {
+            mapManager.OnMapManagerActionCompleted += CloseMapPanel;
         }
     }
     void Update()
@@ -132,28 +140,24 @@ public class DragController : MonoBehaviour
                     {
                         playerListPanel.SetActive(true);
 
-                        CardTypeOnEnemy cardTypeOnEnemy = FindObjectOfType<CardTypeOnEnemy>();
-                        if (cardTypeOnEnemy != null)
+                        PlayerListManager playerListManager = FindObjectOfType<PlayerListManager>();
+                        if (playerListManager != null)
                         {
-                            cardTypeOnEnemy.OnCardDropped(cardId);
-                        }
-                        else
-                        {
-                            Debug.LogError("CardTypeOnMe component not found in the scene!");
+                            playerListManager.SetCardIdOnEnemy(cardId);
                         }
                     }
                     if (int.Parse(cardId) == 2)
                     {
-                        CardTypeOnMap cardTypeOnMap = FindObjectOfType<CardTypeOnMap>();
-                        if (cardTypeOnMap != null)
+                        mapPanel.SetActive(true);
+
+                        MapManager mapManager = FindObjectOfType<MapManager>();
+                        if (mapManager != null)
                         {
-                            cardTypeOnMap.OnCardDropped(cardId);
-                        }
-                        else
-                        {
-                            Debug.LogError("CardTypeOnMe component not found in the scene!");
+                            mapManager.FetchDataFromDatabase();
+                            mapManager.SetCardIdMap(cardId);
                         }
                     }
+
 
 
                     // Resetowanie pozycji karty po zagraniu 
@@ -191,5 +195,19 @@ public class DragController : MonoBehaviour
     {
         _isDragActive = _lastDragged.IsDragging = isDragging;
         _lastDragged.gameObject.layer = isDragging ? Layer.Dragging : Layer.Default;
+    }
+
+    void CloseMapPanel()
+    {
+        mapPanel.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        MapManager mapManager = FindObjectOfType<MapManager>();
+        if (mapManager != null)
+        {
+            mapManager.OnMapManagerActionCompleted -= CloseMapPanel;
+        }
     }
 }
