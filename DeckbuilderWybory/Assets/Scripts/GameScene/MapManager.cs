@@ -5,8 +5,8 @@ using Firebase.Database;
 using Firebase.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Linq;
 using TMPro;
+using System.Linq;
 using System.Threading.Tasks;
 
 public class MapManager : MonoBehaviour
@@ -62,45 +62,55 @@ public class MapManager : MonoBehaviour
 
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
 
-        dbRef.GetValueAsync().ContinueWithOnMainThread(task => {
-            if (task.IsFaulted)
+        // SprawdŸ, czy sesja istnieje w bazie danych przed pobraniem danych mapy
+        SessionExists().ContinueWith(task =>
+        {
+            if (task.Result)
             {
-                Debug.LogError("Error getting data from Firebase: " + task.Exception);
-                return;
-            }
-
-            if (task.IsCompleted)
-            {
-                DataSnapshot snapshot = task.Result;
-
-                if (snapshot.Exists)
+                dbRef.GetValueAsync().ContinueWithOnMainThread(snapshotTask =>
                 {
-                    playerId = DataTransfer.PlayerId;
-                    Debug.Log("PlayerId: " + playerId);
-
-                    // Odczytaj wartoœci regionów dla aktualnego lobby
-                    foreach (var childSnapshot in snapshot.Children)
+                    if (snapshotTask.IsFaulted)
                     {
-                        if (childSnapshot.Key == "map") // Zak³adaj¹c, ¿e dane regionów s¹ w ga³êzi "map"
-                        {
-                            foreach (var regionSnapshot in childSnapshot.Children)
-                            {
-                                string regionName = regionSnapshot.Key;
-                                string regionValue = regionSnapshot.Value.ToString();
+                        Debug.LogError("Error getting data from Firebase: " + snapshotTask.Exception);
+                        return;
+                    }
 
-                                // Ustaw wartoœæ regionu na podstawie tagu
-                                SetRegionValue(regionName, regionValue);
+                    DataSnapshot snapshot = snapshotTask.Result;
+
+                    if (snapshot.Exists)
+                    {
+                        playerId = DataTransfer.PlayerId;
+                        Debug.Log("PlayerId: " + playerId);
+
+                        // Odczytaj wartoœci regionów dla aktualnego lobby
+                        foreach (var childSnapshot in snapshot.Children)
+                        {
+                            if (childSnapshot.Key == "map") // Zak³adaj¹c, ¿e dane regionów s¹ w ga³êzi "map"
+                            {
+                                foreach (var regionSnapshot in childSnapshot.Children)
+                                {
+                                    string regionName = regionSnapshot.Key;
+                                    string regionValue = regionSnapshot.Value.ToString();
+
+                                    // Ustaw wartoœæ regionu na podstawie tagu
+                                    SetRegionValue(regionName, regionValue);
+                                }
                             }
                         }
                     }
-                }
-                else
-                {
-                    Debug.Log("Data does not exist in the database.");
-                }
+                    else
+                    {
+                        Debug.Log("Data does not exist in the database.");
+                    }
+                });
+            }
+            else
+            {
+                Debug.Log("Session does not exist in the database.");
             }
         });
 
+        // Dodaj nas³uchiwanie klikniêæ do przycisków regionów
         region1Button.onClick.AddListener(() => RegionClicked("region1", cardIdMap));
         region2Button.onClick.AddListener(() => RegionClicked("region2", cardIdMap));
         region3Button.onClick.AddListener(() => RegionClicked("region3", cardIdMap));
@@ -140,59 +150,69 @@ public class MapManager : MonoBehaviour
 
     void RegionClicked(string regionName, string cardId)
     {
-        Task<int> getCardValueTask = dbRef.Child("players").Child(playerId).Child("deck").Child(cardId).Child("cardValue").GetValueAsync().ContinueWith(task =>
+        // SprawdŸ, czy sesja istnieje w bazie danych przed pobraniem wartoœci karty i supportu
+        SessionExists().ContinueWith(task =>
         {
-            if (task.IsFaulted)
+            if (task.Result)
             {
-                Debug.Log("Error fetching support value: " + task.Exception);
-                return 0;
+                Task<int> getCardValueTask = dbRef.Child("players").Child(playerId).Child("deck").Child(cardId).Child("cardValue").GetValueAsync().ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        Debug.Log("Error fetching support value: " + task.Exception);
+                        return 0;
+                    }
+
+                    DataSnapshot snapshot = task.Result;
+                    return int.Parse(snapshot.Value.ToString());
+                });
+
+                Task<int> getSupportTask = dbRef.Child("players").Child(playerId).Child("stats").Child("support").GetValueAsync().ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        Debug.Log("Error fetching support value: " + task.Exception);
+                        return 0;
+                    }
+
+                    DataSnapshot snapshot = task.Result;
+                    return int.Parse(snapshot.Value.ToString());
+                });
+
+                // Poczekaj na zakoñczenie obu operacji asynchronicznych
+                Task.WhenAll(getCardValueTask, getSupportTask).ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        Debug.Log("Error fetching support values: " + task.Exception);
+                        return;
+                    }
+
+                    // Pobierz wyniki z zakoñczonych operacji
+                    supportAddValueReload = getCardValueTask.Result;
+                    support = getSupportTask.Result;
+
+                    // Zaktualizuj wartoœæ i wsadŸ do bazy danych
+                    support += supportAddValueReload;
+                    dbRef.Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(support);
+
+                    // Zaktualizuj wartoœæ na mapie
+                    reloadMapValues(regionName, supportAddValueReload);
+                });
+
+                if (OnMapManagerActionCompleted != null)
+                    OnMapManagerActionCompleted();
             }
-
-            DataSnapshot snapshot = task.Result;
-            return int.Parse(snapshot.Value.ToString());
-        });
-
-        Task<int> getSupportTask = dbRef.Child("players").Child(playerId).Child("stats").Child("support").GetValueAsync().ContinueWith(task =>
-        {
-            if (task.IsFaulted)
+            else
             {
-                Debug.Log("Error fetching support value: " + task.Exception);
-                return 0;
+                Debug.Log("Session does not exist in the database.");
             }
-
-            DataSnapshot snapshot = task.Result;
-            return int.Parse(snapshot.Value.ToString());
         });
-
-        // Poczekaj na zakoñczenie obu operacji asynchronicznych
-        Task.WhenAll(getCardValueTask, getSupportTask).ContinueWith(task =>
-        {
-            if (task.IsFaulted)
-            {
-                Debug.Log("Error fetching support values: " + task.Exception);
-                return;
-            }
-
-            // Pobierz wyniki z zakoñczonych operacji
-            supportAddValueReload = getCardValueTask.Result;
-            support = getSupportTask.Result;
-
-            // Zaktualizuj wartoœæ i wsadŸ do bazy danych
-            support += supportAddValueReload;
-            dbRef.Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(support);
-
-            // Zaktualizuj wartoœæ na mapie
-            reloadMapValues(regionName, supportAddValueReload);
-        });
-
-        if (OnMapManagerActionCompleted != null)
-            OnMapManagerActionCompleted();
     }
-
 
     void reloadMapValues(string regionName, int supportSubstractValue)
     {
-        // Pobierz suppoer po nazwie regionu
+        // Pobierz support po nazwie regionu
         dbRef.Child("map").Child(regionName).GetValueAsync().ContinueWith(task =>
         {
             if (task.IsFaulted)
@@ -225,6 +245,11 @@ public class MapManager : MonoBehaviour
         });
     }
 
+    async Task<bool> SessionExists()
+    {
+        var sessionCheck = await dbRef.Parent.Parent.GetValueAsync();
+        return sessionCheck.Exists;
+    }
 
     public void SetCardIdMap(string cardId)
     {
