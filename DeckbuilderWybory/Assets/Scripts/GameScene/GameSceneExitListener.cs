@@ -3,6 +3,7 @@ using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class GameSceneExitListener : MonoBehaviour
 {
@@ -37,6 +38,12 @@ public class GameSceneExitListener : MonoBehaviour
         dbRefPlayers.ChildChanged += HandleInGameChanged;
     }
 
+    void OnDestroy()
+    {
+        // Unregister listeners to prevent interference
+        dbRefPlayers.ChildChanged -= HandleInGameChanged;
+    }
+
     void HandleInGameChanged(object sender, ChildChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -50,26 +57,29 @@ public class GameSceneExitListener : MonoBehaviour
             bool inGameState = (bool)args.Snapshot.Child("stats").Child("inGame").Value;
             if (!inGameState)
             {
-                //odpali sie warunek gdy inGame == false
-                //otwieramy overlay
+                // Otwieramy overlay
                 quitGamePanel.SetActive(true);
-                //usuwanie sesji
-                if (args.Snapshot.Reference.Parent.Parent.Key == lobbyId)
-                {
-                    // Usuñ ca³¹ ga³¹Ÿ lobbyId z sessions
-                    dbRef.RemoveValueAsync().ContinueWith(task => {
-                        if (task.IsCompleted)
-                        {
-                            Debug.Log("Session removed successfully.");
-                        }
-                        else
-                        {
-                            Debug.LogError("Failed to remove session: " + task.Exception);
-                        }
-                    });
-                }
+                // Unregister listeners
+                dbRefPlayers.ChildChanged -= HandleInGameChanged;
+                StartCoroutine(RemoveSessionAfterDelay());
             }
         }
+    }
+
+    IEnumerator RemoveSessionAfterDelay()
+    {
+        yield return new WaitForSeconds(1.0f); // Small delay to ensure all operations are completed
+        // Usuñ ca³¹ ga³¹Ÿ lobbyId z sessions
+        dbRef.RemoveValueAsync().ContinueWith(task => {
+            if (task.IsCompleted)
+            {
+                Debug.Log("Session removed successfully.");
+            }
+            else
+            {
+                Debug.LogError("Failed to remove session: " + task.Exception);
+            }
+        });
     }
 
     void QuitGame()

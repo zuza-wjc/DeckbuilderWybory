@@ -9,6 +9,12 @@ TagManager:
   - 1
   - 2
   - 3
+  - region1
+  - region2
+  - region3
+  - region4
+  - region5
+  - region6
   layers:
   - Default
   - TransparentFX
