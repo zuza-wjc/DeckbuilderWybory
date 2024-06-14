@@ -199,7 +199,7 @@ public class LobbyListManager : MonoBehaviour
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
 
-            PlayerPrefs.SetString("PlayerName", playerName);
+            DataTransfer.PlayerName= playerName;
         }
         else
         {
@@ -228,7 +228,7 @@ public class LobbyListManager : MonoBehaviour
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = PlayerPrefs.GetString("PlayerName");
+        DataTransfer.PlayerName = DataTransfer.PlayerName;  // PlayerPrefs.GetString("PlayerName");
     }
 
 

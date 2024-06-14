@@ -21,7 +21,11 @@ public class JoinLobbyByCode : MonoBehaviour
     string playerId;
     string lobbyName;
     string lobbyId;
-    string playerName = "code_player";
+    private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "PrzemysÅ‚aw", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
+    private List<string> gracze = new List<string>();
+
+    int money = 0;
+    int support = 0;
 
     bool isPlayerAdded;
 
@@ -32,10 +36,10 @@ public class JoinLobbyByCode : MonoBehaviour
 
     void Start()
     {
-        // SprawdŸ, czy Firebase jest ju¿ zainicjalizowany
+        // Sprawdï¿½, czy Firebase jest juï¿½ zainicjalizowany
         if (FirebaseApp.DefaultInstance == null)
         {
-            // Jeœli nie, inicjalizuj Firebase
+            // Jeï¿½li nie, inicjalizuj Firebase
             FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
             if (firebaseInitializer == null)
             {
@@ -81,7 +85,7 @@ public class JoinLobbyByCode : MonoBehaviour
             if (!lobbyStatus.isFull)
             {
                 Debug.Log("Lobby exists and is not full. Adding player...");
-                await AddPlayerAsync();
+                await AddPlayerAsync(lobbyId);
             }
             else
             {
@@ -119,39 +123,105 @@ public class JoinLobbyByCode : MonoBehaviour
         }
     }
 
-    async Task AddPlayerAsync()
+
+    public async Task AssignName(string playerId, string lobbyId)
     {
-        playerId = System.Guid.NewGuid().ToString();
+        gracze.Clear();
 
-        Dictionary<string, object> playerData = new Dictionary<string, object>
+        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
+        var lobbyData = lobbyInfo.Value as Dictionary<string, object>;
+
+        foreach (var name in lobbyData)
         {
-            { "playerName", playerName },
-            { "ready", false }
-        };
+            if (name.Key == "players")
+            {
+                var players = name.Value as Dictionary<string, object>;
 
-        var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
-        await task;
+                foreach (var player in players)
+                {
+                    var gracz = player.Value as Dictionary<string, object>;
+                    if (gracz.ContainsKey("playerName"))
+                    {
+                        gracze.Add(gracz["playerName"].ToString());
+                    }
+                }
+            }
+        }
 
-        if (task.IsCompletedSuccessfully)
+        var random = new System.Random();
+
+        List<string> namesToAssign = new List<string>(availableNames);
+        foreach (var name in gracze)
         {
-            Debug.Log("Player successfully added to the lobby.");
-            isPlayerAdded = true;
+            namesToAssign.Remove(name);
+        }
+
+        if (namesToAssign.Count > 0)
+        {
+            int index = random.Next(namesToAssign.Count);
+            string playerName = namesToAssign[index];
+            availableNames.Remove(playerName);
+
+            Dictionary<string, object> playerData = new Dictionary<string, object>
+            {
+                { "playerName", playerName },
+                { "ready", false },
+                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } } }
+            };
+
+            await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+
+            DataTransfer.PlayerName= playerName;
         }
         else
         {
-            Debug.LogError("Error adding player to the lobby.");
+            Debug.LogError("Brak dostÄ™pnych imion.");
         }
     }
+
+    public async Task<string> AddPlayerAsync(string lobbyId)
+    {
+        string playerId = System.Guid.NewGuid().ToString();
+
+        await AssignName(playerId, lobbyId);
+        isPlayerAdded = true;
+
+        return playerId;
+    }
+
+    //async Task AddPlayerAsync()
+    //{
+    //    playerId = System.Guid.NewGuid().ToString();
+
+    //    Dictionary<string, object> playerData = new Dictionary<string, object>
+      //  {
+        //    { "playerName", playerName },
+          //  { "ready", false }
+//        };
+
+  //      var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+    //    await task;
+
+      //  if (task.IsCompletedSuccessfully)
+        //{
+          //  Debug.Log("Player successfully added to the lobby.");
+            //isPlayerAdded = true;
+//        }
+  //      else
+    //    {
+      //      Debug.LogError("Error adding player to the lobby.");
+        //}
+    //}
 
     public void ChangeScene()
     {
         Debug.Log("Changing scene...");
 
-        // Przejœcie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
+        // Przejï¿½cie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = playerName;
+        DataTransfer.PlayerName = DataTransfer.PlayerName;
     }
 }
