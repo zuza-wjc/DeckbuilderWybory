@@ -137,20 +137,21 @@ public class LobbyListManager : MonoBehaviour
         text2.text = $"{playerCount}/{lobbySize}";
 
         // Dodanie funkcji obsługi zdarzenia dla kliknięcia w przycisk
-        button.GetComponent<Button>().onClick.AddListener(delegate { TaskOnClick(lobbyName, lobbyId, lobbySize); });
+        button.GetComponent<Button>().onClick.AddListener(delegate { _ = TaskOnClick(lobbyName, lobbyId, lobbySize); });
     }
 
     void DestroyButton(string lobbyName)
+{
+    foreach (Transform child in scrollViewContent.transform)
     {
-        foreach (Transform child in scrollViewContent.transform)
+        if (child != null && child.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains(lobbyName))
         {
-            if (child.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains(lobbyName))
-            {
-                Destroy(child.gameObject);
-                return;
-            }
+            Destroy(child.gameObject);
+            return;
         }
     }
+}
+
 
     public async Task AssignName(string playerId, string lobbyId)
     {
@@ -228,7 +229,6 @@ public class LobbyListManager : MonoBehaviour
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = DataTransfer.PlayerName;  // PlayerPrefs.GetString("PlayerName");
     }
 
 

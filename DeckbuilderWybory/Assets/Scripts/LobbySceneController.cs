@@ -162,7 +162,7 @@ public class LobbySceneController : MonoBehaviour
 
         foreach (Text text in texts)
         {
-            if (text.text.Contains(playerName))
+            if (text != null && text.text.Contains(playerName))
             {
                 text.text = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
                 return;
@@ -176,11 +176,14 @@ public class LobbySceneController : MonoBehaviour
     {
         foreach (Transform child in scrollViewContent.transform)
         {
-            Text textComponent = child.GetComponentInChildren<Text>();
-            if (textComponent != null && textComponent.text.Contains(playerName))
+            if (child != null)
             {
-                Destroy(child.gameObject);
-                return;
+                Text textComponent = child.GetComponentInChildren<Text>();
+                if (textComponent != null && textComponent.text.Contains(playerName))
+                {
+                    Destroy(child.gameObject);
+                    return;
+                }
             }
         }
     }
@@ -234,6 +237,11 @@ public class LobbySceneController : MonoBehaviour
                 Debug.Log("Failed to get lobby player count: " + countTask.Exception);
             }
         });
+    }
+
+    void OnApplicationQuit()
+    {
+       LeaveLobby();
     }
 
     void HandleIsStartedChanged(object sender, ValueChangedEventArgs args)
