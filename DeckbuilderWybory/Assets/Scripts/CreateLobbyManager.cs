@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase.Database;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Firebase;
@@ -15,6 +16,7 @@ public class CreateLobbyManager : MonoBehaviour
     public Text lobbySizeText;
     public Button plusButton;
     public Button minusButton;
+    public TextMeshProUGUI feedbackText;
 
     private Image publicButtonImage; // Dodaj referencje do Image przycisku public
     private Image privateButtonImage; // Dodaj referencje do Image przycisku private
@@ -133,6 +135,31 @@ public class CreateLobbyManager : MonoBehaviour
         }
     }
 
+    async Task<bool> IsLobbyNameUnique(string lobbyName)
+    {
+        DataSnapshot snapshot = await dbRef.GetValueAsync();
+        foreach (DataSnapshot childSnapshot in snapshot.Children)
+        {
+            if (childSnapshot.HasChild("lobbyName"))
+            {
+                var lobbyNameValue = childSnapshot.Child("lobbyName").Value;
+                if (lobbyNameValue != null && lobbyNameValue.ToString() == lobbyName)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    IEnumerator ShowErrorMessage(string message)
+    {
+        feedbackText.text = message;
+        feedbackText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(3);
+        feedbackText.gameObject.SetActive(false);
+    }
+
     public async void CreateLobby()
     {
         string lobbyId = await GenerateUniqueLobbyIdAsync();
@@ -144,6 +171,15 @@ public class CreateLobbyManager : MonoBehaviour
         string playerName = availableNames[index];
 
         string lobbyName = lobbyNameInput.text;
+        bool isUnique = await IsLobbyNameUnique(lobbyName);
+
+        if (!isUnique)
+        {
+            StartCoroutine(ShowErrorMessage("Ta nazwa jest już zajęta"));
+            return;
+        }
+
+
         int isStarted = 0;
         int money = 0;
         int support = 0;
@@ -164,7 +200,7 @@ public class CreateLobbyManager : MonoBehaviour
         Debug.Log("Lobby created with ID: " + lobbyId);
 
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
-        
+
         //wsadzanie danych do data transfer
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
