@@ -27,9 +27,6 @@ public class Map : MonoBehaviour
     public TextMeshProUGUI region6Text;
 
 
-    public delegate void MapActionCompleted();
-    public event MapActionCompleted OnMapActionCompleted;
-
     private Dictionary<string, string> playerNameToIdMap = new Dictionary<string, string>();
 
     public void Start()
