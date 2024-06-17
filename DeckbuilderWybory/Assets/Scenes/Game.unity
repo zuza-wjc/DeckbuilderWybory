@@ -5741,7 +5741,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerListPanel: {fileID: 1503094965}
   cardIdOnEnemy: 
-  buttonTemplate: {fileID: 2009362045460389596, guid: 71988950a51e1774fb116c86fdaf3e62, type: 3}
+  buttonTemplate: {fileID: 2009362045460389596, guid: 10d7a9bd411536a45be884359117b3c3, type: 3}
   scrollViewContent: {fileID: 1388568727}
 --- !u!114 &1826779541
 MonoBehaviour:

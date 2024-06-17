@@ -39,17 +39,53 @@ public class MapManager : MonoBehaviour
 
     public string cardIdMap;
 
-    public delegate void MapManagerActionCompleted();
-    public event MapManagerActionCompleted OnMapManagerActionCompleted;
-
     private Dictionary<string, string> playerNameToIdMap = new Dictionary<string, string>();
 
-    public void FetchDataFromDatabase()
+    public async void FetchDataFromDatabase()
     {
-        // Sprawdü, czy Firebase jest juø zainicjalizowany
+        InitializeFirebase();
+
+        lobbyId = DataTransfer.LobbyId;
+        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
+
+        bool sessionExists = await SessionExists();
+        if (!sessionExists)
+        {
+            Debug.Log("Session does not exist in the database.");
+            return;
+        }
+
+        var snapshot = await dbRef.GetValueAsync();
+        if (snapshot.Exists)
+        {
+            playerId = DataTransfer.PlayerId;
+            Debug.Log("PlayerId: " + playerId);
+
+            foreach (var childSnapshot in snapshot.Children)
+            {
+                if (childSnapshot.Key == "map")
+                {
+                    foreach (var regionSnapshot in childSnapshot.Children)
+                    {
+                        string regionName = regionSnapshot.Key;
+                        string regionValue = regionSnapshot.Value.ToString();
+                        SetRegionValue(regionName, regionValue);
+                    }
+                }
+            }
+        }
+        else
+        {
+            Debug.Log("Data does not exist in the database.");
+        }
+
+        InitializeRegionButtons();
+    }
+
+    void InitializeFirebase()
+    {
         if (FirebaseApp.DefaultInstance == null)
         {
-            // Jeúli nie, inicjalizuj Firebase
             FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
             if (firebaseInitializer == null)
             {
@@ -57,60 +93,10 @@ public class MapManager : MonoBehaviour
                 return;
             }
         }
+    }
 
-        lobbyId = DataTransfer.LobbyId;
-
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
-
-        // Sprawdü, czy sesja istnieje w bazie danych przed pobraniem danych mapy
-        SessionExists().ContinueWith(task =>
-        {
-            if (task.Result)
-            {
-                dbRef.GetValueAsync().ContinueWithOnMainThread(snapshotTask =>
-                {
-                    if (snapshotTask.IsFaulted)
-                    {
-                        Debug.LogError("Error getting data from Firebase: " + snapshotTask.Exception);
-                        return;
-                    }
-
-                    DataSnapshot snapshot = snapshotTask.Result;
-
-                    if (snapshot.Exists)
-                    {
-                        playerId = DataTransfer.PlayerId;
-                        Debug.Log("PlayerId: " + playerId);
-
-                        // Odczytaj wartoúci regionÛw dla aktualnego lobby
-                        foreach (var childSnapshot in snapshot.Children)
-                        {
-                            if (childSnapshot.Key == "map") // Zak≥adajπc, øe dane regionÛw sπ w ga≥Ízi "map"
-                            {
-                                foreach (var regionSnapshot in childSnapshot.Children)
-                                {
-                                    string regionName = regionSnapshot.Key;
-                                    string regionValue = regionSnapshot.Value.ToString();
-
-                                    // Ustaw wartoúÊ regionu na podstawie tagu
-                                    SetRegionValue(regionName, regionValue);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.Log("Data does not exist in the database.");
-                    }
-                });
-            }
-            else
-            {
-                Debug.Log("Session does not exist in the database.");
-            }
-        });
-
-        // Dodaj nas≥uchiwanie klikniÍÊ do przyciskÛw regionÛw
+    void InitializeRegionButtons()
+    {
         region1Button.onClick.AddListener(() => RegionClicked("region1", cardIdMap));
         region2Button.onClick.AddListener(() => RegionClicked("region2", cardIdMap));
         region3Button.onClick.AddListener(() => RegionClicked("region3", cardIdMap));
@@ -121,7 +107,6 @@ public class MapManager : MonoBehaviour
 
     void SetRegionValue(string regionName, string regionValue)
     {
-        // Przypisz wartoúÊ regionValue do odpowiedniego regionu na podstawie nazwy regionu
         switch (regionName)
         {
             case "region1":
@@ -148,101 +133,52 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    void RegionClicked(string regionName, string cardId)
+    async void RegionClicked(string regionName, string cardId)
     {
-        // Sprawdü, czy sesja istnieje w bazie danych przed pobraniem wartoúci karty i supportu
-        SessionExists().ContinueWith(task =>
+        bool sessionExists = await SessionExists();
+        if (!sessionExists)
         {
-            if (task.Result)
-            {
-                Task<int> getCardValueTask = dbRef.Child("players").Child(playerId).Child("deck").Child(cardId).Child("cardValue").GetValueAsync().ContinueWith(task =>
-                {
-                    if (task.IsFaulted)
-                    {
-                        Debug.Log("Error fetching support value: " + task.Exception);
-                        return 0;
-                    }
+            Debug.Log("Session does not exist in the database.");
+            return;
+        }
 
-                    DataSnapshot snapshot = task.Result;
-                    return int.Parse(snapshot.Value.ToString());
-                });
+        var cardValueSnapshot = await dbRef.Child("players").Child(playerId).Child("deck").Child(cardId).Child("cardValue").GetValueAsync();
+        if (cardValueSnapshot == null)
+        {
+            Debug.Log("Card value not found.");
+            return;
+        }
+        int cardValue = int.Parse(cardValueSnapshot.Value.ToString());
 
-                Task<int> getSupportTask = dbRef.Child("players").Child(playerId).Child("stats").Child("support").GetValueAsync().ContinueWith(task =>
-                {
-                    if (task.IsFaulted)
-                    {
-                        Debug.Log("Error fetching support value: " + task.Exception);
-                        return 0;
-                    }
+        var supportSnapshot = await dbRef.Child("players").Child(playerId).Child("stats").Child("support").GetValueAsync();
+        if (supportSnapshot == null)
+        {
+            Debug.Log("Support value not found.");
+            return;
+        }
+        int currentSupport = int.Parse(supportSnapshot.Value.ToString());
 
-                    DataSnapshot snapshot = task.Result;
-                    return int.Parse(snapshot.Value.ToString());
-                });
+        currentSupport += cardValue;
+        await dbRef.Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(currentSupport);
 
-                // Poczekaj na zakoÒczenie obu operacji asynchronicznych
-                Task.WhenAll(getCardValueTask, getSupportTask).ContinueWith(task =>
-                {
-                    if (task.IsFaulted)
-                    {
-                        Debug.Log("Error fetching support values: " + task.Exception);
-                        return;
-                    }
+        await ReloadMapValues(regionName, cardValue);
 
-                    // Pobierz wyniki z zakoÒczonych operacji
-                    supportAddValueReload = getCardValueTask.Result;
-                    support = getSupportTask.Result;
-
-                    // Zaktualizuj wartoúÊ i wsadü do bazy danych
-                    support += supportAddValueReload;
-                    dbRef.Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(support);
-
-                    // Zaktualizuj wartoúÊ na mapie
-                    reloadMapValues(regionName, supportAddValueReload);
-                });
-
-                if (OnMapManagerActionCompleted != null)
-                    OnMapManagerActionCompleted();
-            }
-            else
-            {
-                Debug.Log("Session does not exist in the database.");
-            }
-        });
+        // ZamkniÍcie overlay po zakoÒczeniu wszystkich operacji
+        mapPanel.SetActive(false);
     }
 
-    void reloadMapValues(string regionName, int supportSubstractValue)
+    async Task ReloadMapValues(string regionName, int supportSubstractValue)
     {
-        // Pobierz support po nazwie regionu
-        dbRef.Child("map").Child(regionName).GetValueAsync().ContinueWith(task =>
+        var snapshot = await dbRef.Child("map").Child(regionName).GetValueAsync();
+        if (snapshot == null)
         {
-            if (task.IsFaulted)
-            {
-                // Obs≥uø b≥πd pobierania wartoúci
-                Debug.LogError("Error fetching supportOnMap value: " + task.Exception);
-                return;
-            }
+            Debug.LogError("Error fetching supportOnMap value.");
+            return;
+        }
 
-            // Pobierz wartoúÊ z snapshotu
-            DataSnapshot snapshot = task.Result;
-            supportOnMap = int.Parse(snapshot.Value.ToString());
-
-            // Odejmij supportSubstractValue
-            supportOnMap -= supportSubstractValue;
-
-            // Zapisz zaktualizowanπ wartoúÊ do bazy danych
-            dbRef.Child("map").Child(regionName).SetValueAsync(supportOnMap).ContinueWith(updateTask =>
-            {
-                if (updateTask.IsFaulted)
-                {
-                    // Obs≥uø b≥πd zapisu do bazy danych
-                    Debug.LogError("Error updating supportOnMap value: " + updateTask.Exception);
-                }
-                else
-                {
-                    Debug.Log("SupportOnMap updated successfully.");
-                }
-            });
-        });
+        int supportOnMap = int.Parse(snapshot.Value.ToString());
+        supportOnMap -= supportSubstractValue;
+        await dbRef.Child("map").Child(regionName).SetValueAsync(supportOnMap);
     }
 
     async Task<bool> SessionExists()
