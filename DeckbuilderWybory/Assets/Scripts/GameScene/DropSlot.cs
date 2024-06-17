@@ -31,12 +31,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
         dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
-
-        MapManager mapManager = FindObjectOfType<MapManager>();
-        if (mapManager != null)
-        {
-            mapManager.OnMapManagerActionCompleted += CloseMapPanel;
-        }
     }
     public void OnDrop(PointerEventData eventData)
     {
@@ -85,11 +79,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
             }
         }                                  
         
-    }
-
-    void CloseMapPanel()
-    {
-        mapPanel.SetActive(false);
     }
 }
 
