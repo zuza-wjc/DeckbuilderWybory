@@ -12,6 +12,7 @@ public class JoinLobbyByCode : MonoBehaviour
 {
     public InputField lobbyCodeInputField;
     public Button joinButton;
+    public Button pasteButton; //przycisk do wklejania kodu
 
     public GameObject dialogBox;
     public GameObject background;
@@ -53,13 +54,20 @@ public class JoinLobbyByCode : MonoBehaviour
 
         // Dodanie listenera do przycisku
         joinButton.onClick.AddListener(JoinLobby);
+
+        pasteButton.onClick.AddListener(PasteFromClipboard);
     }
+
 
     public void openDialogBox()
     {
         background.SetActive(true);
         dialogBox.SetActive(true);
         Debug.Log("here");
+    }
+
+    void PasteFromClipboard (){
+        lobbyCodeInputField.text= GUIUtility.systemCopyBuffer;
     }
 
     public void closeDialogBox()
