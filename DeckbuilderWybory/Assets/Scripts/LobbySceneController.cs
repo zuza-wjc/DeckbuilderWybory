@@ -14,7 +14,6 @@ public class LobbySceneController : MonoBehaviour
     public GameObject textTemplate;
     public Button readyButton;  // Przycisk gotowosci
     private Image readyButtonImage;
-    public Button copyButton; //przycisk kopiowania
     public Sprite readySprite;
     public Sprite notReadySprite;
     public Text playerCountsText; // Tekst do wyswietlania liczby graczy
@@ -62,7 +61,6 @@ public class LobbySceneController : MonoBehaviour
 
         readyButtonImage = readyButton.GetComponentInChildren<Image>();
         readyButton.onClick.AddListener(ToggleReady);
-        copyButton.onClick.AddListener(CopyToClipboard);
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -284,11 +282,6 @@ public class LobbySceneController : MonoBehaviour
                 SceneManager.LoadScene("Game", LoadSceneMode.Single);
             }
         }
-    }
-
-    void CopyToClipboard()
-    {
-        GUIUtility.systemCopyBuffer = lobbyId;
     }
 
     void CheckAndSetMapData()
