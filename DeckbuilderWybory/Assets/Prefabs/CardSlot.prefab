@@ -89,7 +89,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   image: {fileID: 8373754544775578983}
+  backgroundOverlay: {fileID: 0}
   parentAfterDrag: {fileID: 0}
+  tapThreshold: 10
 --- !u!1 &9217142327670923763
 GameObject:
   m_ObjectHideFlags: 0
