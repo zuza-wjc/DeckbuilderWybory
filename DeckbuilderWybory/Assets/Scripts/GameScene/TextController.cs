@@ -20,19 +20,13 @@ public class TextController : MonoBehaviour
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
 
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            // Jesli nie, inicjalizuj Firebase
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
-        // Inicjalizacja referencji do bazy danych Firebase
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId);
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId);
 
         // Ustawienie nas³uchiwania zmian w stats
         dbRef.Child("stats").Child("money").ValueChanged += FetchFromDbMoney;

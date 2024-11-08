@@ -3,7 +3,7 @@
     "project_number": "543929931373",
     "firebase_url": "https://deckbuilderwybory-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "deckbuilderwybory",
-    "storage_bucket": "deckbuilderwybory.appspot.com"
+    "storage_bucket": "deckbuilderwybory.firebasestorage.app"
   },
   "client": [
     {
