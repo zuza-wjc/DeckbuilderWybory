@@ -28,20 +28,14 @@ public class PlayerListManager : MonoBehaviour
     void Start()
     {
         // Sprawdü, czy Firebase jest juø zainicjalizowany
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            // Jeúli nie, inicjalizuj Firebase
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
         lobbyId = DataTransfer.LobbyId;
-
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
         FetchDataFromDatabase();
     }

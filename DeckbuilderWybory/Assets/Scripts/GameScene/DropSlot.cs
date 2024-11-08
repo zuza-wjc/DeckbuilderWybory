@@ -15,14 +15,10 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
     private void Awake()
     {
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
         playerListPanel.SetActive(false);
@@ -30,7 +26,7 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
     }
     public void OnDrop(PointerEventData eventData)
     {

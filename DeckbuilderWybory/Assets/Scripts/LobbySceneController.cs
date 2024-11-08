@@ -41,18 +41,14 @@ public class LobbySceneController : MonoBehaviour
         lobbyNameText.text = lobbyName;
         lobbyCodeText.text = "KOD: " + lobbyId;
 
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
-        dbRefLobby = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+        dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
         dbRefLobby.Child("isStarted").ValueChanged += HandleIsStartedChanged;
         dbRef.ChildAdded += HandleChildAdded;

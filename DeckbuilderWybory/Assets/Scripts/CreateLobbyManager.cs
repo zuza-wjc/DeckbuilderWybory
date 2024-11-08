@@ -33,7 +33,7 @@ public class CreateLobbyManager : MonoBehaviour
     public Sprite addButtonInactiveSprite;
 
     DatabaseReference dbRef;
-    bool isPublic = true; // Pocz�tkowo ustaw na publiczne
+    bool isPublic = true; // Poczatkowo ustaw na publiczne
     int lobbySize = 2;
 
     private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
@@ -41,27 +41,19 @@ public class CreateLobbyManager : MonoBehaviour
 
     void Start()
     {
-        // Sprawd�, czy Firebase jest ju� zainicjalizowany
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            // Je�li nie, inicjalizuj Firebase
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
-        // Inicjalizacja referencji do bazy danych Firebase
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions");
 
         publicButtonImage = publicButton.GetComponentInChildren<Image>();
         privateButtonImage = privateButton.GetComponentInChildren<Image>();
         addButtonImage = plusButton.GetComponentInChildren<Image>();
-        minusButtonImage = minusButton. GetComponentInChildren<Image>();
+        minusButtonImage = minusButton.GetComponentInChildren<Image>();
 
-        // Dodaj nas�uchiwacze na klikni�cia przycisk�w
         publicButton.onClick.AddListener(() => TogglePublic(true));
         privateButton.onClick.AddListener(() => TogglePublic(false));
         plusButton.onClick.AddListener(IncreaseLobbySize);
