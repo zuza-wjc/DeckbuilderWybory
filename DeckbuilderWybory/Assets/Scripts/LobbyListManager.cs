@@ -21,20 +21,13 @@ public class LobbyListManager : MonoBehaviour
 
     void Start()
     {
-        // Sprawdź, czy Firebase jest już zainicjalizowany
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            // Jeśli nie, inicjalizuj Firebase
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
-        // Inicjalizacja referencji do bazy danych Firebase
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions");
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions");
 
         // Nasłuchiwanie zmian w strukturze bazy danych (dodanie/usunięcie gałęzi)
         dbRef.ChildAdded += HandleChildAdded;

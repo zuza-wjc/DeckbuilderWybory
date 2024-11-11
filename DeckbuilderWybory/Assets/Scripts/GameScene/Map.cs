@@ -32,22 +32,14 @@ public class Map : MonoBehaviour
     public void Start()
     {
 
-        Debug.LogError("I'm alive !");
-        // Sprawd�, czy Firebase jest ju� zainicjalizowany
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            // Je�li nie, inicjalizuj Firebase
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
         lobbyId = DataTransfer.LobbyId;
-
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
         // Sprawd�, czy sesja istnieje w bazie danych przed pobraniem danych mapy
         SessionExists().ContinueWith(task =>

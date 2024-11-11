@@ -43,10 +43,14 @@ public class MapManager : MonoBehaviour
 
     public async void FetchDataFromDatabase()
     {
-        InitializeFirebase();
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
+        {
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
+        }
 
         lobbyId = DataTransfer.LobbyId;
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId);
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
         bool sessionExists = await SessionExists();
         if (!sessionExists)
@@ -80,19 +84,6 @@ public class MapManager : MonoBehaviour
         }
 
         InitializeRegionButtons();
-    }
-
-    void InitializeFirebase()
-    {
-        if (FirebaseApp.DefaultInstance == null)
-        {
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
-        }
     }
 
     void InitializeRegionButtons()

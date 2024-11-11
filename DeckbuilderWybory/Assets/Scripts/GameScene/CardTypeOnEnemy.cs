@@ -21,19 +21,14 @@ public class CardTypeOnEnemy : MonoBehaviour
         playerId = DataTransfer.PlayerId;
         cardId = cardIdDropped;
 
-        if (FirebaseApp.DefaultInstance == null)
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
-            // Jesli nie, inicjalizuj Firebase
-            FirebaseInitializer firebaseInitializer = FindObjectOfType<FirebaseInitializer>();
-            if (firebaseInitializer == null)
-            {
-                Debug.LogError("FirebaseInitializer not found in the scene!");
-                return;
-            }
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
         }
 
         // Inicjalizacja referencji do bazy danych Firebase
-        dbRef = FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).Child("players");
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         HandlePlayedCard(enemyId);
     }
