@@ -75,10 +75,12 @@ public class CardOnHandController : MonoBehaviour
 
         cardImage.sprite = cardSpriteManager.GetCardSprite(cardId);
 
+        newCard.gameObject.tag = cardId;
+
         // Przechowuj kartê w s³owniku
         cardObjects[cardId] = newCard;
 
-        Debug.Log("Added card with ID: " + cardId);
+        Debug.Log("Added card with ID: " + cardId + "and tag: " + newCard.tag);
 
     }
 

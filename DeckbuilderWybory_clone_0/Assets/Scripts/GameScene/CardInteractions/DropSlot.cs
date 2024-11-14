@@ -40,39 +40,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
             cardId = draggableItem.tag;
             dbRef.Child(cardId).Child("played").SetValueAsync(true);
 
-            if (int.Parse(cardId) == 0)
-            {
-                CardTypeOnMe cardTypeOnMe = FindObjectOfType<CardTypeOnMe>();
-                if (cardTypeOnMe != null)
-                {
-                    cardTypeOnMe.OnCardDropped(cardId);
-                }
-                else
-                {
-                    Debug.LogError("CardTypeOnMe component not found in the scene!");
-                }
-            }
-            if (int.Parse(cardId) == 1 || int.Parse(cardId) == 3)
-            {
-                playerListPanel.SetActive(true);
-
-                PlayerListManager playerListManager = FindObjectOfType<PlayerListManager>();
-                if (playerListManager != null)
-                {
-                    playerListManager.SetCardIdOnEnemy(cardId);
-                }
-            }
-            if (int.Parse(cardId) == 2)
-            {
-                mapPanel.SetActive(true);
-
-                MapManager mapManager = FindObjectOfType<MapManager>();
-                if (mapManager != null)
-                {
-                    mapManager.FetchDataFromDatabase();
-                    mapManager.SetCardIdMap(cardId);
-                }
-            }
         }                                  
         
     }
