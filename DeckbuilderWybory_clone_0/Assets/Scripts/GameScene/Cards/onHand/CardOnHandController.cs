@@ -64,7 +64,7 @@ public class CardOnHandController : MonoBehaviour
                 ListenForCardPlayed(cardId); // Nas³uchiwanie na zmiany "played"
             }
         }
-        Debug.Log("Finished processing cards.");
+        
     }
 
     private void AddCardToUI(string cardId)
@@ -80,13 +80,13 @@ public class CardOnHandController : MonoBehaviour
         // Przechowuj kartê w s³owniku
         cardObjects[cardId] = newCard;
 
-        Debug.Log("Added card with ID: " + cardId + "and tag: " + newCard.tag);
+      
 
     }
 
     private void ListenForCardPlayed(string cardId)
     {
-        Debug.Log("ListenForCardPlayed called for cardId: " + cardId);
+      
         // Nas³uchiwanie na zmiany w wartoœci "played" w Firebase
         dbRef.Child(cardId).Child("played").ValueChanged += (sender, args) =>
         {
@@ -99,13 +99,13 @@ public class CardOnHandController : MonoBehaviour
             bool played = (bool)args.Snapshot.Value;
             if (played)
             {
-                Debug.Log("Card with ID: " + cardId + " has been played, removing it from UI.");
+                
                 // Kiedy karta zostanie zagrana, usuwamy j¹ z UI
                 if (cardObjects.ContainsKey(cardId))
                 {
                     Destroy(cardObjects[cardId]);  // Usuwamy kartê z UI
                     cardObjects.Remove(cardId);  // Usuwamy kartê ze s³ownika
-                    Debug.Log("Card with ID: " + cardId + " successfully removed.");
+                    
                 }
                 else
                 {

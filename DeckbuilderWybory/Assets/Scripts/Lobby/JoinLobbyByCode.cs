@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using UnityEngine.SocialPlatforms;
 
 public class JoinLobbyByCode : MonoBehaviour
 {
@@ -26,6 +27,7 @@ public class JoinLobbyByCode : MonoBehaviour
 
     int money = 0;
     int support = 0;
+    int income = 10;
 
     bool isPlayerAdded;
 
@@ -159,7 +161,7 @@ public class JoinLobbyByCode : MonoBehaviour
             {
                 { "playerName", playerName },
                 { "ready", false },
-                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } } }
+                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", income }, { "support", support }, { "playerTurn", false } } }
             };
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);

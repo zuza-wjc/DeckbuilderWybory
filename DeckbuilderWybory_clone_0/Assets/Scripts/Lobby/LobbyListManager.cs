@@ -18,7 +18,7 @@ public class LobbyListManager : MonoBehaviour
 
     int money = 0;
     int support = 0;
-
+    int income = 10;
     void Start()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -188,7 +188,7 @@ public class LobbyListManager : MonoBehaviour
             {
                 { "playerName", playerName },
                 { "ready", false },
-                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } } }
+                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", income }, { "support", support }, { "playerTurn", false } } }
             };
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);

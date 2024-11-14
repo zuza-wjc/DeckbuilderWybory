@@ -56,7 +56,6 @@ public class PlayerListManager : MonoBehaviour
                 if (snapshot.Exists)
                 {
                     playerId = DataTransfer.PlayerId;
-                    Debug.Log("PlayerId: " + playerId);
                     playerName = snapshot.Child("players").Child(playerId).Child("playerName").Value.ToString();
                     int.TryParse(snapshot.Child("lobbySize").Value.ToString(), out lobbySize);
 
@@ -86,7 +85,6 @@ public class PlayerListManager : MonoBehaviour
         GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
         button.SetActive(true);
         button.GetComponentInChildren<UnityEngine.UI.Text>().text = otherPlayerName;
-        // Mo¿esz równie¿ ustawiæ atrybuty przycisku w zale¿noœci od potrzeb
 
         // Dodanie funkcji obs³ugi zdarzenia dla klikniêcia w przycisk
         button.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => TaskOnClick(otherPlayerName));

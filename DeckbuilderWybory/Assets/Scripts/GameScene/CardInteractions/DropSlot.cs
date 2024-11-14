@@ -13,6 +13,8 @@ public class DropSlot : MonoBehaviour, IDropHandler
     string lobbyId;
     string cardId;
 
+    public CardTypeManager cardTypeManager;
+
     private void Awake()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -38,7 +40,8 @@ public class DropSlot : MonoBehaviour, IDropHandler
         if (draggableItem != null)
         {
             cardId = draggableItem.tag;
-            dbRef.Child(cardId).Child("played").SetValueAsync(true);
+
+            cardTypeManager.OnCardDropped(cardId);
 
         }                                  
         

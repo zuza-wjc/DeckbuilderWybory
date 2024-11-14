@@ -120,7 +120,6 @@ public class LobbySceneController : MonoBehaviour
                 if (playerId != playerChanged)
                 {
                     bool isReady = (bool)child.Value;
-                    Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
 
                     if (isReady)
                     {
@@ -222,7 +221,7 @@ public class LobbySceneController : MonoBehaviour
                     }
                     else
                     {
-                        //dbRef.Child(playerId).RemoveValueAsync(); ZAKOMENTOWUJE TÊ LINIJKÊ NA CZAS IMPLEMENTACJI KART
+                        dbRef.Child(playerId).RemoveValueAsync();
                     }
                 }
                 else
@@ -256,6 +255,21 @@ public class LobbySceneController : MonoBehaviour
             if (isStarted == 1)
             {
                 dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
+
+                int budget = 50;
+
+               // if (readyPlayersCount >= 2 && readyPlayersCount <= 3)
+               // {
+               //     budget = 50;
+               // } else if (readyPlayersCount >= 4 && readyPlayersCount <= 6 )
+               // {
+               //     budget = 70;
+              //  } else if (readyPlayersCount >= 7 && readyPlayersCount <= 8 )
+              //  {
+               //     budget = 90;
+              //  }
+
+                dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
 
                 dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
                 {

@@ -15,6 +15,9 @@ TagManager:
   - region4
   - region5
   - region6
+  - AD003
+  - AD007
+  - AD016
   layers:
   - Default
   - TransparentFX
