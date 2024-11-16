@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
 using Firebase.Extensions;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TextController : MonoBehaviour
 {
@@ -12,8 +12,8 @@ public class TextController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    public TextMeshProUGUI moneyText;
-    public TextMeshProUGUI supportText;
+    public Text moneyText;
+    public Text supportText;
 
     void Start()
     {
@@ -35,7 +35,7 @@ public class TextController : MonoBehaviour
 
     void OnDestroy()
     {
-        // Unregister listeners to prevent interference
+        // Usun nasluchiwanie
         dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
         dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
     }
@@ -50,7 +50,7 @@ public class TextController : MonoBehaviour
 
         if (args.Snapshot.Exists)
         {
-            moneyText.text = args.Snapshot.Value.ToString();
+            moneyText.text = args.Snapshot.Value.ToString() + "k";
         }
     }
 
@@ -64,7 +64,7 @@ public class TextController : MonoBehaviour
 
         if (args.Snapshot.Exists)
         {
-            supportText.text = args.Snapshot.Value.ToString();
+            supportText.text = args.Snapshot.Value.ToString() + "%";
         }
     }
 }
