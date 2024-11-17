@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
-using Firebase.Extensions;
 using UnityEngine;
 
 public class AddRemoveCardImp : MonoBehaviour
@@ -11,33 +10,64 @@ public class AddRemoveCardImp : MonoBehaviour
     private DatabaseReference dbRefCard;
     private DatabaseReference dbRefPlayerStats;
     private DatabaseReference dbRefPlayerDeck;
-    private DatabaseReference dbRefPlayers;
     private DatabaseReference dbRefEnemyStats;
+    private DatabaseReference dbRefSupport;
 
     private string lobbyId = DataTransfer.LobbyId;
     private string playerId = DataTransfer.PlayerId;
 
-    private bool budgetChange = false;
-    private bool incomeChange = false;
+    private bool budgetChange;
+    private bool incomeChange;
+    private bool supportChange;
+
     private int cost;
     private int playerBudget;
     private int enemyBudget;
     private int playerIncome;
+    private int support;
+    private string enemyId;
+    private int enemyIncome;
+
+    private int chosenRegion;
+    private int maxAreaSupport;
+    private int currentAreaSupport;
 
     private Dictionary<int, BudgetOptionData> budgetOptionsDictionary = new Dictionary<int, BudgetOptionData>();
     private Dictionary<int, IncomeOptionData> incomeOptionsDictionary = new Dictionary<int, IncomeOptionData>();
+    private Dictionary<int, SupportOptionData> supportOptionsDictionary = new Dictionary<int, SupportOptionData>();
 
-    public GameObject playerListPanel;
+    public PlayerListManager playerListManager;
+    public MapManager mapManager;
 
-    string enemyId;
+    void Start()
+    {
+        playerListManager.Initialize(lobbyId, playerId);
+    }
 
-    public GameObject buttonTemplate;
-    public GameObject scrollViewContent;
-
-    private Dictionary<string, string> playerNameToIdMap = new Dictionary<string, string>();
 
     public async void CardLibrary(string cardIdDropped)
     {
+        // Zerowanie zmiennych przed ka¿dym wywo³aniem
+        budgetChange = false;
+        incomeChange = false;
+        supportChange = false;
+
+        cost = 0;
+        playerBudget = 0;
+        enemyBudget = 0;
+        playerIncome = 0;
+        support = 0;
+        enemyId = string.Empty;
+        enemyIncome = 0;
+
+        chosenRegion = 0;
+        maxAreaSupport = 0;
+        currentAreaSupport = 0;
+
+        budgetOptionsDictionary.Clear();
+        incomeOptionsDictionary.Clear();
+        supportOptionsDictionary.Clear();
+
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
             Debug.LogError("Firebase is not initialized properly!");
@@ -65,7 +95,6 @@ public class AddRemoveCardImp : MonoBehaviour
             if (budgetSnapshot.Exists)
             {
                 budgetChange = true;
-                budgetOptionsDictionary.Clear();
 
                 int optionIndex = 0;
                 foreach (var optionSnapshot in budgetSnapshot.Children)
@@ -94,7 +123,6 @@ public class AddRemoveCardImp : MonoBehaviour
             if (incomeSnapshot.Exists)
             {
                 incomeChange = true;
-                incomeOptionsDictionary.Clear();
 
                 int optionIndex = 0;
                 foreach (var optionSnapshot in incomeSnapshot.Children)
@@ -108,6 +136,34 @@ public class AddRemoveCardImp : MonoBehaviour
                         string target = targetSnapshot.Value.ToString();
 
                         incomeOptionsDictionary.Add(optionIndex, new IncomeOptionData(number, target));
+                    }
+                    else
+                    {
+                        Debug.LogError($"Option {optionIndex} is missing 'number' or 'target'.");
+                        return;
+                    }
+
+                    optionIndex++;
+                }
+            }
+
+            DataSnapshot supportSnapshot = snapshot.Child("support");
+            if (supportSnapshot.Exists)
+            {
+                supportChange = true;
+
+                int optionIndex = 0;
+                foreach (var optionSnapshot in supportSnapshot.Children)
+                {
+                    DataSnapshot numberSnapshot = optionSnapshot.Child("number");
+                    DataSnapshot targetSnapshot = optionSnapshot.Child("target");
+
+                    if (numberSnapshot.Exists && targetSnapshot.Exists)
+                    {
+                        int number = Convert.ToInt32(numberSnapshot.Value);
+                        string target = targetSnapshot.Value.ToString();
+
+                        supportOptionsDictionary.Add(optionIndex, new SupportOptionData(number, target));
                     }
                     else
                     {
@@ -137,7 +193,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 playerBudget = Convert.ToInt32(moneySnapshot.Value);
                 if (playerBudget < cost)
                 {
-                    Debug.LogError("Brak bud¿etu aby zagraæ kartê."); //trzeba zrobiæ okienko które o tym informuje
+                    Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                     return;
                 }
             }
@@ -171,7 +227,12 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (incomeChange)
         {
-            await IncomeChangeAction();
+            await IncomeAction();
+        }
+
+        if (supportChange)
+        {
+            await SupportAction();
         }
 
         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
@@ -181,6 +242,7 @@ public class AddRemoveCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
+
 
     private async Task BudgetAction()
     {
@@ -192,23 +254,41 @@ public class AddRemoveCardImp : MonoBehaviour
             }
             else if (data.Target == "enemy")
             {
-                await FetchPlayersList();
-                enemyId = await WaitForEnemySelection();
-                await ChangeEnemyBudget(enemyId,data.Number);
-               
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                await ChangeEnemyBudget(enemyId, data.Number);
+            }
+        }
+    }
+
+    private async Task SupportAction()
+    {
+        foreach (var data in supportOptionsDictionary.Values)
+        {
+            if (data.Target == "enemy-region")
+            {
+                chosenRegion = await mapManager.SelectArea();
+                enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
+                await ChangeSupport(enemyId, data.Number, chosenRegion);
+
+            } else if (data.Target == "player-region")
+            {
+                await ChangeSupport(playerId, data.Number, chosenRegion);
             }
         }
     }
 
 
-    private async Task IncomeChangeAction()
+    private async Task IncomeAction()
     {
         foreach (var data in incomeOptionsDictionary.Values)
         {
             if (data.Target == "player")
             {
                 playerIncome += data.Number;
-                await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome); // Asynchroniczna operacja
+                await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
+            } else if (data.Target == "enemy")
+            {
+                await ChangeEnemyIncome(enemyId, data.Number);
             }
         }
     }
@@ -234,6 +314,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         } else {
             Debug.LogError("No enemy data found in the database.");
+            return;
         }
 
         enemyBudget += value;
@@ -247,78 +328,85 @@ public class AddRemoveCardImp : MonoBehaviour
 
     }
 
-    private async Task FetchPlayersList()
+    private async Task ChangeEnemyIncome(string enemyId, int value)
     {
-        dbRefPlayers = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
-        var snapshot = await dbRefPlayers.GetValueAsync(); // Czekaj na wynik operacji.
+        dbRefEnemyStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(enemyId).Child("stats");
+        var snapshot = await dbRefEnemyStats.GetValueAsync();
 
         if (snapshot.Exists)
         {
-            foreach (var childSnapshot in snapshot.Child("players").Children)
+            DataSnapshot enemyIncomeSnapshot = snapshot.Child("income");
+            if (enemyIncomeSnapshot.Exists)
             {
-                string otherPlayerId = childSnapshot.Key;
-                if (otherPlayerId != playerId)
-                {
-                    string otherPlayerName = childSnapshot.Child("playerName").Value.ToString();
-                    playerNameToIdMap[otherPlayerName] = otherPlayerId;
-
-                    CreateButton(otherPlayerName); // Twórz przyciski dla graczy.
-                }
+                enemyIncome = Convert.ToInt32(enemyIncomeSnapshot.Value);
+            }
+            else
+            {
+                Debug.LogError("Branch income does not exist.");
+                return;
             }
 
-            playerListPanel.SetActive(true); // Wyœwietl panel wyboru gracza.
-            playerListPanel.transform.SetAsLastSibling();
         }
         else
         {
-            Debug.LogError("No player data found in the database.");
-        }
-    }
-
-
-    void CreateButton(string otherPlayerName)
-    {
-        GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
-        button.SetActive(true);
-        button.GetComponentInChildren<UnityEngine.UI.Text>().text = otherPlayerName;
-
-        // Dodanie funkcji obs³ugi zdarzenia dla klikniêcia w przycisk
-        button.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => TaskOnClick(otherPlayerName));
-    }
-
-
-    private Action<string> TaskOnClickCompleted;
-
-    private Task<string> WaitForEnemySelection()
-    {
-        var tcs = new TaskCompletionSource<string>();
-        TaskOnClickCompleted = (selectedEnemyId) =>
-        {
-            tcs.TrySetResult(selectedEnemyId);
-        };
-
-        return tcs.Task;
-    }
-
-
-    public void TaskOnClick(string otherPlayerName)
-    {
-        Debug.Log($"Clicked on {otherPlayerName}");
-
-        // SprawdŸ, czy wybrany gracz istnieje w mapie
-        if (playerNameToIdMap.TryGetValue(otherPlayerName, out string otherPlayerId))
-        {
-            enemyId = otherPlayerId;
-            TaskOnClickCompleted?.Invoke(enemyId); // Rozwi¹zanie TaskCompletionSource.
-        }
-        else
-        {
-            Debug.LogError($"PlayerId not found for the given playerName: {otherPlayerName}");
+            Debug.LogError("No enemy data found in the database.");
             return;
         }
 
-        playerListPanel.SetActive(false); // Zamknij panel wyboru gracza.
+        enemyIncome += value;
+
+        if (enemyIncome < 0)
+        {
+            enemyIncome = 0;
+        }
+
+        await dbRefEnemyStats.Child("income").SetValueAsync(enemyIncome);
+
     }
+
+    private async Task ChangeSupport(string playerId, int value, int areaId)
+    {
+
+        dbRefSupport = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats")
+            .Child("support")
+            .Child(areaId.ToString()); 
+
+        var snapshot = await dbRefSupport.GetValueAsync();
+
+        if (snapshot.Exists)
+        {
+            support = Convert.ToInt32(snapshot.Value);
+        }
+        else
+        {
+            Debug.LogError("No support data found for the given region in the player's stats.");
+            return;
+        }
+
+        maxAreaSupport = await mapManager.GetMaxSupportForRegion(areaId);
+        currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
+
+        support += value;
+
+        if (support < 0)
+        {
+            support = 0;
+        }
+        else if (currentAreaSupport + support > maxAreaSupport)
+        {
+            support = maxAreaSupport - currentAreaSupport;
+        }
+
+        await dbRefSupport.SetValueAsync(support);
+    }
+
+
+
 
 }
 
@@ -340,6 +428,18 @@ public class IncomeOptionData
     public string Target { get; }
 
     public IncomeOptionData(int number, string target)
+    {
+        Number = number;
+        Target = target;
+    }
+}
+
+public class SupportOptionData
+{
+    public int Number { get; }
+    public string Target { get; }
+
+    public SupportOptionData(int number, string target)
     {
         Number = number;
         Target = target;

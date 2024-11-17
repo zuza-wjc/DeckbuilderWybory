@@ -1,9 +1,6 @@
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
 public class CardTypeOnMap : MonoBehaviour
 {

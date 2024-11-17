@@ -172,20 +172,34 @@ public class CreateLobbyManager : MonoBehaviour
         }
 
 
-        int isStarted = 0;
-        int money = 0;
-        int support = 0;
-        int income = 10;
-
         // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
-        {
-            { "lobbyName", lobbyName },
-            { "isStarted", isStarted },
-            { "isPublic", isPublic },
-            { "lobbySize", lobbySize },
-            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", income }, { "support", support }, { "playerTurn", false } }  } } } } }
-        };
+{
+        { "lobbyName", lobbyName },
+        { "isStarted", 0 },
+        { "isPublic", isPublic },
+        { "lobbySize", lobbySize },
+        { "players", new Dictionary<string, object>
+            {
+                { playerId, new Dictionary<string, object>
+                    {
+                        { "playerName", playerName },
+                        { "ready", false },
+                        { "stats", new Dictionary<string, object>
+                            {
+                                { "inGame", false },
+                                { "money", 0 },
+                                { "income", 10 },
+                                { "support", new int[6] { 5, 0, 0, 0, 0, 0 } },
+                                { "playerTurn", false }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
 
         // Dodawanie danych do bazy Firebase
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
@@ -198,7 +212,7 @@ public class CreateLobbyManager : MonoBehaviour
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
-        DataTransfer.IsStarted = isStarted;
+        DataTransfer.IsStarted = 0;
         DataTransfer.PlayerId = playerId;
         DataTransfer.PlayerName = playerName;
     }

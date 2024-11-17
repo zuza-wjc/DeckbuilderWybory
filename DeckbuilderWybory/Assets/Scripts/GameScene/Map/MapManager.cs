@@ -1,26 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
-using Firebase.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Linq;
 using System.Threading.Tasks;
+using System;
 
 public class MapManager : MonoBehaviour
 {
     DatabaseReference dbRef;
 
     string lobbyId;
-    string playerId;
-    string playerName;
-    int support;
-    int supportAddValueReload;
-    int supportOnMap;
-    string supportAddValue;
-    int lobbySize;
     public GameObject mapPanel;
 
     public TextMeshProUGUI region1Text;
@@ -37,11 +27,15 @@ public class MapManager : MonoBehaviour
     public Button region5Button;
     public Button region6Button;
 
-    public string cardIdMap;
+    private Action<int> TaskOnClickCompleted;
 
-    private Dictionary<string, string> playerNameToIdMap = new Dictionary<string, string>();
+    public async Task<int> SelectArea()
+    {
+        await FetchDataFromDatabase();
+        return await WaitForAreaSelection();
+    }
 
-    public async void FetchDataFromDatabase()
+    public async Task FetchDataFromDatabase()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
@@ -59,127 +53,192 @@ public class MapManager : MonoBehaviour
             return;
         }
 
+        await CalculateRegionValues();
+        InitializeRegionButtons();
+    }
+
+    async Task CalculateRegionValues()
+    {
+        var playersSnapshot = await dbRef.Child("players").GetValueAsync();
+
+        if (!playersSnapshot.Exists)
+        {
+            Debug.LogError("No player data found in the database.");
+            return;
+        }
+
+        var mapSnapshot = await dbRef.Child("map").GetValueAsync();
+        if (!mapSnapshot.Exists)
+        {
+            Debug.LogError("No map data found in the database.");
+            return;
+        }
+
+        int maxRegion1 = int.Parse(mapSnapshot.Child("region1").Value.ToString());
+        int maxRegion2 = int.Parse(mapSnapshot.Child("region2").Value.ToString());
+        int maxRegion3 = int.Parse(mapSnapshot.Child("region3").Value.ToString());
+        int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Value.ToString());
+        int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Value.ToString());
+        int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Value.ToString());
+
+        int[] regionValues = new int[6];
+
+        foreach (var playerSnapshot in playersSnapshot.Children)
+        {
+            var supportSnapshot = playerSnapshot.Child("stats").Child("support");
+
+            if (supportSnapshot.Exists)
+            {
+                int index = 0;
+                foreach (var regionSupport in supportSnapshot.Children)
+                {
+                    if (int.TryParse(regionSupport.Value.ToString(), out int supportValue))
+                    {
+                        regionValues[index] += supportValue;
+                    }
+                    index++;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Player {playerSnapshot.Key} has no support data.");
+            }
+        }
+
+        UpdateMap(regionValues, maxRegion1, maxRegion2, maxRegion3, maxRegion4, maxRegion5, maxRegion6);
+    }
+
+    public async Task<int> GetCurrentSupportForRegion(int areaId, string excludedPlayerId)
+    {
+        lobbyId = DataTransfer.LobbyId;
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+
+        int totalSupport = 0;
+
+        var playersSnapshot = await dbRef.GetValueAsync();
+
+        if (!playersSnapshot.Exists)
+        {
+            Debug.LogError("No player data found in the database.");
+            return 0;
+        }
+
+        foreach (var playerSnapshot in playersSnapshot.Children)
+        {
+            if (playerSnapshot.Key == excludedPlayerId)
+            {
+                continue;
+            }
+
+            var supportSnapshot = playerSnapshot.Child("stats").Child("support");
+
+            if (supportSnapshot.Exists)
+            {
+                string regionKey = areaId.ToString();
+
+                if (supportSnapshot.HasChild(regionKey))
+                {
+                    int supportValue = Convert.ToInt32(supportSnapshot.Child(regionKey).Value);
+                    totalSupport += supportValue;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Player {playerSnapshot.Key} has no support data.");
+            }
+        }
+
+        return totalSupport;
+    }
+
+    public async Task<int> GetMaxSupportForRegion(int areaId)
+    {
+        lobbyId = DataTransfer.LobbyId;
+        int maxSupport = 0;
+
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("map");
+
         var snapshot = await dbRef.GetValueAsync();
+
         if (snapshot.Exists)
         {
-            playerId = DataTransfer.PlayerId;
-            Debug.Log("PlayerId: " + playerId);
-
-            foreach (var childSnapshot in snapshot.Children)
+            switch (areaId)
             {
-                if (childSnapshot.Key == "map")
-                {
-                    foreach (var regionSnapshot in childSnapshot.Children)
-                    {
-                        string regionName = regionSnapshot.Key;
-                        string regionValue = regionSnapshot.Value.ToString();
-                        SetRegionValue(regionName, regionValue);
-                    }
-                }
+                case 0:
+                    maxSupport = Convert.ToInt32(snapshot.Child("region1").Value);
+                    break;
+                case 1:
+                    maxSupport = Convert.ToInt32(snapshot.Child("region2").Value);
+                    break;
+                case 2:
+                    maxSupport = Convert.ToInt32(snapshot.Child("region3").Value);
+                    break;
+                case 3:
+                    maxSupport = Convert.ToInt32(snapshot.Child("region4").Value);
+                    break;
+                case 4:
+                    maxSupport = Convert.ToInt32(snapshot.Child("region5").Value);
+                    break;
+                case 5:
+                    maxSupport = Convert.ToInt32(snapshot.Child("region6").Value);
+                    break;
+                default:
+                    Debug.LogError("Invalid region ID.");
+                    break;
             }
         }
         else
         {
-            Debug.Log("Data does not exist in the database.");
+            Debug.LogError("Map data does not exist in the database.");
         }
 
-        InitializeRegionButtons();
+        return maxSupport;
+    }
+
+    void UpdateMap(int[] regionValues, int maxRegion1, int maxRegion2, int maxRegion3, int maxRegion4, int maxRegion5, int maxRegion6)
+    {
+        if (regionValues.Length != 6)
+        {
+            Debug.LogError("Region values array has an incorrect size.");
+            return;
+        }
+
+        region1Text.text = $"{regionValues[0]}/{maxRegion1}";
+        region2Text.text = $"{regionValues[1]}/{maxRegion2}";
+        region3Text.text = $"{regionValues[2]}/{maxRegion3}";
+        region4Text.text = $"{regionValues[3]}/{maxRegion4}";
+        region5Text.text = $"{regionValues[4]}/{maxRegion5}";
+        region6Text.text = $"{regionValues[5]}/{maxRegion6}";
     }
 
     void InitializeRegionButtons()
     {
-        region1Button.onClick.AddListener(() => RegionClicked("region1", cardIdMap));
-        region2Button.onClick.AddListener(() => RegionClicked("region2", cardIdMap));
-        region3Button.onClick.AddListener(() => RegionClicked("region3", cardIdMap));
-        region4Button.onClick.AddListener(() => RegionClicked("region4", cardIdMap));
-        region5Button.onClick.AddListener(() => RegionClicked("region5", cardIdMap));
-        region6Button.onClick.AddListener(() => RegionClicked("region6", cardIdMap));
+        region1Button.onClick.AddListener(() => RegionClicked(0));
+        region2Button.onClick.AddListener(() => RegionClicked(1));
+        region3Button.onClick.AddListener(() => RegionClicked(2));
+        region4Button.onClick.AddListener(() => RegionClicked(3));
+        region5Button.onClick.AddListener(() => RegionClicked(4));
+        region6Button.onClick.AddListener(() => RegionClicked(5));
+
+        mapPanel.SetActive(true);
     }
 
-    void SetRegionValue(string regionName, string regionValue)
+    public void RegionClicked(int regionId)
     {
-        switch (regionName)
-        {
-            case "region1":
-                region1Text.text = regionValue;
-                break;
-            case "region2":
-                region2Text.text = regionValue;
-                break;
-            case "region3":
-                region3Text.text = regionValue;
-                break;
-            case "region4":
-                region4Text.text = regionValue;
-                break;
-            case "region5":
-                region5Text.text = regionValue;
-                break;
-            case "region6":
-                region6Text.text = regionValue;
-                break;
-            default:
-                Debug.LogWarning("Unknown region name: " + regionName);
-                break;
-        }
-    }
-
-    async void RegionClicked(string regionName, string cardId)
-    {
-        bool sessionExists = await SessionExists();
-        if (!sessionExists)
-        {
-            Debug.Log("Session does not exist in the database.");
-            return;
-        }
-
-        var cardValueSnapshot = await dbRef.Child("players").Child(playerId).Child("deck").Child(cardId).Child("cardValue").GetValueAsync();
-        if (cardValueSnapshot == null)
-        {
-            Debug.Log("Card value not found.");
-            return;
-        }
-        int cardValue = int.Parse(cardValueSnapshot.Value.ToString());
-
-        var supportSnapshot = await dbRef.Child("players").Child(playerId).Child("stats").Child("support").GetValueAsync();
-        if (supportSnapshot == null)
-        {
-            Debug.Log("Support value not found.");
-            return;
-        }
-        int currentSupport = int.Parse(supportSnapshot.Value.ToString());
-
-        currentSupport += cardValue;
-        await dbRef.Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(currentSupport);
-
-        await ReloadMapValues(regionName, cardValue);
-
-        // Zamkniêcie overlay po zakoñczeniu wszystkich operacji
+        TaskOnClickCompleted?.Invoke(regionId);
         mapPanel.SetActive(false);
     }
 
-    async Task ReloadMapValues(string regionName, int supportSubstractValue)
+    private Task<int> WaitForAreaSelection()
     {
-        var snapshot = await dbRef.Child("map").Child(regionName).GetValueAsync();
-        if (snapshot == null)
-        {
-            Debug.LogError("Error fetching supportOnMap value.");
-            return;
-        }
-
-        int supportOnMap = int.Parse(snapshot.Value.ToString());
-        supportOnMap -= supportSubstractValue;
-        await dbRef.Child("map").Child(regionName).SetValueAsync(supportOnMap);
+        var tcs = new TaskCompletionSource<int>();
+        TaskOnClickCompleted = (selectedAreaId) => tcs.TrySetResult(selectedAreaId);
+        return tcs.Task;
     }
 
     async Task<bool> SessionExists()
     {
         var sessionCheck = await dbRef.Parent.Parent.GetValueAsync();
         return sessionCheck.Exists;
-    }
-
-    public void SetCardIdMap(string cardId)
-    {
-        cardIdMap = cardId;
     }
 }

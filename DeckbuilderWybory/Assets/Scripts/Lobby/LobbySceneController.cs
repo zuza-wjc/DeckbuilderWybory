@@ -79,7 +79,7 @@ public class LobbySceneController : MonoBehaviour
         UpdatePlayerCountsText();
         UpdateText(playerName, isReady);
 
-        StartingGame(lobbyId);
+        StartingGame();
     }
 
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
@@ -137,7 +137,7 @@ public class LobbySceneController : MonoBehaviour
                 }
             }
         }
-        StartingGame(lobbyId);
+        StartingGame();
     }
 
     void CreateText(string playerName, bool readyStatus)
@@ -268,7 +268,7 @@ public class LobbySceneController : MonoBehaviour
             {
                 dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
 
-                int budget = 50;
+                int budget = 50; // NA CZAS IMPLEMENTACJI KART USTAWIONE NA SZTYWNO
 
                // if (readyPlayersCount >= 2 && readyPlayersCount <= 3)
                // {
@@ -360,13 +360,12 @@ public class LobbySceneController : MonoBehaviour
         });
     }
 
-    void StartingGame(string lobbyId)
+    void StartingGame()
     {
         if (readyPlayersCount == lobbySize)
         {
             isStarted = 1;
             dbRefLobby.Child("isStarted").SetValueAsync(isStarted);
-
 
         }
     }

@@ -25,10 +25,6 @@ public class JoinLobbyByCode : MonoBehaviour
     private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
     private List<string> gracze = new List<string>();
 
-    int money = 0;
-    int support = 0;
-    int income = 10;
-
     bool isPlayerAdded;
 
     void OnEnable()
@@ -158,11 +154,20 @@ public class JoinLobbyByCode : MonoBehaviour
             availableNames.Remove(playerName);
 
             Dictionary<string, object> playerData = new Dictionary<string, object>
-            {
-                { "playerName", playerName },
-                { "ready", false },
-                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", income }, { "support", support }, { "playerTurn", false } } }
-            };
+                {
+                    { "playerName", playerName },
+                    { "ready", false },
+                    { "stats", new Dictionary<string, object>
+                        {
+                            { "inGame", false },
+                            { "money", 0 },
+                            { "income", 10 },
+                            { "support", new int[6] { 5, 0, 0, 0, 0, 0 } }, // Wsparcie dla sześciu regionów
+                            { "playerTurn", false }
+                        }
+                    }
+                };
+
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
 

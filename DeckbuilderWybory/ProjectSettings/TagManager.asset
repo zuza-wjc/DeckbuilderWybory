@@ -18,6 +18,8 @@ TagManager:
   - AD003
   - AD007
   - AD016
+  - AD020
+  - AD023
   layers:
   - Default
   - TransparentFX
