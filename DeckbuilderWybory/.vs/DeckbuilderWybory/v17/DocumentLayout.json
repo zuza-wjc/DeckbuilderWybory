@@ -7,12 +7,16 @@
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\cards\\cardimp\\addremovecardimp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\gamescene\\cardinteractions\\dropslot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\cardinteractions\\dropslot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\gamescene\\players\\playerlistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\players\\playerlistmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\gamescene\\cards\\onhand\\cardonhandcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\cards\\onhand\\cardonhandcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\lobby\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobby\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\gamescene\\exit\\gamesceneexitlistener.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\exit\\gamesceneexitlistener.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,32 +26,43 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "CardOnHandController.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\onHand\\CardOnHandController.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Cards\\onHand\\CardOnHandController.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\onHand\\CardOnHandController.cs",
-              "RelativeToolTip": "Assets\\Scripts\\GameScene\\Cards\\onHand\\CardOnHandController.cs",
-              "ViewState": "AQIAAFkAAAAAAAAAAAAIwF8AAAAXAAAA",
+              "DocumentIndex": 3,
+              "Title": "GameSceneExitListener.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Exit\\GameSceneExitListener.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Exit\\GameSceneExitListener.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Exit\\GameSceneExitListener.cs",
+              "RelativeToolTip": "Assets\\Scripts\\GameScene\\Exit\\GameSceneExitListener.cs",
+              "ViewState": "AQIAABkAAAAAAAAAAAAqwCcAAAA5AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-14T18:15:28.332Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-16T16:09:05.692Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LobbySceneController.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\Lobby\\LobbySceneController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Lobby\\LobbySceneController.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\Lobby\\LobbySceneController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Lobby\\LobbySceneController.cs",
+              "ViewState": "AQIAAJgAAAAAAAAAAAAwwMkAAAAFAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-16T16:06:22.75Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "DropSlot.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
-              "RelativeToolTip": "Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
-              "ViewState": "AQIAABYAAAAAAAAAAAAgwCsAAAApAAAA",
+              "Title": "PlayerListManager.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Players\\PlayerListManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Players\\PlayerListManager.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Players\\PlayerListManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\GameScene\\Players\\PlayerListManager.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAFgAAAAEAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-14T17:15:25.01Z",
+              "WhenOpened": "2024-11-15T11:08:24.574Z",
               "EditorCaption": ""
             },
             {
@@ -58,7 +73,7 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Cards\\CardImp\\AddRemoveCardImp.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\CardImp\\AddRemoveCardImp.cs",
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\Cards\\CardImp\\AddRemoveCardImp.cs",
-              "ViewState": "AQIAABMAAAAAAAAAAAArwCMAAAAAAAAA",
+              "ViewState": "AQIAANAAAAAAAAAAAAAiwB8BAAAJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-14T15:41:46.715Z",
               "EditorCaption": ""

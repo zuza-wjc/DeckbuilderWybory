@@ -11,7 +11,7 @@ public class CardTypeManager : MonoBehaviour
         switch (cardType)
         {
             case "AD":
-                addRemoveCardImp.cardLibrary(cardIdDropped);
+                addRemoveCardImp.CardLibrary(cardIdDropped);
                 break;
 
         }

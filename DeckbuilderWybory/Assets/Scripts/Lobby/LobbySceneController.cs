@@ -153,19 +153,27 @@ public class LobbySceneController : MonoBehaviour
 
     void UpdateText(string playerName, bool readyStatus)
     {
+   
+        if (scrollViewContent == null)
+        {
+            return;
+        }
+
         Text[] texts = scrollViewContent.GetComponentsInChildren<Text>();
 
         foreach (Text text in texts)
         {
-            if (text != null && text.text.Contains(playerName))
+            if (text != null && text.text != null && text.text.Contains(playerName))
             {
                 text.text = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
                 return;
             }
         }
 
+
         CreateText(playerName, readyStatus);
     }
+
 
     void RemoveText(string playerName)
     {
@@ -203,8 +211,12 @@ public class LobbySceneController : MonoBehaviour
 
     void UpdatePlayerCountsText()
     {
-        playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
+        if (playerCountsText != null)
+        {
+            playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
+        }
     }
+
 
     public void LeaveLobby()
     {

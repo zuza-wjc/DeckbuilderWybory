@@ -10,11 +10,6 @@ public class DeckController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    void Start()
-    {
-        
-    }
-
     public void InitializeDeck ()
     {
         lobbyId = DataTransfer.LobbyId;
@@ -54,14 +49,11 @@ public class DeckController : MonoBehaviour
         // Dodajemy kartê do decku w Firebase
         dbRef.Child(playerId).Child("deck").Child(cardId.ToString()).SetValueAsync(cardDataDict)
             .ContinueWith(task => {
-                if (task.IsCompleted)
-                {
-                    Debug.Log($"Card {cardId} successfully added to the deck with onHand = {onHand} and played = {played}");
-                }
-                else
+                if (!task.IsCompleted)
                 {
                     Debug.LogError($"Failed to add card {cardId} to the deck: {task.Exception}");
                 }
+              
             });
     }
 

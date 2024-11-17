@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
-using Firebase.Extensions;
 using TMPro;
 using UnityEngine;
 
@@ -26,18 +23,31 @@ public class TextController : MonoBehaviour
             return;
         }
 
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("LobbyId or PlayerId is not assigned properly!");
+            return;
+        }
+
+        if (moneyText == null || supportText == null)
+        {
+            Debug.LogError("TextMeshProUGUI components are not assigned in the Inspector!");
+            return;
+        }
+
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId);
 
-        // Ustawienie nas³uchiwania zmian w stats
         dbRef.Child("stats").Child("money").ValueChanged += FetchFromDbMoney;
         dbRef.Child("stats").Child("support").ValueChanged += FetchFromDbSupport;
     }
 
     void OnDestroy()
     {
-        // Unregister listeners to prevent interference
-        dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
-        dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
+        if (dbRef != null)
+        {
+            dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
+            dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
+        }
     }
 
     void FetchFromDbMoney(object sender, ValueChangedEventArgs args)
@@ -53,7 +63,6 @@ public class TextController : MonoBehaviour
             moneyText.text = args.Snapshot.Value.ToString();
         }
     }
-
     void FetchFromDbSupport(object sender, ValueChangedEventArgs args)
     {
         if (args.DatabaseError != null)

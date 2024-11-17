@@ -117,89 +117,125 @@ public class LobbyListManager : MonoBehaviour
 
     void CreateButton(string lobbyName, string lobbyId, int playerCount, int lobbySize)
     {
-        GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
-        button.SetActive(true);
-
-        // Znajdź komponenty tekstowe w instancji prefabrykatu
-        Text[] texts = button.GetComponentsInChildren<Text>();
-        Text text1 = texts[0]; // Pierwszy tekst
-        Text text2 = texts[1]; // Drugi tekst
-
-        // Ustaw wartości tekstów
-        text1.text = lobbyName;
-        text2.text = $"{playerCount}/{lobbySize}";
-
-        // Dodanie funkcji obsługi zdarzenia dla kliknięcia w przycisk
-        button.GetComponent<Button>().onClick.AddListener(delegate { _ = TaskOnClick(lobbyName, lobbyId, lobbySize); });
-    }
-
-    void DestroyButton(string lobbyName)
-{
-    foreach (Transform child in scrollViewContent.transform)
-    {
-        if (child != null && child.GetComponentInChildren<UnityEngine.UI.Text>().text.Contains(lobbyName))
+        if (scrollViewContent == null || buttonTemplate == null)
         {
-            Destroy(child.gameObject);
+            Debug.LogWarning("scrollViewContent or buttonTemplate is null, unable to create button.");
             return;
         }
-    }
-}
 
-
-    public async Task AssignName(string playerId, string lobbyId)
-    {
-        gracze.Clear();
-
-        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
-        var lobbyData = lobbyInfo.Value as Dictionary<string, object>;
-
-        foreach (var name in lobbyData)
+        GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
+        if (button != null)
         {
-            if (name.Key == "players")
-            {
-                var players = name.Value as Dictionary<string, object>;
+            button.SetActive(true);
 
-                foreach (var player in players)
+            // Znajdź komponenty tekstowe w instancji prefabrykatu
+            Text[] texts = button.GetComponentsInChildren<Text>();
+            Text text1 = texts[0]; // Pierwszy tekst
+            Text text2 = texts[1]; // Drugi tekst
+
+            // Ustaw wartości tekstów
+            text1.text = lobbyName;
+            text2.text = $"{playerCount}/{lobbySize}";
+
+            // Dodanie funkcji obsługi zdarzenia dla kliknięcia w przycisk
+            button.GetComponent<Button>().onClick.AddListener(delegate { _ = TaskOnClick(lobbyName, lobbyId, lobbySize); });
+        }
+        else
+        {
+            Debug.LogWarning("Button was not created because prefab instantiation failed.");
+        }
+    }
+
+
+    void DestroyButton(string lobbyName)
+    {
+        if (scrollViewContent == null)
+        {
+            Debug.LogWarning("scrollViewContent is null, unable to destroy button.");
+            return;
+        }
+
+        foreach (Transform child in scrollViewContent.transform)
+        {
+            if (child != null)
+            {
+                Text textComponent = child.GetComponentInChildren<Text>();
+
+                if (textComponent != null && textComponent.text.Contains(lobbyName))
                 {
-                    var gracz = player.Value as Dictionary<string, object>;
-                    if (gracz.ContainsKey("playerName"))
+                    if (child.gameObject != null)
                     {
-                        gracze.Add(gracz["playerName"].ToString());
+                        Destroy(child.gameObject);
+                        return;
                     }
                 }
             }
         }
+    }
 
-        var random = new System.Random();
 
-        List<string> namesToAssign = new List<string>(availableNames);
-        foreach (var name in gracze)
+    public async Task AssignName(string playerId, string lobbyId)
+    {
+        try
         {
-            namesToAssign.Remove(name);
-        }
+            gracze.Clear();
 
-        if (namesToAssign.Count > 0)
-        {
-            int index = random.Next(namesToAssign.Count);
-            string playerName = namesToAssign[index];
-            availableNames.Remove(playerName);
+            var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
+            var lobbyData = lobbyInfo.Value as Dictionary<string, object>;
 
-            Dictionary<string, object> playerData = new Dictionary<string, object>
+            foreach (var name in lobbyData)
+            {
+                if (name.Key == "players")
+                {
+                    var players = name.Value as Dictionary<string, object>;
+
+                    foreach (var player in players)
+                    {
+                        var gracz = player.Value as Dictionary<string, object>;
+                        if (gracz.ContainsKey("playerName"))
+                        {
+                            gracze.Add(gracz["playerName"].ToString());
+                        }
+                    }
+                }
+            }
+
+            var random = new System.Random();
+
+            List<string> namesToAssign = new List<string>(availableNames);
+            foreach (var name in gracze)
+            {
+                namesToAssign.Remove(name);
+            }
+
+            if (namesToAssign.Count > 0)
+            {
+                int index = random.Next(namesToAssign.Count);
+                string playerName = namesToAssign[index];
+                availableNames.Remove(playerName);
+
+                Dictionary<string, object> playerData = new Dictionary<string, object>
             {
                 { "playerName", playerName },
                 { "ready", false },
                 { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", income }, { "support", support }, { "playerTurn", false } } }
             };
 
-            await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+                await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
 
-            DataTransfer.PlayerName= playerName;
+                DataTransfer.PlayerName = playerName;
+            }
+            else
+            {
+                Debug.LogError("Brak dostępnych imion.");
+            }
         }
-        else
+        catch (System.Exception e)
         {
-            Debug.LogError("Brak dostępnych imion.");
+            Debug.LogError($"Error assigning player name: {e.Message}");
         }
     }
+
 
     public async Task<string> AddPlayerAsync(string lobbyId)
     {
@@ -222,6 +258,13 @@ public class LobbyListManager : MonoBehaviour
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
         DataTransfer.PlayerId = playerId;
+    }
+
+    void OnDestroy()
+    {
+        dbRef.ChildAdded -= HandleChildAdded;
+        dbRef.ChildRemoved -= HandleChildRemoved;
+        dbRef.ChildChanged -= HandleChildChanged;
     }
 
 
