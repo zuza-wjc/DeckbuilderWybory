@@ -221,7 +221,7 @@ public class LobbyListManager : MonoBehaviour
                             { "inGame", false },
                             { "money", 0 },
                             { "income", 10 },
-                            { "support", new int[6] { 5, 0, 0, 0, 0, 0 } }, // Wsparcie dla sześciu regionów
+                            { "support", new int[6] { 5, 5, 5, 5, 5, 5 } }, 
                             { "playerTurn", false }
                         }
                     }

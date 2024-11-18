@@ -179,6 +179,7 @@ public class CreateLobbyManager : MonoBehaviour
         { "isStarted", 0 },
         { "isPublic", isPublic },
         { "lobbySize", lobbySize },
+        {"rounds", 10 },
         { "players", new Dictionary<string, object>
             {
                 { playerId, new Dictionary<string, object>
@@ -190,7 +191,7 @@ public class CreateLobbyManager : MonoBehaviour
                                 { "inGame", false },
                                 { "money", 0 },
                                 { "income", 10 },
-                                { "support", new int[6] { 5, 0, 0, 0, 0, 0 } },
+                                { "support", new int[6] { 5, 5, 5, 5, 5, 5 } },
                                 { "playerTurn", false }
                             }
                         }

@@ -325,7 +325,7 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
- 
+
 
     void CheckAndSetMapData()
     {
@@ -336,15 +336,15 @@ public class LobbySceneController : MonoBehaviour
                 DataSnapshot sessionSnapshot = sessionTask.Result;
                 if (sessionSnapshot.Exists)
                 {
-                    Dictionary<string, object> mapData = new Dictionary<string, object>
-                    {
-                        { "region1", 15 },
-                        { "region2", 19 },
-                        { "region3", 16 },
-                        { "region4", 18 },
-                        { "region5", 16 },
-                        { "region6", 16 }
-                    };
+                    Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
+                {
+                    { "region1", new Dictionary<string, object> { { "maxSupport", 15 }, { "type", "Ambasada" } } },
+                    { "region2", new Dictionary<string, object> { { "maxSupport", 19 }, { "type", "Metropolia" } } },
+                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Œrodowisko" } } },
+                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemys³" } } },
+                    { "region5", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Metropolia" } } },
+                    { "region6", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Ambasada" } } }
+                };
 
                     dbRefLobby.Child("map").SetValueAsync(mapData);
                 }
@@ -359,6 +359,7 @@ public class LobbySceneController : MonoBehaviour
             }
         });
     }
+
 
     void StartingGame()
     {

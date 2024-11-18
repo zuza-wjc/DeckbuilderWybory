@@ -74,12 +74,12 @@ public class MapManager : MonoBehaviour
             return;
         }
 
-        int maxRegion1 = int.Parse(mapSnapshot.Child("region1").Value.ToString());
-        int maxRegion2 = int.Parse(mapSnapshot.Child("region2").Value.ToString());
-        int maxRegion3 = int.Parse(mapSnapshot.Child("region3").Value.ToString());
-        int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Value.ToString());
-        int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Value.ToString());
-        int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Value.ToString());
+        int maxRegion1 = int.Parse(mapSnapshot.Child("region1").Child("maxSupport").Value.ToString());
+        int maxRegion2 = int.Parse(mapSnapshot.Child("region2").Child("maxSupport").Value.ToString());
+        int maxRegion3 = int.Parse(mapSnapshot.Child("region3").Child("maxSupport").Value.ToString());
+        int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Child("maxSupport").Value.ToString());
+        int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Child("maxSupport").Value.ToString());
+        int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Child("maxSupport").Value.ToString());
 
         int[] regionValues = new int[6];
 
@@ -165,22 +165,22 @@ public class MapManager : MonoBehaviour
             switch (areaId)
             {
                 case 0:
-                    maxSupport = Convert.ToInt32(snapshot.Child("region1").Value);
+                    maxSupport = Convert.ToInt32(snapshot.Child("region1").Child("maxSupport").Value);
                     break;
                 case 1:
-                    maxSupport = Convert.ToInt32(snapshot.Child("region2").Value);
+                    maxSupport = Convert.ToInt32(snapshot.Child("region2").Child("maxSupport").Value);
                     break;
                 case 2:
-                    maxSupport = Convert.ToInt32(snapshot.Child("region3").Value);
+                    maxSupport = Convert.ToInt32(snapshot.Child("region3").Child("maxSupport").Value);
                     break;
                 case 3:
-                    maxSupport = Convert.ToInt32(snapshot.Child("region4").Value);
+                    maxSupport = Convert.ToInt32(snapshot.Child("region4").Child("maxSupport").Value);
                     break;
                 case 4:
-                    maxSupport = Convert.ToInt32(snapshot.Child("region5").Value);
+                    maxSupport = Convert.ToInt32(snapshot.Child("region5").Child("maxSupport").Value);
                     break;
                 case 5:
-                    maxSupport = Convert.ToInt32(snapshot.Child("region6").Value);
+                    maxSupport = Convert.ToInt32(snapshot.Child("region6").Child("maxSupport").Value);
                     break;
                 default:
                     Debug.LogError("Invalid region ID.");
@@ -193,6 +193,51 @@ public class MapManager : MonoBehaviour
         }
 
         return maxSupport;
+    }
+
+    public async Task<bool> CheckIfBonusRegion(int areaId, string cardType)
+    {
+        lobbyId = DataTransfer.LobbyId;
+        bool sameRegion = false;
+
+        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("map");
+
+        var snapshot = await dbRef.GetValueAsync();
+
+        if (snapshot.Exists)
+        {
+            switch (areaId)
+            {
+                case 0:
+                    sameRegion = snapshot.Child("region1").Child("type").Value.ToString() == cardType;
+                    break;
+                case 1:
+                    sameRegion = snapshot.Child("region2").Child("type").Value.ToString() == cardType;
+                    break;
+                case 2:
+                    sameRegion = snapshot.Child("region3").Child("type").Value.ToString() == cardType;
+                    break;
+                case 3:
+                    sameRegion = snapshot.Child("region4").Child("type").Value.ToString() == cardType;
+                    break;
+                case 4:
+                    sameRegion = snapshot.Child("region5").Child("type").Value.ToString() == cardType;
+                    break;
+                case 5:
+                    sameRegion = snapshot.Child("region6").Child("type").Value.ToString() == cardType;
+                    break;
+                default:
+                    Debug.LogError("Invalid region ID.");
+                    break;
+            }
+
+        }
+        else
+        {
+            Debug.LogError("Map data does not exist in the database.");
+        }
+
+        return sameRegion;
     }
 
     void UpdateMap(int[] regionValues, int maxRegion1, int maxRegion2, int maxRegion3, int maxRegion4, int maxRegion5, int maxRegion6)

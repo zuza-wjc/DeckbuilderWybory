@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Firebase;
@@ -15,37 +14,32 @@ public class DeckController : MonoBehaviour
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
 
-        // SprawdŸ, czy Firebase jest ju¿ zainicjalizowany
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
             Debug.LogError("Firebase is not initialized properly!");
             return;
         }
 
-        // Inicjalizacja referencji do bazy danych Firebase
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         // Dodaj karty do decka
-        AddCardToDeck("AD023");
-        AddCardToDeck("AD016");
+        AddCardToDeck("AD081");
 
         Debug.Log("Deck loaded");
     }
-    // Funkcja dodaj¹ca kartê do decka gracza
+
     void AddCardToDeck(string cardId)
     {
    
-        bool onHand = true;  // Karta jest na rêce
-        bool played = false; // Karta nie zosta³a jeszcze zagrana
+        bool onHand = true;  
+        bool played = false; 
 
-        // Przygotowanie danych do zapisania
         Dictionary<string, object> cardDataDict = new Dictionary<string, object>
     {
         { "onHand", onHand },
         { "played", played }
     };
 
-        // Dodajemy kartê do decku w Firebase
         dbRef.Child(playerId).Child("deck").Child(cardId.ToString()).SetValueAsync(cardDataDict)
             .ContinueWith(task => {
                 if (!task.IsCompleted)

@@ -34,7 +34,6 @@ public class MapDisplay : MonoBehaviour
 
     async Task CalculateRegionValues()
     {
-
         var playersSnapshot = await dbRef.Child("players").GetValueAsync();
 
         if (!playersSnapshot.Exists)
@@ -50,15 +49,17 @@ public class MapDisplay : MonoBehaviour
             return;
         }
 
-        int maxRegion1 = int.Parse(mapSnapshot.Child("region1").Value.ToString());
-        int maxRegion2 = int.Parse(mapSnapshot.Child("region2").Value.ToString());
-        int maxRegion3 = int.Parse(mapSnapshot.Child("region3").Value.ToString());
-        int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Value.ToString());
-        int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Value.ToString());
-        int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Value.ToString());
+        // Zamiast bezpoœrednich wartoœci, u¿ywamy dostêpu do "poparcie"
+        int maxRegion1 = int.Parse(mapSnapshot.Child("region1").Child("maxSupport").Value.ToString());
+        int maxRegion2 = int.Parse(mapSnapshot.Child("region2").Child("maxSupport").Value.ToString());
+        int maxRegion3 = int.Parse(mapSnapshot.Child("region3").Child("maxSupport").Value.ToString());
+        int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Child("maxSupport").Value.ToString());
+        int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Child("maxSupport").Value.ToString());
+        int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Child("maxSupport").Value.ToString());
 
         int[] regionValues = new int[6];
 
+        // Reszta kodu pozostaje bez zmian
         foreach (var playerSnapshot in playersSnapshot.Children)
         {
             var supportSnapshot = playerSnapshot.Child("stats").Child("support");
@@ -83,6 +84,7 @@ public class MapDisplay : MonoBehaviour
 
         UpdateMap(regionValues, maxRegion1, maxRegion2, maxRegion3, maxRegion4, maxRegion5, maxRegion6);
     }
+
 
     void UpdateMap(int[] regionValues, int maxRegion1, int maxRegion2, int maxRegion3, int maxRegion4, int maxRegion5, int maxRegion6)
     {
