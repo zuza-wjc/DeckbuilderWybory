@@ -13,7 +13,7 @@ public class ExitButtonHandler : MonoBehaviour
 
         if (lobbyController != null)
         {
-            // Wywo³aj funkcjê opuszczaj¹cej lobby
+            // Wywo³aj funkcjê opuszczania lobby
             lobbyController.LeaveLobby();
         }
         else

@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Collections.Generic; // Added for Dictionary
+using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
@@ -222,7 +222,7 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                        FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).RemoveValueAsync();
+                        dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
