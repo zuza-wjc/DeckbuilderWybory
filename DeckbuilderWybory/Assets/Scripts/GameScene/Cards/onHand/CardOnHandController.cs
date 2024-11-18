@@ -15,16 +15,13 @@ public class CardOnHandController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    // Zmienna do przechowywania referencji do kart w UI
     private Dictionary<string, GameObject> cardObjects = new Dictionary<string, GameObject>();
 
     private void Awake()
     {
-    
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
 
-        // Sprawdzenie inicjalizacji Firebase
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
             Debug.LogError("Firebase is not initialized properly!");
@@ -33,13 +30,11 @@ public class CardOnHandController : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
 
-
         StartCoroutine(LoadCardsOnHand());
     }
 
     private IEnumerator LoadCardsOnHand()
     {
-    
         var task = dbRef.GetValueAsync();
         yield return new WaitUntil(() => task.IsCompleted);
 
@@ -49,69 +44,103 @@ public class CardOnHandController : MonoBehaviour
             yield break;
         }
 
-
         DataSnapshot snapshot = task.Result;
         foreach (DataSnapshot cardSnapshot in snapshot.Children)
         {
             bool onHand = (bool)cardSnapshot.Child("onHand").Value;
             bool played = (bool)cardSnapshot.Child("played").Value;
 
-            if (onHand && !played)  // Tylko karty, które s¹ na rêce i nie zosta³y zagrane
+            if (onHand && !played)
             {
-       
                 string cardId = cardSnapshot.Key;
-                AddCardToUI(cardId);
-                ListenForCardPlayed(cardId); // Nas³uchiwanie na zmiany "played"
+                if (!cardObjects.ContainsKey(cardId)) 
+                {
+                    AddCardToUI(cardId);
+                    ListenForCardOnHandChange(cardId);
+                    ListenForCardPlayed(cardId);
+                }
             }
         }
-        
     }
 
-    private void AddCardToUI(string cardId)
+
+
+private void AddCardToUI(string cardId)
     {
-  
+        if (cardObjects.ContainsKey(cardId)) return;
+
         GameObject newCard = Instantiate(cardPrefab, cardListContainer.transform);
         Image cardImage = newCard.GetComponent<Image>();
 
         cardImage.sprite = cardSpriteManager.GetCardSprite(cardId);
-
         newCard.gameObject.tag = cardId;
 
-        // Przechowuj kartê w s³owniku
         cardObjects[cardId] = newCard;
 
-      
-
+        Debug.Log($"Card {cardId} added to UI.");
     }
+
+    private void ListenForCardOnHandChange(string cardId)
+    {
+        dbRef.Child(cardId).Child("onHand").ValueChanged += (sender, args) =>
+        {
+            if (args.DatabaseError != null)
+            {
+                Debug.LogError("Error while listening for card onHand status change: " + args.DatabaseError.Message);
+                return;
+            }
+
+            bool onHand = (bool)args.Snapshot.Value;
+
+            if (onHand)
+            {
+                if (!cardObjects.ContainsKey(cardId))
+                {
+                    AddCardToUI(cardId);
+                }
+            }
+            else
+            {
+                if (cardObjects.ContainsKey(cardId))
+                {
+                    Destroy(cardObjects[cardId]);
+                    cardObjects.Remove(cardId);
+                }
+            }
+
+            ForceUpdateUI();
+        };
+    }
+
 
     private void ListenForCardPlayed(string cardId)
     {
-      
-        // Nas³uchiwanie na zmiany w wartoœci "played" w Firebase
         dbRef.Child(cardId).Child("played").ValueChanged += (sender, args) =>
         {
             if (args.DatabaseError != null)
             {
-                Debug.LogError("Error while listening for card status change: " + args.DatabaseError.Message);
+                Debug.LogError("Error while listening for card played status change: " + args.DatabaseError.Message);
                 return;
             }
 
             bool played = (bool)args.Snapshot.Value;
+
             if (played)
             {
-                
-                // Kiedy karta zostanie zagrana, usuwamy j¹ z UI
                 if (cardObjects.ContainsKey(cardId))
                 {
-                    Destroy(cardObjects[cardId]);  // Usuwamy kartê z UI
-                    cardObjects.Remove(cardId);  // Usuwamy kartê ze s³ownika
-                    
-                }
-                else
-                {
-                    Debug.LogWarning("Card with ID: " + cardId + " not found in the container.");
+                    Destroy(cardObjects[cardId]);
+                    cardObjects.Remove(cardId);
                 }
             }
         };
     }
+
+    private void ForceUpdateUI()
+    {
+        StartCoroutine(LoadCardsOnHand());
+    }
+
+
+
 }

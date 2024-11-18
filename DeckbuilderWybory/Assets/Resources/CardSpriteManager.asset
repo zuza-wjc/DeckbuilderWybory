@@ -71,3 +71,15 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: 6cb3cc7b154185f4d87b0bcd02923fa7, type: 3}
   - cardId: AD081
     cardSprite: {fileID: 21300000, guid: 17f21854c8486bd40bc5961ce0f2058e, type: 3}
+  - cardId: AD042
+    cardSprite: {fileID: 21300000, guid: 585dc66c0f78ad04b92e350aa559bdb5, type: 3}
+  - cardId: AD046
+    cardSprite: {fileID: 21300000, guid: 14868f16f520ef548bfb4b4131b07e08, type: 3}
+  - cardId: AD090
+    cardSprite: {fileID: 21300000, guid: 13a6cbd3f26eaa340b0ffc4cf3307408, type: 3}
+  - cardId: AD091
+    cardSprite: {fileID: 21300000, guid: 874778515297b01449a3fafaa1fb98fa, type: 3}
+  - cardId: AD069
+    cardSprite: {fileID: 21300000, guid: f50b20297ae4974478f23e217b7358e6, type: 3}
+  - cardId: AD071
+    cardSprite: {fileID: 21300000, guid: add1fa1d8e4e4b94b8c50d8b8c54ff92, type: 3}

@@ -43,6 +43,13 @@ TagManager:
   - AD063
   - AD064
   - AD065
+  - AD081
+  - AD042
+  - AD046
+  - AD090
+  - AD091
+  - AD069
+  - AD071
   layers:
   - Default
   - TransparentFX

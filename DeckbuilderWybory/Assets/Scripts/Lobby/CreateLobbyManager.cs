@@ -191,7 +191,7 @@ public class CreateLobbyManager : MonoBehaviour
                                 { "inGame", false },
                                 { "money", 0 },
                                 { "income", 10 },
-                                { "support", new int[6] { 5, 5, 5, 5, 5, 5 } },
+                                { "support", new int[6] { 4, 4, 4, 4, 4, 4 } },
                                 { "playerTurn", false }
                             }
                         }
