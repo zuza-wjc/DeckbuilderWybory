@@ -13,6 +13,8 @@ public class JoinLobbyByCode : MonoBehaviour
 {
     public InputField lobbyCodeInputField;
     public Button joinButton;
+    public Button pasteButton; //przycisk do wklejania kodu
+    public Text feedbackText;
 
     public GameObject dialogBox;
     public GameObject background;
@@ -24,13 +26,6 @@ public class JoinLobbyByCode : MonoBehaviour
     string lobbyId;
     private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
     private List<string> gracze = new List<string>();
-
-    bool isPlayerAdded;
-
-    void OnEnable()
-    {
-        isPlayerAdded = false;
-    }
 
     void Start()
     {
@@ -44,6 +39,8 @@ public class JoinLobbyByCode : MonoBehaviour
 
         // Dodanie listenera do przycisku
         joinButton.onClick.AddListener(JoinLobby);
+
+        pasteButton.onClick.AddListener(PasteFromClipboard);
     }
 
     public void openDialogBox()
@@ -59,12 +56,18 @@ public class JoinLobbyByCode : MonoBehaviour
         dialogBox.SetActive(false);
     }
 
+    void PasteFromClipboard()
+    {
+        lobbyCodeInputField.text = GUIUtility.systemCopyBuffer;
+    }
+
     async void JoinLobby()
     {
         lobbyId = lobbyCodeInputField.text;
 
         if (string.IsNullOrEmpty(lobbyId))
         {
+            ShowErrorMessage("BRAK KODU");
             Debug.LogError("Lobby ID is empty!");
             return;
         }
@@ -77,6 +80,7 @@ public class JoinLobbyByCode : MonoBehaviour
             {
                 Debug.Log("Lobby exists and is not full. Adding player...");
                 await AddPlayerAsync(lobbyId);
+                ChangeScene();
             }
             else
             {
@@ -86,12 +90,8 @@ public class JoinLobbyByCode : MonoBehaviour
         }
         else
         {
+            ShowErrorMessage("KOD NIEPOPRAWNY");
             Debug.LogError("Lobby not found!");
-        }
-
-        if (isPlayerAdded)
-        {
-            ChangeScene();
         }
     }
 
@@ -181,47 +181,29 @@ public class JoinLobbyByCode : MonoBehaviour
 
     public async Task<string> AddPlayerAsync(string lobbyId)
     {
-        string playerId = System.Guid.NewGuid().ToString();
+        playerId = System.Guid.NewGuid().ToString();
 
         await AssignName(playerId, lobbyId);
-        isPlayerAdded = true;
 
         return playerId;
     }
-
-    //async Task AddPlayerAsync()
-    //{
-    //    playerId = System.Guid.NewGuid().ToString();
-
-    //    Dictionary<string, object> playerData = new Dictionary<string, object>
-      //  {
-        //    { "playerName", playerName },
-          //  { "ready", false }
-//        };
-
-  //      var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
-    //    await task;
-
-      //  if (task.IsCompletedSuccessfully)
-        //{
-          //  Debug.Log("Player successfully added to the lobby.");
-            //isPlayerAdded = true;
-//        }
-  //      else
-    //    {
-      //      Debug.LogError("Error adding player to the lobby.");
-        //}
-    //}
 
     public void ChangeScene()
     {
         Debug.Log("Changing scene...");
 
-        // Przej�cie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
-        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = DataTransfer.PlayerName;
+
+        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+    }
+
+    async void ShowErrorMessage(string message)
+    {
+        feedbackText.text = message;
+        feedbackText.gameObject.SetActive(true);
+        await Task.Delay(3000); // Odczekaj 3 sekundy
+        feedbackText.gameObject.SetActive(false);
     }
 }
