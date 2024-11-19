@@ -5,6 +5,7 @@ using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Firebase.Extensions;
 
 public class LobbySceneController : MonoBehaviour
 {
@@ -12,31 +13,32 @@ public class LobbySceneController : MonoBehaviour
     public Text lobbyCodeText;
     public GameObject scrollViewContent;
     public GameObject textTemplate;
+
     public Button readyButton;  // Przycisk gotowosci
-    private Image readyButtonImage;
-    public Sprite readySprite;
-    public Sprite notReadySprite;
+    public Sprite selected;
+    public Sprite notSelected;
+    private Image image;
+
+    public Button copyButton; //przycisk do kopiowania kodu
     public Text playerCountsText; // Tekst do wyswietlania liczby graczy
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
     string lobbyId;
-    int isStarted;
     string playerId;
     string playerName;
     int lobbySize;
 
     bool readyState = false;
     private int readyPlayersCount = 0;
+    int isStarted = 0;
 
     void Start()
     {
         string lobbyName = DataTransfer.LobbyName;
-        isStarted = DataTransfer.IsStarted;
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
         playerName = DataTransfer.PlayerName;
-        lobbySize = DataTransfer.LobbySize;
 
         lobbyNameText.text = lobbyName;
         lobbyCodeText.text = "KOD: " + lobbyId;
@@ -50,17 +52,89 @@ public class LobbySceneController : MonoBehaviour
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
         dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
+        CountReadyPlayers();
+        getLobbySizeFromDatabase();
+
         dbRefLobby.Child("isStarted").ValueChanged += HandleIsStartedChanged;
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
         dbRef.ChildChanged += HandleChildChanged;
 
-        readyButtonImage = readyButton.GetComponentInChildren<Image>();
+        image = readyButton.GetComponent<Image>();
         readyButton.onClick.AddListener(ToggleReady);
+        copyButton.onClick.AddListener(CopyFromClipboard);
+    }
+
+    void CountReadyPlayers()
+    {
+        dbRef.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+                readyPlayersCount = 0;
+
+                foreach (var child in snapshot.Children)
+                {
+                    if (child.Child("ready").Exists && (bool)child.Child("ready").Value)
+                    {
+                        readyPlayersCount += 1;
+
+                        if (child.Child("playerName").Exists && child.Child("playerName").Value != null)
+                        {
+                            string readyPlayerName = child.Child("playerName").Value.ToString();
+                            UpdateText(readyPlayerName, true);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("playerName key not found or null in child data.");
+                        }
+                    }
+                }
+
+                Debug.Log("Liczba gotowych graczy: " + readyPlayersCount);
+            }
+            else
+            {
+                Debug.LogError("Nie uda³o siê pobraæ danych graczy: " + task.Exception);
+            }
+        });
+    }
+
+    void getLobbySizeFromDatabase()
+    {
+        dbRefLobby.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
+                {
+                    if (snapshot.Child("lobbySize").Exists)
+                    {
+                        lobbySize = int.Parse(snapshot.Child("lobbySize").Value.ToString());
+                        UpdatePlayerCountsText();
+                    }
+                    else
+                    {
+                        Debug.LogWarning("lobbySize key not found in database.");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Snapshot for lobby not found.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to fetch lobby data: " + task.Exception);
+            }
+        });
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)
     {
+        Debug.Log("ADDED");
         if (args.DatabaseError != null)
         {
             Debug.LogError(args.DatabaseError.Message);
@@ -69,17 +143,6 @@ public class LobbySceneController : MonoBehaviour
 
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         CreateText(playerName, false);
-
-        bool isReady = (bool)args.Snapshot.Child("ready").Value;
-        if (isReady)
-        {
-            readyPlayersCount += 1;
-        }
-
-        UpdatePlayerCountsText();
-        UpdateText(playerName, isReady);
-
-        StartingGame();
     }
 
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
@@ -90,21 +153,19 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
-        string playerName = args.Snapshot.Child("playerName").Value.ToString();
-        RemoveText(playerName);
-
-        bool isReady = (bool)args.Snapshot.Child("ready").Value;
-        if (isReady)
+        if (readyState)
         {
             readyPlayersCount -= 1;
+            UpdatePlayerCountsText();
         }
 
-        UpdatePlayerCountsText();
-        UpdateText(playerName, isReady);
+        string playerName = args.Snapshot.Child("playerName").Value.ToString();
+        RemoveText(playerName);
     }
 
     void HandleChildChanged(object sender, ChildChangedEventArgs args)
     {
+        Debug.Log("CHANGED");
         if (args.DatabaseError != null)
         {
             Debug.LogError(args.DatabaseError.Message);
@@ -120,6 +181,7 @@ public class LobbySceneController : MonoBehaviour
                 if (playerId != playerChanged)
                 {
                     bool isReady = (bool)child.Value;
+                    Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
 
                     if (isReady)
                     {
@@ -137,11 +199,25 @@ public class LobbySceneController : MonoBehaviour
                 }
             }
         }
-        StartingGame();
+        StartingGame(lobbyId);
     }
 
     void CreateText(string playerName, bool readyStatus)
     {
+        // Sprawdzanie, czy obiekt z t¹ sam¹ nazw¹ gracza ju¿ istnieje
+        foreach (Transform child in scrollViewContent.transform)
+        {
+            // Sprawdzamy, czy tekst obiektu zawiera nazwê gracza
+            Text childText = child.GetComponentInChildren<Text>();
+            if (childText != null && childText.text.Contains(playerName))
+            {
+                // Jeœli obiekt z t¹ nazw¹ gracza ju¿ istnieje, nie tworzymy nowego
+                Debug.Log("Obiekt z t¹ nazw¹ gracza ju¿ istnieje: " + playerName);
+                return;
+            }
+        }
+
+        // Jeœli obiekt z t¹ nazw¹ nie istnieje, tworzymy nowy
         string playerInfo = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
         GameObject text = Instantiate(textTemplate, scrollViewContent.transform);
         if (text != null)
@@ -153,23 +229,16 @@ public class LobbySceneController : MonoBehaviour
 
     void UpdateText(string playerName, bool readyStatus)
     {
-   
-        if (scrollViewContent == null)
-        {
-            return;
-        }
-
         Text[] texts = scrollViewContent.GetComponentsInChildren<Text>();
 
         foreach (Text text in texts)
         {
-            if (text != null && text.text != null && text.text.Contains(playerName))
+            if (text != null && text.text.Contains(playerName))
             {
                 text.text = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
                 return;
             }
         }
-
 
         CreateText(playerName, readyStatus);
     }
@@ -191,30 +260,47 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
+    void CopyFromClipboard()
+    {
+        GUIUtility.systemCopyBuffer = lobbyId;
+    }
+
     void ToggleReady()
     {
         readyState = !readyState;
-        UpdateImage();
-        dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
-        readyPlayersCount += readyState ? 1 : -1;
+        if (readyState)
+        {
+            readyPlayersCount += 1;
+        }
+        else
+        {
+            readyPlayersCount -= 1;
+        }
         UpdatePlayerCountsText();
         UpdateText(playerName, readyState);
+        UpdateReadyButton();
+
+        dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
         LoadPlayerCards();
     }
 
-    void UpdateImage()
+    void UpdateReadyButton()
     {
-        readyButtonImage.sprite = readyState ? readySprite : notReadySprite;
+        if (image.sprite == selected)
+        {
+            image.sprite = notSelected;
+        }
+        else
+        {
+            image.sprite = selected;
+        }
     }
 
     void UpdatePlayerCountsText()
     {
-        if (playerCountsText != null)
-        {
-            playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
-        }
+        playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
     }
 
 
@@ -361,13 +447,12 @@ public class LobbySceneController : MonoBehaviour
     }
 
 
-    void StartingGame()
+    void StartingGame(string lobbyId)
     {
         if (readyPlayersCount == lobbySize)
         {
             isStarted = 1;
             dbRefLobby.Child("isStarted").SetValueAsync(isStarted);
-
         }
     }
 }

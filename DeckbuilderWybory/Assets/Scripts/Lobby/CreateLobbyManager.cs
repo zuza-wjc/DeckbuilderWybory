@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using Firebase.Database;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using Firebase;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
@@ -16,14 +15,7 @@ public class CreateLobbyManager : MonoBehaviour
     public Text lobbySizeText;
     public Button plusButton;
     public Button minusButton;
-    public TextMeshProUGUI feedbackText;
-
-    private Image publicButtonImage; // Dodaj referencje do Image przycisku public
-    private Image privateButtonImage; // Dodaj referencje do Image przycisku private
-    public Sprite publicActiveSprite; // Sprite do wy�wietlenia, gdy przycisk public jest aktywny
-    public Sprite publicInactiveSprite; // Sprite do wy�wietlenia, gdy przycisk public jest nieaktywny
-    public Sprite privateActiveSprite; // Sprite do wy�wietlenia, gdy przycisk private jest aktywny
-    public Sprite privateInactiveSprite; // Sprite do wy�wietlenia, gdy przycisk private jest nieaktywny
+    public Text feedbackText;
 
     private Image addButtonImage;
     private Image minusButtonImage;
@@ -49,8 +41,6 @@ public class CreateLobbyManager : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions");
 
-        publicButtonImage = publicButton.GetComponentInChildren<Image>();
-        privateButtonImage = privateButton.GetComponentInChildren<Image>();
         addButtonImage = plusButton.GetComponentInChildren<Image>();
         minusButtonImage = minusButton.GetComponentInChildren<Image>();
 
@@ -65,16 +55,6 @@ public class CreateLobbyManager : MonoBehaviour
     public void TogglePublic(bool isPublicLobby)
     {
         isPublic = isPublicLobby;
-        if (isPublic)
-        {
-            publicButtonImage.sprite = publicActiveSprite;
-            privateButtonImage.sprite = privateInactiveSprite;
-        }
-        else
-        {
-            publicButtonImage.sprite = publicInactiveSprite;
-            privateButtonImage.sprite = privateActiveSprite;
-        }
     }
 
     public void IncreaseLobbySize()
@@ -165,57 +145,47 @@ public class CreateLobbyManager : MonoBehaviour
         string lobbyName = lobbyNameInput.text;
         bool isUnique = await IsLobbyNameUnique(lobbyName);
 
+        if (lobbyName == "")
+        {
+            StartCoroutine(ShowErrorMessage("NAZWA NIE MOŻE BYĆ PUSTA"));
+            return;
+        }
+
         if (!isUnique)
         {
-            StartCoroutine(ShowErrorMessage("Ta nazwa jest już zajęta"));
+            StartCoroutine(ShowErrorMessage("NAZWA JEST JUŻ ZAJĘTA"));
             return;
         }
 
 
+        int isStarted = 0;
+        int money = 0;
+        int support = 0;
+
         // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
-{
-        { "lobbyName", lobbyName },
-        { "isStarted", 0 },
-        { "isPublic", isPublic },
-        { "lobbySize", lobbySize },
-        {"rounds", 10 },
-        { "players", new Dictionary<string, object>
-            {
-                { playerId, new Dictionary<string, object>
-                    {
-                        { "playerName", playerName },
-                        { "ready", false },
-                        { "stats", new Dictionary<string, object>
-                            {
-                                { "inGame", false },
-                                { "money", 0 },
-                                { "income", 10 },
-                                { "support", new int[6] { 4, 4, 4, 4, 4, 4 } },
-                                { "playerTurn", false }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-
+        {
+            { "lobbyName", lobbyName },
+            { "isStarted", isStarted },
+            { "isPublic", isPublic },
+            { "lobbySize", lobbySize },
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } }  } } } } }
+        };
 
         // Dodawanie danych do bazy Firebase
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
 
         Debug.Log("Lobby created with ID: " + lobbyId);
 
-        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
-
         //wsadzanie danych do data transfer
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
-        DataTransfer.IsStarted = 0;
+        DataTransfer.IsStarted = isStarted;
         DataTransfer.PlayerId = playerId;
         DataTransfer.PlayerName = playerName;
+
+        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
