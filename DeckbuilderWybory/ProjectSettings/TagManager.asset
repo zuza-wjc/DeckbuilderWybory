@@ -50,6 +50,10 @@ TagManager:
   - AD091
   - AD069
   - AD071
+  - AS008
+  - AS060
+  - AS062
+  - AS072
   layers:
   - Default
   - TransparentFX

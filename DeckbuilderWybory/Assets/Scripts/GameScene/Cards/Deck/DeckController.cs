@@ -24,10 +24,7 @@ public class DeckController : MonoBehaviour
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         // Dodaj karty do decka
-        AddCardToDeck("AD069", true);
-        AddCardToDeck("AD071", true);
-        AddCardToDeck("AD051", false);
-        AddCardToDeck("AD058", false);
+        AddCardToDeck("AS062", true);
 
         Debug.Log("Deck loaded");
     }

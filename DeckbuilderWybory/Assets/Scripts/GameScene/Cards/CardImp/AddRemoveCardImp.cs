@@ -28,13 +28,10 @@ public class AddRemoveCardImp : MonoBehaviour
     private int cost;
     private int playerBudget;
     private int playerIncome;
-    private int support;
     private string enemyId;
     private string cardType;
 
     private int chosenRegion;
-    private int maxAreaSupport;
-    private int currentAreaSupport;
     private bool isBonusRegion;
 
     private Dictionary<int, OptionData> budgetOptionsDictionary = new();
@@ -50,6 +47,7 @@ public class AddRemoveCardImp : MonoBehaviour
     public PlayerListManager playerListManager;
     public MapManager mapManager;
     public DeckController deckController;
+    public CardUtilities cardUtilities;
 
     void Start()
     {
@@ -67,16 +65,13 @@ public class AddRemoveCardImp : MonoBehaviour
         roundChange = 0;
         cardsChange = false;
 
-        cost = 0;
-        playerBudget = 0;
-        playerIncome = 0;
-        support = 0;
+        cost = -1;
+        playerBudget = -1;
+        playerIncome = -1;
         enemyId = string.Empty;
         cardType = string.Empty;
 
         chosenRegion = -1;
-        maxAreaSupport = 0;
-        currentAreaSupport = 0;
 
         budgetOptionsDictionary.Clear();
         incomeOptionsDictionary.Clear();
@@ -135,14 +130,14 @@ public class AddRemoveCardImp : MonoBehaviour
                 DataSnapshot bonusSnapshot = budgetSnapshot.Child("bonus");
                 if (bonusSnapshot.Exists)
                 {
-                    ProcessBonusOptions(bonusSnapshot, optionType: "money");
+                    cardUtilities.ProcessBonusOptions(bonusSnapshot, budgetBonusOptionsDictionary);
                 }
 
                 foreach (var optionSnapshot in budgetSnapshot.Children)
                 {
                     if (optionSnapshot.Key != "bonus")
                     {
-                        ProcessOptions(optionSnapshot, optionType: "money");
+                        cardUtilities.ProcessOptions(optionSnapshot, budgetOptionsDictionary);
                     }
                 }
             }
@@ -155,14 +150,14 @@ public class AddRemoveCardImp : MonoBehaviour
                 DataSnapshot bonusSnapshot = incomeSnapshot.Child("bonus");
                 if (bonusSnapshot.Exists)
                 {
-                    ProcessBonusOptions(bonusSnapshot, optionType: "income");
+                    cardUtilities.ProcessBonusOptions(bonusSnapshot, incomeBonusOptionsDictionary);
                 }
 
                 foreach (var optionSnapshot in incomeSnapshot.Children)
                 {
                     if (optionSnapshot.Key != "bonus") 
                     {
-                        ProcessOptions(optionSnapshot, optionType: "income");
+                        cardUtilities.ProcessOptions(optionSnapshot, incomeOptionsDictionary);
                     }
                 }
             }
@@ -175,14 +170,14 @@ public class AddRemoveCardImp : MonoBehaviour
                 DataSnapshot bonusSnapshot = supportSnapshot.Child("bonus");
                 if (bonusSnapshot.Exists)
                 {
-                    ProcessBonusOptions(bonusSnapshot, optionType: "support");
+                    cardUtilities.ProcessBonusOptions(bonusSnapshot, supportBonusOptionsDictionary);
                 }
 
                 foreach (var optionSnapshot in supportSnapshot.Children)
                 {
                     if (optionSnapshot.Key != "bonus")
                     {
-                        ProcessOptions(optionSnapshot, optionType: "support");
+                        cardUtilities.ProcessOptions(optionSnapshot, supportOptionsDictionary);
                     }
                 }
             }
@@ -319,78 +314,6 @@ public class AddRemoveCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private void ProcessOptions(DataSnapshot optionSnapshot, string optionType)
-    {
-        var optionsDictionary = optionType switch
-        {
-            "income" => incomeOptionsDictionary,
-            "money" => budgetOptionsDictionary,
-            "support" => supportOptionsDictionary,
-            _ => throw new ArgumentException($"Unknown option type: {optionType}")
-        };
-
-        DataSnapshot numberSnapshot = optionSnapshot.Child("number");
-        DataSnapshot targetSnapshot = optionSnapshot.Child("target");
-        DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
-
-        if (numberSnapshot.Exists && targetSnapshot.Exists)
-        {
-            int number = Convert.ToInt32(numberSnapshot.Value);
-            string target = targetSnapshot.Value.ToString();
-            int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
-
-            int optionKey = Convert.ToInt32(optionSnapshot.Key.Replace("option", ""));
-
-            optionsDictionary.Add(optionKey, new OptionData(number, target, targetNumber));
-        }
-        else
-        {
-            Debug.LogError($"Option is missing 'number' or 'target'.");
-        }
-    }
-
-    private void ProcessBonusOptions(DataSnapshot bonusSnapshot, string optionType)
-    {
-        int optionIndex = 0;
-
-        foreach (var optionSnapshot in bonusSnapshot.Children)
-        {
-            DataSnapshot numberSnapshot = optionSnapshot.Child("number");
-            DataSnapshot targetSnapshot = optionSnapshot.Child("target");
-            DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
-
-            if (numberSnapshot.Exists && targetSnapshot.Exists)
-            {
-                int number = Convert.ToInt32(numberSnapshot.Value);
-                string target = targetSnapshot.Value.ToString();
-                int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
-
-                if (optionType == "money")
-                {
-                    budgetBonusOptionsDictionary.Add(optionIndex, new OptionData(number, target, targetNumber));
-                }
-                else if (optionType == "income")
-                {
-                    incomeBonusOptionsDictionary.Add(optionIndex, new OptionData(number, target, targetNumber));
-                }
-                else if (optionType == "support") 
-                {
-                    supportBonusOptionsDictionary.Add(optionIndex, new OptionData(number, target, targetNumber));
-                }
-                else
-                {
-                    Debug.LogError($"Unknown bonus option type: {optionType}");
-                }
-            }
-            else
-            {
-                Debug.LogError($"Bonus option {optionIndex} is missing 'number' or 'target'.");
-            }
-
-            optionIndex++;
-        }
-    }
-
     private async Task BudgetAction(string cardId)
     {
         if(cardId == "AD090")
@@ -410,7 +333,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (isBonus)
         {
-            Debug.Log("bonus jest zagrany");
+            Debug.Log("Bonus region detected.");
         }
 
         foreach (var data in optionsToApply.Values)
@@ -448,7 +371,7 @@ public class AddRemoveCardImp : MonoBehaviour
                     if(cardId == "AD090")
                     {
                         enemyId = await HighestSupportInArea(chosenRegion);
-                        await ChangeEnemyStat(enemyId, data.Number, "money");
+                        await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money",playerBudget);
                     }
                     else {
                         if (string.IsNullOrEmpty(enemyId))
@@ -460,7 +383,7 @@ public class AddRemoveCardImp : MonoBehaviour
                                 return;
                             }
                         }
-                        await ChangeEnemyStat(enemyId, data.Number, "money");
+                        await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
                     }
                 }
             }
@@ -525,7 +448,7 @@ public class AddRemoveCardImp : MonoBehaviour
                         if(cardId == "AD091")
                         {
                             enemyId = await LowestSupportInArea(chosenRegion);
-                            await ChangeSupport(enemyId, data.Number, chosenRegion, cardId);
+                            await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
                             isBonusRegion = false;
                         }
                         else
@@ -536,7 +459,7 @@ public class AddRemoveCardImp : MonoBehaviour
                                 Debug.LogError("No enemy player found in the area.");
                                 return;
                             }
-                            await ChangeSupport(enemyId, data.Number, chosenRegion, cardId);
+                            await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
 
                             if (isBonusRegion && cardsChange && (cardId == "AD069" || cardId == "AD071"))
                             {
@@ -587,8 +510,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     chosenRegion = await mapManager.SelectArea();
                 }
-
-                await ChangeSupport(playerId, data.Number, chosenRegion, cardId);
+                await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
             }
             else if (data.Target == "player-random")
             {
@@ -597,14 +519,14 @@ public class AddRemoveCardImp : MonoBehaviour
                     List<int> areas = await CheckHighestSupport(playerId);
                     foreach (var regionId in areas)
                     {
-                        await ChangeSupport(playerId, data.Number, regionId, cardId);
+                        await cardUtilities.ChangeSupport(playerId, data.Number, regionId, cardId, mapManager);
                     }
                 }
                 else
                 {
                     chosenRegion = await RandomizeRegion(playerId, data.Number);
                     Debug.Log($"Wylosowany region to {chosenRegion}");
-                    await ChangeSupport(playerId, data.Number, chosenRegion, cardId);
+                    await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
                 }
             }
             else if (data.Target == "enemy-random")
@@ -612,7 +534,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 enemyId = await playerListManager.SelectEnemyPlayer();
                 chosenRegion = await RandomizeRegion(enemyId, data.Number);
                 Debug.Log($"Wylosowany region to {chosenRegion}");
-                await ChangeSupport(enemyId, data.Number, chosenRegion, cardId);
+                await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
             }
         }
     }
@@ -672,7 +594,7 @@ public class AddRemoveCardImp : MonoBehaviour
                         }
                     }
 
-                    await ChangeEnemyStat(enemyId, data.Number, "income");
+                    await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "income", playerBudget);
                 }
             }
             else if (data.Target == "enemy-region")
@@ -721,56 +643,6 @@ public class AddRemoveCardImp : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogError($"An error occurred while updating the round: {ex.Message}");
-        }
-    }
-
-    private async Task ChangeEnemyStat(string enemyId, int value, string statType)
-    {
-        if (string.IsNullOrEmpty(enemyId))
-        {
-            Debug.LogError($"Enemy ID is null or empty. ID: {enemyId}");
-            return;
-        }
-
-        dbRefEnemyStats = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(enemyId)
-            .Child("stats");
-
-        try
-        {
-            var snapshot = await dbRefEnemyStats.GetValueAsync();
-
-            if (!snapshot.Exists)
-            {
-                Debug.LogError($"No enemy data found in the database for enemy ID: {enemyId}");
-                return;
-            }
-
-            var enemyStatSnapshot = snapshot.Child(statType);
-            if (!enemyStatSnapshot.Exists)
-            {
-                Debug.LogError($"Branch '{statType}' does not exist for enemy ID: {enemyId}");
-                return;
-            }
-
-            if (!int.TryParse(enemyStatSnapshot.Value.ToString(), out int enemyStat))
-            {
-                Debug.LogError($"Failed to parse '{statType}' value for enemy ID: {enemyId}. Value: {enemyStatSnapshot.Value}");
-                return;
-            }
-
-            int updatedStat = Math.Max(0, enemyStat + value);
-
-            if(playerId == enemyId) { playerBudget = updatedStat; }
-
-            await dbRefEnemyStats.Child(statType).SetValueAsync(updatedStat);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"An error occurred while changing the enemy {statType}: {ex.Message}");
         }
     }
 
@@ -833,62 +705,6 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             Debug.LogError($"An error occurred while updating area income: {ex.Message}");
         }
-    }
-
-    private async Task ChangeSupport(string playerId, int value, int areaId, string cardId)
-    {
-        dbRefSupport = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("support")
-            .Child(areaId.ToString());
-
-        var snapshot = await dbRefSupport.GetValueAsync();
-
-        if (!snapshot.Exists)
-        {
-            Debug.LogError("No support data found for the given region in the player's stats.");
-            return;
-        }
-
-        if (!int.TryParse(snapshot.Value.ToString(), out support))
-        {
-            Debug.LogError("Failed to parse support value from the database.");
-            return;
-        }
-
-        var maxSupportTask = mapManager.GetMaxSupportForRegion(areaId);
-        var currentSupportTask = mapManager.GetCurrentSupportForRegion(areaId, playerId);
-
-        await Task.WhenAll(maxSupportTask, currentSupportTask);
-
-        maxAreaSupport = await maxSupportTask;
-        currentAreaSupport = await currentSupportTask;
-
-        if (cardId == "AD020" || cardId == "AD054")
-        {
-            if (currentAreaSupport < value)
-            {
-                Debug.Log("Nie mo¿na zagraæ karty ze wzglêdu na niewystarczaj¹ce poparcie w tym regionie");
-                return;
-            }
-        }
-
-        support += value;
-
-        if (support < 0)
-        {
-            support = 0;
-        }
-        else if (currentAreaSupport + support > maxAreaSupport)
-        {
-            support = maxAreaSupport - currentAreaSupport;
-        }
-
-        await dbRefSupport.SetValueAsync(support);
     }
 
     private async Task ChangeAreaSupport(int areaId, int value, string cardholderId)
@@ -1366,22 +1182,6 @@ public class AddRemoveCardImp : MonoBehaviour
         }
 
         return playerSupport.Keys.FirstOrDefault();
-    }
-
-
-}
-
-public class OptionData
-{
-    public int Number { get; }
-    public string Target { get; }
-    public int TargetNumber { get; }
-
-    public OptionData(int number, string target, int targetNumber)
-    {
-        Number = number;
-        Target = target;
-        TargetNumber = targetNumber;
     }
 
 
