@@ -3,7 +3,6 @@ using UnityEngine.UI;
 using Firebase.Database;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using Firebase;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
@@ -16,7 +15,7 @@ public class CreateLobbyManager : MonoBehaviour
     public Text lobbySizeText;
     public Button plusButton;
     public Button minusButton;
-    public TextMeshProUGUI feedbackText;
+    public Text feedbackText;
 
     private Image publicButtonImage; // Dodaj referencje do Image przycisku public
     private Image privateButtonImage; // Dodaj referencje do Image przycisku private
@@ -165,9 +164,15 @@ public class CreateLobbyManager : MonoBehaviour
         string lobbyName = lobbyNameInput.text;
         bool isUnique = await IsLobbyNameUnique(lobbyName);
 
+        if (lobbyName == "")
+        {
+            StartCoroutine(ShowErrorMessage("NAZWA NIE MOŻE BYĆ PUSTA"));
+            return;
+        }
+
         if (!isUnique)
         {
-            StartCoroutine(ShowErrorMessage("Ta nazwa jest już zajęta"));
+            StartCoroutine(ShowErrorMessage("NAZWA JEST JUŻ ZAJĘTA"));
             return;
         }
 
@@ -192,8 +197,6 @@ public class CreateLobbyManager : MonoBehaviour
 
         Debug.Log("Lobby created with ID: " + lobbyId);
 
-        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
-
         //wsadzanie danych do data transfer
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
@@ -201,6 +204,8 @@ public class CreateLobbyManager : MonoBehaviour
         DataTransfer.IsStarted = isStarted;
         DataTransfer.PlayerId = playerId;
         DataTransfer.PlayerName = playerName;
+
+        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
