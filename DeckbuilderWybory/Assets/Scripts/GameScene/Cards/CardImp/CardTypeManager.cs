@@ -3,6 +3,7 @@ using UnityEngine;
 public class CardTypeManager : MonoBehaviour
 {
     public AddRemoveCardImp addRemoveCardImp;
+    public AsMuchAsCardImp asMuchAsCardImp;
 
     public void OnCardDropped(string cardIdDropped)
     {
@@ -12,6 +13,9 @@ public class CardTypeManager : MonoBehaviour
         {
             case "AD":
                 addRemoveCardImp.CardLibrary(cardIdDropped);
+                break;
+            case "AS":
+                asMuchAsCardImp.CardLibrary(cardIdDropped);
                 break;
 
         }

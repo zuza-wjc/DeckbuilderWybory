@@ -83,3 +83,11 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: f50b20297ae4974478f23e217b7358e6, type: 3}
   - cardId: AD071
     cardSprite: {fileID: 21300000, guid: add1fa1d8e4e4b94b8c50d8b8c54ff92, type: 3}
+  - cardId: AS008
+    cardSprite: {fileID: 21300000, guid: ff8cb4dccc48de84a8f652d96bdd3876, type: 3}
+  - cardId: AS060
+    cardSprite: {fileID: 21300000, guid: 0a6c79e22d784f1458ae69214e8db156, type: 3}
+  - cardId: AS072
+    cardSprite: {fileID: 21300000, guid: 7a90828e0cc5a42428c8929718b777c0, type: 3}
+  - cardId: AS062
+    cardSprite: {fileID: 21300000, guid: d5e529379785d2440b1a49fea8a40ce8, type: 3}

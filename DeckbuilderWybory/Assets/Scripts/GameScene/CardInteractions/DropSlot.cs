@@ -1,4 +1,3 @@
-using Firebase.Database;
 using Firebase;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,9 +7,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
     public GameObject playerListPanel;
     public GameObject mapPanel;
 
-    DatabaseReference dbRef;
-    string playerId;
-    string lobbyId;
     string cardId;
 
     public CardTypeManager cardTypeManager;
@@ -26,9 +22,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
         playerListPanel.SetActive(false);
         mapPanel.SetActive(false);
 
-        lobbyId = DataTransfer.LobbyId;
-        playerId = DataTransfer.PlayerId;
-        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
     }
     public void OnDrop(PointerEventData eventData)
     {
