@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Collections.Generic; // Added for Dictionary
+using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
@@ -229,7 +229,7 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                        //FirebaseDatabase.DefaultInstance.RootReference.Child("sessions").Child(lobbyId).RemoveValueAsync(); ZAKOMENTOWUJE TÊ LINIJKÊ NA CZAS IMPLEMENTACJI KART
+                        dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
@@ -308,14 +308,14 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
-    // Funkcja do ³adowania kart gracza z Firebase przed rozpoczêciem gry
+    // Funkcja do ï¿½adowania kart gracza z Firebase przed rozpoczï¿½ciem gry
     void LoadPlayerCards()
     {
         DeckController deckController = FindObjectOfType<DeckController>();
 
         if (deckController != null)
         {
-            // Wywo³aj metodê InitializeDeck()
+            // Wywoï¿½aj metodï¿½ InitializeDeck()
             deckController.InitializeDeck();
           
         }
@@ -340,8 +340,8 @@ public class LobbySceneController : MonoBehaviour
                 {
                     { "region1", new Dictionary<string, object> { { "maxSupport", 15 }, { "type", "Ambasada" } } },
                     { "region2", new Dictionary<string, object> { { "maxSupport", 19 }, { "type", "Metropolia" } } },
-                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Œrodowisko" } } },
-                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemys³" } } },
+                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "ï¿½rodowisko" } } },
+                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemysï¿½" } } },
                     { "region5", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Metropolia" } } },
                     { "region6", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Ambasada" } } }
                 };
