@@ -7,20 +7,12 @@
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\changescene.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\backbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\backbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\ciao ella\\documents\\github\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\datatransfer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\datatransfer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\exitbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -29,6 +21,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\sectionsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\sectionsmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\backbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\backbuttonhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,20 +38,19 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "DataTransfer.cs",
-              "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\DataTransfer.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\DataTransfer.cs",
-              "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\DataTransfer.cs",
-              "RelativeToolTip": "Assets\\Scripts\\DataTransfer.cs",
+              "DocumentIndex": 3,
+              "Title": "MainMenu.cs",
+              "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\MainMenu.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\MainMenu.cs",
+              "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\MainMenu.cs",
+              "RelativeToolTip": "Assets\\Scripts\\MainMenu.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-18T14:36:44.618Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-11T10:09:01.673Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
               "Title": "SectionsManager.cs",
               "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\SectionsManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\SectionsManager.cs",
@@ -73,27 +68,27 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\ChangeScene.cs",
               "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ChangeScene.cs",
               "RelativeToolTip": "Assets\\Scripts\\ChangeScene.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-11T09:58:15.2Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "LobbySceneController.cs",
               "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\LobbySceneController.cs",
               "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
               "RelativeToolTip": "Assets\\Scripts\\LobbySceneController.cs",
-              "ViewState": "AgIAAIAAAAAAAAAAAAAIwI8AAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAANUAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-11T09:55:13.708Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 5,
               "Title": "BackButtonHandler.cs",
               "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\BackButtonHandler.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\BackButtonHandler.cs",
@@ -101,33 +96,20 @@
               "RelativeToolTip": "Assets\\Scripts\\BackButtonHandler.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-11T09:54:48.01Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-11T09:54:48.01Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "ExitButtonHandler.cs",
               "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ExitButtonHandler.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\ExitButtonHandler.cs",
               "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ExitButtonHandler.cs",
               "RelativeToolTip": "Assets\\Scripts\\ExitButtonHandler.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-11T09:46:44.024Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MainMenu.cs",
-              "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\MainMenu.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\MainMenu.cs",
-              "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\MainMenu.cs",
-              "RelativeToolTip": "Assets\\Scripts\\MainMenu.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-11T10:09:01.673Z"
             }
           ]
         }
