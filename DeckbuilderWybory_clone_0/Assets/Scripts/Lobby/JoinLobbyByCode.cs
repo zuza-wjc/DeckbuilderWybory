@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Firebase;
 using Firebase.Database;
 using UnityEngine.SceneManagement;
@@ -14,6 +13,7 @@ public class JoinLobbyByCode : MonoBehaviour
     public InputField lobbyCodeInputField;
     public Button joinButton;
     public Button pasteButton; //przycisk do wklejania kodu
+    public Text feedbackText;
 
     public GameObject dialogBox;
     public GameObject background;
@@ -29,13 +29,6 @@ public class JoinLobbyByCode : MonoBehaviour
     int money = 0;
     int support = 0;
     int income = 10;
-
-    bool isPlayerAdded;
-
-    void OnEnable()
-    {
-        isPlayerAdded = false;
-    }
 
     void Start()
     {
@@ -77,6 +70,7 @@ public class JoinLobbyByCode : MonoBehaviour
 
         if (string.IsNullOrEmpty(lobbyId))
         {
+            ShowErrorMessage("BRAK KODU");
             Debug.LogError("Lobby ID is empty!");
             return;
         }
@@ -89,6 +83,7 @@ public class JoinLobbyByCode : MonoBehaviour
             {
                 Debug.Log("Lobby exists and is not full. Adding player...");
                 await AddPlayerAsync(lobbyId);
+                ChangeScene();
             }
             else
             {
@@ -98,12 +93,8 @@ public class JoinLobbyByCode : MonoBehaviour
         }
         else
         {
+            ShowErrorMessage("KOD NIEPOPRAWNY");
             Debug.LogError("Lobby not found!");
-        }
-
-        if (isPlayerAdded)
-        {
-            ChangeScene();
         }
     }
 
@@ -174,7 +165,7 @@ public class JoinLobbyByCode : MonoBehaviour
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
 
-            DataTransfer.PlayerName= playerName;
+            DataTransfer.PlayerName = playerName;
         }
         else
         {
@@ -184,47 +175,29 @@ public class JoinLobbyByCode : MonoBehaviour
 
     public async Task<string> AddPlayerAsync(string lobbyId)
     {
-        string playerId = System.Guid.NewGuid().ToString();
+        playerId = System.Guid.NewGuid().ToString();
 
         await AssignName(playerId, lobbyId);
-        isPlayerAdded = true;
 
         return playerId;
     }
-
-    //async Task AddPlayerAsync()
-    //{
-    //    playerId = System.Guid.NewGuid().ToString();
-
-    //    Dictionary<string, object> playerData = new Dictionary<string, object>
-      //  {
-        //    { "playerName", playerName },
-          //  { "ready", false }
-//        };
-
-  //      var task = dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
-    //    await task;
-
-      //  if (task.IsCompletedSuccessfully)
-        //{
-          //  Debug.Log("Player successfully added to the lobby.");
-            //isPlayerAdded = true;
-//        }
-  //      else
-    //    {
-      //      Debug.LogError("Error adding player to the lobby.");
-        //}
-    //}
 
     public void ChangeScene()
     {
         Debug.Log("Changing scene...");
 
-        // Przej�cie do sceny Lobby i przekazanie nazwy lobby oraz lobbyId jako parametry
-        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = DataTransfer.PlayerName;
+
+        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+    }
+
+    async void ShowErrorMessage(string message)
+    {
+        feedbackText.text = message;
+        feedbackText.gameObject.SetActive(true);
+        await Task.Delay(3000); // Odczekaj 3 sekundy
+        feedbackText.gameObject.SetActive(false);
     }
 }
