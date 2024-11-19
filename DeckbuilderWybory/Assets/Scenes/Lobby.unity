@@ -636,7 +636,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1191905922}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -989,9 +989,9 @@ MonoBehaviour:
   scrollViewContent: {fileID: 1191905921}
   textTemplate: {fileID: 8224675254308820580, guid: 2728b7796cf0e924f8a3e9bb9bfda95f, type: 3}
   readyButton: {fileID: 1641716298}
+  selected: {fileID: 21300000, guid: e7c4cf3bb1f48764498a6cd4aa33d664, type: 3}
+  notSelected: {fileID: 21300000, guid: c73ba54616b070b4c99e5cafd4967cb4, type: 3}
   copyButton: {fileID: 1667679761}
-  readySprite: {fileID: 21300000, guid: 584766454360745428ffdf0ac0e0cd2b, type: 3}
-  notReadySprite: {fileID: 21300000, guid: c85bbdee90191de4ca23fd81cbd9f84b, type: 3}
   playerCountsText: {fileID: 1265338362}
 --- !u!1 &1163527929
 GameObject:
@@ -1127,7 +1127,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 0
+  m_Spacing: 25
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -1219,7 +1219,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'GOTOWI GRACZE: 0/8'
+  m_Text: 
 --- !u!222 &1265338363
 CanvasRenderer:
   m_ObjectHideFlags: 0

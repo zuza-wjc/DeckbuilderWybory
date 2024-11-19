@@ -3,8 +3,24 @@
   "WorkspaceRootPath": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\TextController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\GameScene\\TextController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\LobbySceneController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonSelected.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\ButtonSelected.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageNew.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\ButtonImageNew.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\JoinLobbyByCode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\JoinLobbyByCode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageChanger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\ButtonImageChanger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,15 +34,73 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "TextController.cs",
-              "DocumentMoniker": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\TextController.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\TextController.cs",
-              "ToolTip": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\TextController.cs",
-              "RelativeToolTip": "Assets\\Scripts\\GameScene\\TextController.cs",
-              "ViewState": "AQIAACoAAAAAAAAAAAAAAEIAAABCAAAA",
+              "DocumentIndex": 1,
+              "Title": "ButtonSelected.cs",
+              "DocumentMoniker": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonSelected.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\ButtonSelected.cs",
+              "ToolTip": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonSelected.cs",
+              "RelativeToolTip": "Assets\\Scripts\\ButtonSelected.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB0AAAAIAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-16T08:24:39.46Z",
+              "WhenOpened": "2024-11-19T13:26:15.391Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ButtonImageNew.cs",
+              "DocumentMoniker": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageNew.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\ButtonImageNew.cs",
+              "ToolTip": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageNew.cs",
+              "RelativeToolTip": "Assets\\Scripts\\ButtonImageNew.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAcAAAAkAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-19T13:22:48.702Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ButtonImageChanger.cs",
+              "DocumentMoniker": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageChanger.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\ButtonImageChanger.cs",
+              "ToolTip": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\ButtonImageChanger.cs",
+              "RelativeToolTip": "Assets\\Scripts\\ButtonImageChanger.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABwAAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-19T13:21:31.077Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "JoinLobbyByCode.cs",
+              "DocumentMoniker": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\JoinLobbyByCode.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\JoinLobbyByCode.cs",
+              "ToolTip": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\JoinLobbyByCode.cs",
+              "RelativeToolTip": "Assets\\Scripts\\JoinLobbyByCode.cs",
+              "ViewState": "AQIAADEAAAAAAAAAAAAuwEYAAAAjAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-19T10:55:59.208Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LobbySceneController.cs",
+              "DocumentMoniker": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LobbySceneController.cs",
+              "ToolTip": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\LobbySceneController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LobbySceneController.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAcAAAAaAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-19T08:41:42.236Z",
               "EditorCaption": ""
             }
           ]
