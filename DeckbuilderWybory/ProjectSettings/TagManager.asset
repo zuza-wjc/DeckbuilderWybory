@@ -61,6 +61,13 @@ TagManager:
   - CA070
   - CA077
   - CA085
+  - OP002
+  - OP005
+  - OP006
+  - OP009
+  - OP011
+  - OP013
+  - OP014
   layers:
   - Default
   - TransparentFX

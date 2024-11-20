@@ -250,6 +250,87 @@ public class CardUtilities : MonoBehaviour
         }
     }
 
+    public async Task<int> RandomizeRegion(string playerId, int value, MapManager mapManager)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError($"Player ID is null or empty. ID: {playerId}");
+            return -1;
+        }
+
+        DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats")
+            .Child("support");
+
+        try
+        {
+            var snapshot = await dbRefSupport.GetValueAsync();
+
+            if (!snapshot.Exists)
+            {
+                Debug.LogError($"No player data found in the database for player ID: {playerId}");
+                return -1;
+            }
+
+            List<int> validRegions = new();
+
+            foreach (var supportChildSnapshot in snapshot.Children)
+            {
+                if (int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
+                {
+                    int updatedSupportValue = currentSupportValue + value;
+
+                    if (updatedSupportValue < 0)
+                    {
+                        continue;
+                    }
+
+                    var maxSupportTask = mapManager.GetMaxSupportForRegion(Convert.ToInt32(supportChildSnapshot.Key));
+                    var currentAreaSupportTask = mapManager.GetCurrentSupportForRegion(Convert.ToInt32(supportChildSnapshot.Key), playerId);
+
+                    await Task.WhenAll(maxSupportTask, currentAreaSupportTask);
+
+                    int maxSupport = await maxSupportTask;
+                    int currentAreaSupport = await currentAreaSupportTask;
+
+                    if (currentAreaSupport + updatedSupportValue > maxSupport)
+                    {
+                        continue;
+                    }
+
+                    validRegions.Add(Convert.ToInt32(supportChildSnapshot.Key));
+                }
+                else
+                {
+                    Debug.LogError($"Invalid support value for region {supportChildSnapshot.Key}. Value: {supportChildSnapshot.Value}");
+                }
+            }
+
+            if (validRegions.Count > 0)
+            {
+                System.Random rand = new();
+                int randomIndex = rand.Next(validRegions.Count);
+                return validRegions[randomIndex];
+            }
+            else
+            {
+                Debug.LogError($"No valid regions found for player {playerId} with at least {value}% support.");
+                return -1;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error occurred while retrieving data for player {playerId}: {ex.Message}");
+            return -1;
+        }
+    }
+
 }
 
 public class OptionData
