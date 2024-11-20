@@ -49,7 +49,7 @@ public class InternetChecker : MonoBehaviour
 
         if (request.result != UnityWebRequest.Result.Success)
         {
-            Debug.LogError("Brak po³¹czenia z internetem.");
+            Debug.LogError("Brak poÂ³Â¹czenia z internetem.");
             isCheckingConnection = false;
             IsConnected = false;
 
