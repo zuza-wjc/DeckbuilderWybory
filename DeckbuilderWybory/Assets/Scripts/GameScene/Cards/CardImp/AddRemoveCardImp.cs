@@ -11,7 +11,6 @@ public class AddRemoveCardImp : MonoBehaviour
     private DatabaseReference dbRefCard;
     private DatabaseReference dbRefPlayerStats;
     private DatabaseReference dbRefPlayerDeck;
-    private DatabaseReference dbRefEnemyStats;
     private DatabaseReference dbRefSupport;
     private DatabaseReference dbRefAllPlayersStats;
     private DatabaseReference dbRefRounds;
@@ -55,7 +54,7 @@ public class AddRemoveCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped)
+    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
     {
 
         budgetChange = false;
@@ -126,60 +125,24 @@ public class AddRemoveCardImp : MonoBehaviour
             if (budgetSnapshot.Exists)
             {
                 budgetChange = true;
-
-                DataSnapshot bonusSnapshot = budgetSnapshot.Child("bonus");
-                if (bonusSnapshot.Exists)
-                {
-                    cardUtilities.ProcessBonusOptions(bonusSnapshot, budgetBonusOptionsDictionary);
-                }
-
-                foreach (var optionSnapshot in budgetSnapshot.Children)
-                {
-                    if (optionSnapshot.Key != "bonus")
-                    {
-                        cardUtilities.ProcessOptions(optionSnapshot, budgetOptionsDictionary);
-                    }
-                }
+                cardUtilities.ProcessBonusOptions(budgetSnapshot, budgetBonusOptionsDictionary);
+                cardUtilities.ProcessOptions(budgetSnapshot, budgetOptionsDictionary);
             }
 
             DataSnapshot incomeSnapshot = snapshot.Child("income");
             if (incomeSnapshot.Exists)
             {
                 incomeChange = true;
-
-                DataSnapshot bonusSnapshot = incomeSnapshot.Child("bonus");
-                if (bonusSnapshot.Exists)
-                {
-                    cardUtilities.ProcessBonusOptions(bonusSnapshot, incomeBonusOptionsDictionary);
-                }
-
-                foreach (var optionSnapshot in incomeSnapshot.Children)
-                {
-                    if (optionSnapshot.Key != "bonus") 
-                    {
-                        cardUtilities.ProcessOptions(optionSnapshot, incomeOptionsDictionary);
-                    }
-                }
+                cardUtilities.ProcessBonusOptions(incomeSnapshot, incomeBonusOptionsDictionary);
+                cardUtilities.ProcessOptions(incomeSnapshot, incomeOptionsDictionary);
             }
 
             DataSnapshot supportSnapshot = snapshot.Child("support");
             if (supportSnapshot.Exists)
             {
                 supportChange = true;
-
-                DataSnapshot bonusSnapshot = supportSnapshot.Child("bonus");
-                if (bonusSnapshot.Exists)
-                {
-                    cardUtilities.ProcessBonusOptions(bonusSnapshot, supportBonusOptionsDictionary);
-                }
-
-                foreach (var optionSnapshot in supportSnapshot.Children)
-                {
-                    if (optionSnapshot.Key != "bonus")
-                    {
-                        cardUtilities.ProcessOptions(optionSnapshot, supportOptionsDictionary);
-                    }
-                }
+                cardUtilities.ProcessBonusOptions(supportSnapshot, supportBonusOptionsDictionary);
+                cardUtilities.ProcessOptions(supportSnapshot, supportOptionsDictionary);
             }
 
             DataSnapshot cardsSnapshot = snapshot.Child("cardsOnHand");
@@ -187,59 +150,10 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 cardsChange = true;
 
-                DataSnapshot bonusSnapshot = cardsSnapshot.Child("bonus");
-                if (bonusSnapshot.Exists)
-                {
-                    int optionIndex = 0;
-
-                    foreach (var optionSnapshot in bonusSnapshot.Children)
-                    {
-                        DataSnapshot cardNumberSnapshot = optionSnapshot.Child("cardNumber");
-                        DataSnapshot sourceSnapshot = optionSnapshot.Child("source");
-                        DataSnapshot targetSnapshot = optionSnapshot.Child("target");
-
-                        if (cardNumberSnapshot.Exists && targetSnapshot.Exists && sourceSnapshot.Exists)
-                        {
-                            int cardNumber = Convert.ToInt32(cardNumberSnapshot.Value);
-                            string source = sourceSnapshot.Value.ToString();
-                            string target = targetSnapshot.Value.ToString();
-
-                            cardsBonusOptionsDictionary.Add(optionIndex, new OptionDataCard(cardNumber, source, target));
-                        }
-                        else
-                        {
-                            Debug.LogError($"Bonus option {optionIndex} is missing an attribiute.");
-                        }
-
-                        optionIndex++;
-                    }
-                }
-
-                foreach (var optionSnapshot in cardsSnapshot.Children)
-                {
-                    if (optionSnapshot.Key != "bonus")
-                    {
-                        DataSnapshot cardNumberSnapshot = optionSnapshot.Child("cardNumber");
-                        DataSnapshot sourceSnapshot = optionSnapshot.Child("source");
-                        DataSnapshot targetSnapshot = optionSnapshot.Child("target");
-
-                        if (cardNumberSnapshot.Exists && targetSnapshot.Exists && sourceSnapshot.Exists)
-                        {
-                            int cardNumber = Convert.ToInt32(cardNumberSnapshot.Value);
-                            string source = sourceSnapshot.Value.ToString();
-                            string target = targetSnapshot.Value.ToString();
-
-                            int optionKey = Convert.ToInt32(optionSnapshot.Key.Replace("action", ""));
-
-                            cardsBonusOptionsDictionary.Add(optionKey, new OptionDataCard(cardNumber, source, target));
-                        }
-                        else
-                        {
-                            Debug.LogError($"Option is missing an attribiute.");
-                        }
-                    }
-                }
+                cardUtilities.ProcessBonusOptionsCard(cardsSnapshot, cardsBonusOptionsDictionary);
+                cardUtilities.ProcessOptionsCard(cardsSnapshot, cardsOptionsDictionary);
             }
+
         }
         else
         {
@@ -306,7 +220,10 @@ public class AddRemoveCardImp : MonoBehaviour
             await RoundAction();
         }
 
-        await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+        if(!ignoreCost)
+        {
+            await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+        }
 
         dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
 
@@ -485,7 +402,7 @@ public class AddRemoveCardImp : MonoBehaviour
                                         {
                                             try
                                             {
-                                                await deckController.GetCard(source, target);
+                                                await deckController.GetCardFromDeck(source, target);
                                             }
                                             catch (Exception ex)
                                             {
@@ -538,7 +455,6 @@ public class AddRemoveCardImp : MonoBehaviour
             }
         }
     }
-
 
     private async Task IncomeAction()
     {
@@ -1184,19 +1100,4 @@ public class AddRemoveCardImp : MonoBehaviour
         return playerSupport.Keys.FirstOrDefault();
     }
 
-
-}
-
-public class OptionDataCard
-{
-    public int CardNumber { get; set; }
-    public string Source { get; set; }
-    public string Target { get; set; }
-
-    public OptionDataCard(int cardNumber, string source, string target)
-    {
-        CardNumber = cardNumber;
-        Source = source;
-        Target = target;
-    }
 }

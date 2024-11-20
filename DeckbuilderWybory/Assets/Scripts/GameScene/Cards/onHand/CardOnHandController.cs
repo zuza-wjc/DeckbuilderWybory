@@ -63,8 +63,6 @@ public class CardOnHandController : MonoBehaviour
         }
     }
 
-
-
 private void AddCardToUI(string cardId)
     {
         if (cardObjects.ContainsKey(cardId)) return;
@@ -77,7 +75,6 @@ private void AddCardToUI(string cardId)
 
         cardObjects[cardId] = newCard;
 
-        Debug.Log($"Card {cardId} added to UI.");
     }
 
     private void ListenForCardOnHandChange(string cardId)

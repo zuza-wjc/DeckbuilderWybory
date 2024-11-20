@@ -62,7 +62,7 @@ public class InternetChecker : MonoBehaviour
         }
         else
         {
-            Debug.Log("Nawi¹zano po³¹czenie z internetem.");
+            //Debug.Log("Nawi¹zano po³¹czenie z internetem."); co chwile jest na logach wiêc zakomentowuje
             IsConnected = true;
         }
     }

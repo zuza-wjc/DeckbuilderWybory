@@ -6,55 +6,133 @@ using UnityEngine;
 
 public class CardUtilities : MonoBehaviour
 {
-    public void ProcessOptions(DataSnapshot optionSnapshot, Dictionary<int, OptionData> optionsDictionary)
+    public void ProcessOptions(DataSnapshot snapshot, Dictionary<int, OptionData> optionsDictionary)
     {
-        DataSnapshot numberSnapshot = optionSnapshot.Child("number");
-        DataSnapshot targetSnapshot = optionSnapshot.Child("target");
-        DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
-
-        if (numberSnapshot.Exists && targetSnapshot.Exists)
+        foreach (var optionSnapshot in snapshot.Children)
         {
-            int number = Convert.ToInt32(numberSnapshot.Value);
-            string target = targetSnapshot.Value.ToString();
-            int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
+            if (optionSnapshot.Key != "bonus")
+            {
+                DataSnapshot numberSnapshot = optionSnapshot.Child("number");
+                DataSnapshot targetSnapshot = optionSnapshot.Child("target");
+                DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
 
-            int optionKey = Convert.ToInt32(optionSnapshot.Key.Replace("option", ""));
+                if (numberSnapshot.Exists && targetSnapshot.Exists)
+                {
+                    int number = Convert.ToInt32(numberSnapshot.Value);
+                    string target = targetSnapshot.Value.ToString();
+                    int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
 
-            optionsDictionary.Add(optionKey, new OptionData(number, target, targetNumber));
+                    int optionKey = Convert.ToInt32(optionSnapshot.Key.Replace("option", ""));
+
+                    optionsDictionary.Add(optionKey, new OptionData(number, target, targetNumber));
+                }
+                else
+                {
+                    Debug.LogError($"Option is missing 'number' or 'target'.");
+                }
+            }
         }
-        else
+}
+
+    public void ProcessBonusOptions(DataSnapshot snapshot, Dictionary<int, OptionData> bonusOptionsDictionary)
+    {
+        DataSnapshot bonusSnapshot = snapshot.Child("bonus");
+        if (bonusSnapshot.Exists)
         {
-            Debug.LogError($"Option is missing 'number' or 'target'.");
-        }
+            int optionIndex = 0;
 
+            foreach (var optionSnapshot in bonusSnapshot.Children)
+            {
+                DataSnapshot numberSnapshot = optionSnapshot.Child("number");
+                DataSnapshot targetSnapshot = optionSnapshot.Child("target");
+                DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
+
+                if (numberSnapshot.Exists && targetSnapshot.Exists)
+                {
+                    int number = Convert.ToInt32(numberSnapshot.Value);
+                    string target = targetSnapshot.Value.ToString();
+                    int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
+
+                    bonusOptionsDictionary.Add(optionIndex, new OptionData(number, target, targetNumber));
+                }
+                else
+                {
+                    Debug.LogError($"Bonus option {optionIndex} is missing 'number' or 'target'.");
+                }
+
+                optionIndex++;
+            }
+        }
     }
 
-    public void ProcessBonusOptions(DataSnapshot bonusSnapshot, Dictionary<int, OptionData> bonusOptionsDictionary)
+    public void ProcessOptionsCard(DataSnapshot cardsSnapshot, Dictionary<int, OptionDataCard> optionsDictionary)
     {
-        int optionIndex = 0;
-
-        foreach (var optionSnapshot in bonusSnapshot.Children)
+        foreach (var optionSnapshot in cardsSnapshot.Children)
         {
-            DataSnapshot numberSnapshot = optionSnapshot.Child("number");
-            DataSnapshot targetSnapshot = optionSnapshot.Child("target");
-            DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
-
-            if (numberSnapshot.Exists && targetSnapshot.Exists)
+            if (optionSnapshot.Key != "bonus")
             {
-                int number = Convert.ToInt32(numberSnapshot.Value);
-                string target = targetSnapshot.Value.ToString();
-                int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
+                DataSnapshot cardNumberSnapshot = optionSnapshot.Child("cardNumber");
+                DataSnapshot cardTypeSnapshot = optionSnapshot.Child("cardType");
+                DataSnapshot sourceSnapshot = optionSnapshot.Child("source");
+                DataSnapshot targetSnapshot = optionSnapshot.Child("target");
+                DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
 
-                bonusOptionsDictionary.Add(optionIndex, new OptionData(number, target, targetNumber));
-            }
-            else
-            {
-                Debug.LogError($"Bonus option {optionIndex} is missing 'number' or 'target'.");
-            }
+                // Sprawdzamy, czy wszystkie wymagane dane istniej¹
+                if (cardNumberSnapshot.Exists && cardTypeSnapshot.Exists && sourceSnapshot.Exists && targetSnapshot.Exists)
+                {
+                    int cardNumber = Convert.ToInt32(cardNumberSnapshot.Value);
+                    string cardType = cardTypeSnapshot.Value.ToString();
+                    string source = sourceSnapshot.Value.ToString();
+                    string target = targetSnapshot.Value.ToString();
 
-            optionIndex++;
+                    int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
+
+                    int optionKey = Convert.ToInt32(optionSnapshot.Key.Replace("action", ""));
+
+                    optionsDictionary.Add(optionKey, new OptionDataCard(cardNumber, cardType, source, target, targetNumber));
+                }
+                else
+                {
+                    Debug.LogError($"Option is missing an attribute.");
+                }
+            }
         }
+    }
 
+    public void ProcessBonusOptionsCard(DataSnapshot cardsSnapshot, Dictionary<int, OptionDataCard> bonusOptionsDictionary)
+    {
+        DataSnapshot bonusSnapshot = cardsSnapshot.Child("bonus");
+        if (bonusSnapshot.Exists)
+        {
+            int optionIndex = 0;
+
+            foreach (var optionSnapshot in bonusSnapshot.Children)
+            {
+                DataSnapshot cardNumberSnapshot = optionSnapshot.Child("cardNumber");
+                DataSnapshot cardTypeSnapshot = optionSnapshot.Child("cardType");
+                DataSnapshot sourceSnapshot = optionSnapshot.Child("source");
+                DataSnapshot targetSnapshot = optionSnapshot.Child("target");
+                DataSnapshot targetNumberSnapshot = optionSnapshot.Child("targetNumber");
+
+                if (cardNumberSnapshot.Exists && cardTypeSnapshot.Exists && sourceSnapshot.Exists && targetSnapshot.Exists)
+                {
+                    int cardNumber = Convert.ToInt32(cardNumberSnapshot.Value);
+                    string cardType = cardTypeSnapshot.Value.ToString();
+                    string source = sourceSnapshot.Value.ToString();
+                    string target = targetSnapshot.Value.ToString();
+
+                    int targetNumber = targetNumberSnapshot.Exists ? Convert.ToInt32(targetNumberSnapshot.Value) : 1;
+
+                    bonusOptionsDictionary.Add(optionIndex, new OptionDataCard(cardNumber, cardType, source, target, targetNumber));
+                }
+                else
+                {
+                    Debug.LogError($"Bonus option {optionIndex} is missing an attribute.");
+                }
+
+                optionIndex++;
+            }
+        }
     }
 
     public async Task ChangeSupport(string playerId, int value, int areaId, string cardId, MapManager mapManager)
@@ -104,7 +182,7 @@ public class CardUtilities : MonoBehaviour
 
         int supportToAdd = (availableSupport >= value) ? value : availableSupport;
 
-        if (cardId == "AD020" || cardId == "AD054")
+        if (cardId == "AD020" || cardId == "AD054" || cardId == "CA085")
         {
             if (currentAreaSupport < value)
             {
@@ -186,6 +264,22 @@ public class OptionData
         Target = target;
         TargetNumber = targetNumber;
     }
+}
 
+public class OptionDataCard
+{
+    public int CardNumber { get; set; }
+    public string CardType { get; set; }
+    public string Source { get; set; }
+    public string Target { get; set; }
+    public int TargetNumber { get; set; }
 
+    public OptionDataCard(int cardNumber, string cardType, string source, string target, int targetNumber)
+    {
+        CardNumber = cardNumber;
+        CardType = cardType;
+        Source = source;
+        Target = target;
+        TargetNumber = targetNumber;
+    }
 }
