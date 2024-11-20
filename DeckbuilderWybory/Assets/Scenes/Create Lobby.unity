@@ -469,10 +469,6 @@ MonoBehaviour:
   plusButton: {fileID: 1899328020}
   minusButton: {fileID: 2074213096}
   feedbackText: {fileID: 1891021678}
-  publicActiveSprite: {fileID: 21300000, guid: 584766454360745428ffdf0ac0e0cd2b, type: 3}
-  publicInactiveSprite: {fileID: 21300000, guid: c85bbdee90191de4ca23fd81cbd9f84b, type: 3}
-  privateActiveSprite: {fileID: 21300000, guid: 584766454360745428ffdf0ac0e0cd2b, type: 3}
-  privateInactiveSprite: {fileID: 21300000, guid: c85bbdee90191de4ca23fd81cbd9f84b, type: 3}
   addButtonActiveSprite: {fileID: 21300000, guid: 435a1d1333223174cb1f7d717f06ead8, type: 3}
   minusButtonActiveSprite: {fileID: 21300000, guid: 89cb1b400849c6e4485c7f2e36474e97, type: 3}
   minusButtonInactiveSprite: {fileID: 21300000, guid: 558bd6ded23af7148a7812d1bcecfd54, type: 3}
@@ -1690,7 +1686,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.8, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
