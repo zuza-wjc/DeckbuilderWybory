@@ -167,7 +167,7 @@ public class JoinLobbyByCode : MonoBehaviour
             {
                 { "playerName", playerName },
                 { "ready", false },
-                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } } }
+                { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support },{"regionSupport", new Dictionary<string, int> { {"1", 0}, {"2", 0}, {"3", 0}, {"4", 0}, {"5", 0}, {"6", 0} }}, { "playerTurn", false } } }
             };
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
