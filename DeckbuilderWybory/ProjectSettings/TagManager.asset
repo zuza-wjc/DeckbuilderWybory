@@ -54,6 +54,13 @@ TagManager:
   - AS060
   - AS062
   - AS072
+  - CA015
+  - CA017
+  - CA031
+  - CA033
+  - CA070
+  - CA077
+  - CA085
   layers:
   - Default
   - TransparentFX

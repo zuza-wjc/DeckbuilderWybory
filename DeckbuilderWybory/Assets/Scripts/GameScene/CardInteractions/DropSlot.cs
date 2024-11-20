@@ -34,7 +34,7 @@ public class DropSlot : MonoBehaviour, IDropHandler
         {
             cardId = draggableItem.tag;
 
-            cardTypeManager.OnCardDropped(cardId);
+            cardTypeManager.OnCardDropped(cardId, false);
 
         }                                  
         

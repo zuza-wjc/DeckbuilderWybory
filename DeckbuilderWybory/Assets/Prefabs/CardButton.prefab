@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4292534281317120940}
   - component: {fileID: 1045609878780313039}
   m_Layer: 5
-  m_Name: PlayerButton
+  m_Name: CardButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -37,8 +37,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1387.3375, y: -774.28894}
-  m_SizeDelta: {x: 895, y: 232.19}
+  m_AnchoredPosition: {x: -1567.8776, y: -778.981}
+  m_SizeDelta: {x: 930, y: 240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7811532625002325926
 CanvasRenderer:
@@ -203,7 +203,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: c26eb0cc19caf6043ba35efa06e8c21f, type: 3}
-    m_FontSize: 97
+    m_FontSize: 80
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 1
