@@ -5,6 +5,8 @@ using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using Firebase.Extensions;
+using System;
 
 public class LobbySceneController : MonoBehaviour
 {
@@ -12,31 +14,32 @@ public class LobbySceneController : MonoBehaviour
     public Text lobbyCodeText;
     public GameObject scrollViewContent;
     public GameObject textTemplate;
+
     public Button readyButton;  // Przycisk gotowosci
-    private Image readyButtonImage;
-    public Sprite readySprite;
-    public Sprite notReadySprite;
+    public Sprite selected;
+    public Sprite notSelected;
+    private Image image;
+
+    public Button copyButton; //przycisk do kopiowania kodu
     public Text playerCountsText; // Tekst do wyswietlania liczby graczy
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
     string lobbyId;
-    int isStarted;
     string playerId;
     string playerName;
-    int lobbySize;
 
     bool readyState = false;
-    private int readyPlayersCount = 0;
+    int readyPlayers = 0;
+    int isStarted = 0;
+    int lobbySize = 0;
 
     void Start()
     {
         string lobbyName = DataTransfer.LobbyName;
-        isStarted = DataTransfer.IsStarted;
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
         playerName = DataTransfer.PlayerName;
-        lobbySize = DataTransfer.LobbySize;
 
         lobbyNameText.text = lobbyName;
         lobbyCodeText.text = "KOD: " + lobbyId;
@@ -50,13 +53,64 @@ public class LobbySceneController : MonoBehaviour
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
         dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
+        getLobbySizeFromDatabase(() =>
+        {
+            getReadyPlayersFromDatabase(() =>
+            {
+                UpdatePlayerCountsText();
+            });
+        });
+
         dbRefLobby.Child("isStarted").ValueChanged += HandleIsStartedChanged;
         dbRef.ChildAdded += HandleChildAdded;
         dbRef.ChildRemoved += HandleChildRemoved;
         dbRef.ChildChanged += HandleChildChanged;
 
-        readyButtonImage = readyButton.GetComponentInChildren<Image>();
+        image = readyButton.GetComponent<Image>();
         readyButton.onClick.AddListener(ToggleReady);
+        copyButton.onClick.AddListener(CopyFromClipboard);
+    }
+
+    void getLobbySizeFromDatabase(Action onComplete)
+    {
+        dbRefLobby.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists && snapshot.Child("lobbySize").Exists)
+                {
+                    lobbySize = int.Parse(snapshot.Child("lobbySize").Value.ToString());
+                }
+                else
+                {
+                    readyPlayers = 0; // Ustawienie domyślnej wartości
+                    Debug.LogWarning("Ready players count not found. Defaulting to 0.");
+                }
+            }
+            onComplete?.Invoke();
+        });
+    }
+
+    void getReadyPlayersFromDatabase(Action onComplete)
+    {
+        dbRefLobby.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists && snapshot.Child("readyPlayers").Exists)
+                {
+                    readyPlayers = int.Parse(snapshot.Child("readyPlayers").Value.ToString());
+                }
+                else
+                {
+                    readyPlayers = 0; // Ustawienie domyślnej wartości
+                    Debug.LogWarning("Ready players count not found. Defaulting to 0.");
+                }
+            }
+            onComplete?.Invoke();
+        });
     }
 
     void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -68,18 +122,8 @@ public class LobbySceneController : MonoBehaviour
         }
 
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
-        CreateText(playerName, false);
-
         bool isReady = (bool)args.Snapshot.Child("ready").Value;
-        if (isReady)
-        {
-            readyPlayersCount += 1;
-        }
-
-        UpdatePlayerCountsText();
-        UpdateText(playerName, isReady);
-
-        StartingGame();
+        CreateText(playerName, isReady);
     }
 
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
@@ -90,17 +134,13 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
+        getReadyPlayersFromDatabase(() =>
+        {
+            UpdatePlayerCountsText();
+        });
+
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         RemoveText(playerName);
-
-        bool isReady = (bool)args.Snapshot.Child("ready").Value;
-        if (isReady)
-        {
-            readyPlayersCount -= 1;
-        }
-
-        UpdatePlayerCountsText();
-        UpdateText(playerName, isReady);
     }
 
     void HandleChildChanged(object sender, ChildChangedEventArgs args)
@@ -120,28 +160,37 @@ public class LobbySceneController : MonoBehaviour
                 if (playerId != playerChanged)
                 {
                     bool isReady = (bool)child.Value;
-
-                    if (isReady)
-                    {
-                        readyPlayersCount += 1;
-                    }
-                    else
-                    {
-                        readyPlayersCount -= 1;
-                    }
+                    Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
 
                     string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
 
-                    UpdatePlayerCountsText();
-                    UpdateText(playerNameChange, isReady);
+                    getReadyPlayersFromDatabase(() =>
+                    {
+                        UpdatePlayerCountsText();
+                        UpdateText(playerNameChange, isReady);
+                    });                    
                 }
             }
         }
-        StartingGame();
+        StartingGame(lobbyId);
     }
 
     void CreateText(string playerName, bool readyStatus)
     {
+        // Sprawdzanie, czy obiekt z t¹ sam¹ nazw¹ gracza ju¿ istnieje
+        foreach (Transform child in scrollViewContent.transform)
+        {
+            // Sprawdzamy, czy tekst obiektu zawiera nazwê gracza
+            Text childText = child.GetComponentInChildren<Text>();
+            if (childText != null && childText.text.Contains(playerName))
+            {
+                // Jeœli obiekt z t¹ nazw¹ gracza ju¿ istnieje, nie tworzymy nowego
+                Debug.Log("Obiekt z t¹ nazw¹ gracza ju¿ istnieje: " + playerName);
+                return;
+            }
+        }
+
+        // Jeœli obiekt z t¹ nazw¹ nie istnieje, tworzymy nowy
         string playerInfo = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
         GameObject text = Instantiate(textTemplate, scrollViewContent.transform);
         if (text != null)
@@ -153,23 +202,16 @@ public class LobbySceneController : MonoBehaviour
 
     void UpdateText(string playerName, bool readyStatus)
     {
-   
-        if (scrollViewContent == null)
-        {
-            return;
-        }
-
         Text[] texts = scrollViewContent.GetComponentsInChildren<Text>();
 
         foreach (Text text in texts)
         {
-            if (text != null && text.text != null && text.text.Contains(playerName))
+            if (text != null && text.text.Contains(playerName))
             {
                 text.text = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
                 return;
             }
         }
-
 
         CreateText(playerName, readyStatus);
     }
@@ -191,30 +233,38 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
+    void CopyFromClipboard()
+    {
+        GUIUtility.systemCopyBuffer = lobbyId;
+    }
+
     void ToggleReady()
     {
         readyState = !readyState;
-        UpdateImage();
-        dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
-        readyPlayersCount += readyState ? 1 : -1;
-        UpdatePlayerCountsText();
-        UpdateText(playerName, readyState);
+        getReadyPlayersFromDatabase(() =>
+        {
+            readyPlayers += readyState ? 1 : -1;
 
-        LoadPlayerCards();
+            dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
+            dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
+
+            UpdatePlayerCountsText();
+            UpdateText(playerName, readyState);
+            UpdateReadyButton();
+
+            LoadPlayerCards();
+        });
     }
 
-    void UpdateImage()
+    void UpdateReadyButton()
     {
-        readyButtonImage.sprite = readyState ? readySprite : notReadySprite;
+        image.sprite = readyState ? selected : notSelected;
     }
 
     void UpdatePlayerCountsText()
     {
-        if (playerCountsText != null)
-        {
-            playerCountsText.text = "GOTOWI GRACZE: " + readyPlayersCount + " / " + lobbySize;
-        }
+        playerCountsText.text = "GOTOWI GRACZE: " + readyPlayers + " / " + lobbySize;
     }
 
 
@@ -229,11 +279,36 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                       // dbRefLobby.RemoveValueAsync(); na czas implementacji
+                        // Usuń cały węzeł lobby, jeśli jesteś ostatnim graczem
+                        dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
-                        //  dbRef.Child(playerId).RemoveValueAsync(); na czas implementacji
+                        // Sprawdź, czy miałeś ustawione "ready: true"
+                        dbRef.Child(playerId).Child("ready").GetValueAsync().ContinueWith(readyTask =>
+                        {
+                            if (readyTask.IsCompleted && !readyTask.IsFaulted)
+                            {
+                                bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
+
+                                if (wasReady)
+                                {
+                                    // Jeśli gracz był gotowy, zmniejsz licznik "readyPlayers"
+                                    getReadyPlayersFromDatabase(() =>
+                                    {
+                                        readyPlayers -= 1;
+                                        dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
+                                    });
+                                }
+
+                                // Usuń gracza z lobby niezależnie od stanu "ready"
+                                dbRef.Child(playerId).RemoveValueAsync();
+                            }
+                            else
+                            {
+                                Debug.Log("Failed to get player 'ready' status: " + readyTask.Exception);
+                            }
+                        });
                     }
                 }
                 else
@@ -270,16 +345,17 @@ public class LobbySceneController : MonoBehaviour
 
                 int budget = 50; // NA CZAS IMPLEMENTACJI KART USTAWIONE NA SZTYWNO
 
-               // if (readyPlayersCount >= 2 && readyPlayersCount <= 3)
-               // {
-               //     budget = 50;
-               // } else if (readyPlayersCount >= 4 && readyPlayersCount <= 6 )
-               // {
-               //     budget = 70;
-              //  } else if (readyPlayersCount >= 7 && readyPlayersCount <= 8 )
-              //  {
-               //     budget = 90;
-              //  }
+                // getReadyPlayersFromDatabase();
+                // if (readyPlayers >= 2 && readyPlayers <= 3)
+                // {
+                //     budget = 50;
+                // } else if (readyPlayers >= 4 && readyPlayers <= 6 )
+                // {
+                //     budget = 70;
+                //  } else if (readyPlayers >= 7 && readyPlayers <= 8 )
+                //  {
+                //     budget = 90;
+                //  }
 
                 dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
 
@@ -325,8 +401,6 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
-
-
     void CheckAndSetMapData()
     {
         dbRefLobby.GetValueAsync().ContinueWith(sessionTask =>
@@ -340,8 +414,8 @@ public class LobbySceneController : MonoBehaviour
                 {
                     { "region1", new Dictionary<string, object> { { "maxSupport", 15 }, { "type", "Ambasada" } } },
                     { "region2", new Dictionary<string, object> { { "maxSupport", 19 }, { "type", "Metropolia" } } },
-                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Środowisko" } } },
-                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemysł" } } },
+                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "�rodowisko" } } },
+                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemys�" } } },
                     { "region5", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Metropolia" } } },
                     { "region6", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Ambasada" } } }
                 };
@@ -361,13 +435,15 @@ public class LobbySceneController : MonoBehaviour
     }
 
 
-    void StartingGame()
+    void StartingGame(string lobbyId)
     {
-        if (readyPlayersCount == lobbySize)
+        getReadyPlayersFromDatabase(() =>
         {
-            isStarted = 1;
-            dbRefLobby.Child("isStarted").SetValueAsync(isStarted);
-
-        }
+            if (readyPlayers == lobbySize)
+            {
+                isStarted = 1;
+                dbRefLobby.Child("isStarted").SetValueAsync(isStarted);
+            }
+        });
     }
 }
