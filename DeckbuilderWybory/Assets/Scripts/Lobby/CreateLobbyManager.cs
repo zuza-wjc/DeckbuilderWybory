@@ -159,7 +159,6 @@ public class CreateLobbyManager : MonoBehaviour
 
         int isStarted = 0;
         int money = 0;
-        int support = 0;
         int readyPlayers = 0;
 
         // Tworzenie danych lobby
@@ -170,7 +169,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
             { "readyPlayers", readyPlayers },
-            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } }  } } } } }
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", new int[6] { 5, 5, 5, 5, 5, 5 } }, { "playerTurn", false } }  } } } } }
         };
 
         // Dodawanie danych do bazy Firebase

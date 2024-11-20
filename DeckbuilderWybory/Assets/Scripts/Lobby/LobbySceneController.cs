@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
@@ -15,13 +14,13 @@ public class LobbySceneController : MonoBehaviour
     public GameObject scrollViewContent;
     public GameObject textTemplate;
 
-    public Button readyButton;  // Przycisk gotowosci
+    public Button readyButton;
     public Sprite selected;
     public Sprite notSelected;
     private Image image;
 
-    public Button copyButton; //przycisk do kopiowania kodu
-    public Text playerCountsText; // Tekst do wyswietlania liczby graczy
+    public Button copyButton;
+    public Text playerCountsText;
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
@@ -84,7 +83,7 @@ public class LobbySceneController : MonoBehaviour
                 }
                 else
                 {
-                    readyPlayers = 0; // Ustawienie domyślnej wartości
+                    readyPlayers = 0;
                     Debug.LogWarning("Ready players count not found. Defaulting to 0.");
                 }
             }
@@ -105,7 +104,7 @@ public class LobbySceneController : MonoBehaviour
                 }
                 else
                 {
-                    readyPlayers = 0; // Ustawienie domyślnej wartości
+                    readyPlayers = 0;
                     Debug.LogWarning("Ready players count not found. Defaulting to 0.");
                 }
             }
@@ -160,7 +159,7 @@ public class LobbySceneController : MonoBehaviour
                 if (playerId != playerChanged)
                 {
                     bool isReady = (bool)child.Value;
-                    Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
+                   // Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
 
                     string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
 
@@ -177,20 +176,16 @@ public class LobbySceneController : MonoBehaviour
 
     void CreateText(string playerName, bool readyStatus)
     {
-        // Sprawdzanie, czy obiekt z t¹ sam¹ nazw¹ gracza ju¿ istnieje
         foreach (Transform child in scrollViewContent.transform)
         {
-            // Sprawdzamy, czy tekst obiektu zawiera nazwê gracza
             Text childText = child.GetComponentInChildren<Text>();
             if (childText != null && childText.text.Contains(playerName))
             {
-                // Jeœli obiekt z t¹ nazw¹ gracza ju¿ istnieje, nie tworzymy nowego
                 Debug.Log("Obiekt z t¹ nazw¹ gracza ju¿ istnieje: " + playerName);
                 return;
             }
         }
 
-        // Jeœli obiekt z t¹ nazw¹ nie istnieje, tworzymy nowy
         string playerInfo = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
         GameObject text = Instantiate(textTemplate, scrollViewContent.transform);
         if (text != null)
@@ -215,7 +210,6 @@ public class LobbySceneController : MonoBehaviour
 
         CreateText(playerName, readyStatus);
     }
-
 
     void RemoveText(string playerName)
     {
@@ -267,7 +261,6 @@ public class LobbySceneController : MonoBehaviour
         playerCountsText.text = "GOTOWI GRACZE: " + readyPlayers + " / " + lobbySize;
     }
 
-
     public void LeaveLobby()
     {
         dbRef.GetValueAsync().ContinueWith(countTask =>
@@ -279,36 +272,35 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                        // Usuń cały węzeł lobby, jeśli jesteś ostatnim graczem
-                        dbRefLobby.RemoveValueAsync();
+                       // dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
                         // Sprawdź, czy miałeś ustawione "ready: true"
-                        dbRef.Child(playerId).Child("ready").GetValueAsync().ContinueWith(readyTask =>
-                        {
-                            if (readyTask.IsCompleted && !readyTask.IsFaulted)
-                            {
-                                bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
+                       // dbRef.Child(playerId).Child("ready").GetValueAsync().ContinueWith(readyTask =>
+                       // {
+                        //    if (readyTask.IsCompleted && !readyTask.IsFaulted)
+                         //   {
+                         //       bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
 
-                                if (wasReady)
-                                {
+                         //       if (wasReady)
+                         //       {
                                     // Jeśli gracz był gotowy, zmniejsz licznik "readyPlayers"
-                                    getReadyPlayersFromDatabase(() =>
-                                    {
-                                        readyPlayers -= 1;
-                                        dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
-                                    });
-                                }
+                        //            getReadyPlayersFromDatabase(() =>
+                        //            {
+                        //                readyPlayers -= 1;
+                        //                dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
+                         //           });
+                        //        }
 
                                 // Usuń gracza z lobby niezależnie od stanu "ready"
-                                dbRef.Child(playerId).RemoveValueAsync();
-                            }
-                            else
-                            {
-                                Debug.Log("Failed to get player 'ready' status: " + readyTask.Exception);
-                            }
-                        });
+                       //         dbRef.Child(playerId).RemoveValueAsync();
+                      //      }
+                       //     else
+                        //    {
+                       //         Debug.Log("Failed to get player 'ready' status: " + readyTask.Exception);
+                       //     }
+                    //    });
                     }
                 }
                 else

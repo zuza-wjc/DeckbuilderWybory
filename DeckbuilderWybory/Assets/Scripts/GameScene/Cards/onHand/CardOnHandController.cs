@@ -63,7 +63,7 @@ public class CardOnHandController : MonoBehaviour
         }
     }
 
-private void AddCardToUI(string cardId)
+    private void AddCardToUI(string cardId)
     {
         if (cardObjects.ContainsKey(cardId)) return;
 
@@ -109,7 +109,6 @@ private void AddCardToUI(string cardId)
         };
     }
 
-
     private void ListenForCardPlayed(string cardId)
     {
         dbRef.Child(cardId).Child("played").ValueChanged += (sender, args) =>
@@ -135,6 +134,11 @@ private void AddCardToUI(string cardId)
 
     private void ForceUpdateUI()
     {
+        if (this == null)
+        {
+            return;
+        }
+
         StartCoroutine(LoadCardsOnHand());
     }
 
