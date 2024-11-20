@@ -157,10 +157,10 @@ public class CreateLobbyManager : MonoBehaviour
             return;
         }
 
-
         int isStarted = 0;
         int money = 0;
         int support = 0;
+        int readyPlayers = 0;
 
         // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
@@ -169,6 +169,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "isStarted", isStarted },
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
+            { "readyPlayers", readyPlayers },
             { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", support }, { "playerTurn", false } }  } } } } }
         };
 
