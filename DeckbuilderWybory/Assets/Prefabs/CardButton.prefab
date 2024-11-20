@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4292534281317120940}
   - component: {fileID: 1045609878780313039}
   m_Layer: 5
-  m_Name: PlayerButton
+  m_Name: CardButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -37,8 +37,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1142, y: -543}
-  m_SizeDelta: {x: 773.6708, y: 229.3586}
+  m_AnchoredPosition: {x: -1567.8776, y: -778.981}
+  m_SizeDelta: {x: 930, y: 240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7811532625002325926
 CanvasRenderer:
@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 7552874150501617893}
   - component: {fileID: 5579180093862433782}
   m_Layer: 5
-  m_Name: lobbyName
+  m_Name: playerName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -214,4 +214,4 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: GRACZ
+  m_Text: playerName
