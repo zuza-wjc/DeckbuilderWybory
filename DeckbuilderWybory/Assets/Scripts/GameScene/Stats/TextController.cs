@@ -1,7 +1,10 @@
+using System.Collections;
+using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
-using TMPro;
+using Firebase.Extensions;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TextController : MonoBehaviour
 {
@@ -9,8 +12,8 @@ public class TextController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    public TextMeshProUGUI moneyText;
-    public TextMeshProUGUI supportText;
+    public Text moneyText;
+    public Text supportText;
 
     void Start()
     {
@@ -23,31 +26,18 @@ public class TextController : MonoBehaviour
             return;
         }
 
-        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(playerId))
-        {
-            Debug.LogError("LobbyId or PlayerId is not assigned properly!");
-            return;
-        }
-
-        if (moneyText == null || supportText == null)
-        {
-            Debug.LogError("TextMeshProUGUI components are not assigned in the Inspector!");
-            return;
-        }
-
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId);
 
+        // Ustawienie nasluchiwania zmian w stats
         dbRef.Child("stats").Child("money").ValueChanged += FetchFromDbMoney;
         dbRef.Child("stats").Child("support").ValueChanged += FetchFromDbSupport;
     }
 
     void OnDestroy()
     {
-        if (dbRef != null)
-        {
-            dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
-            dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
-        }
+        // Usun nasluchiwanie
+        dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
+        dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
     }
 
     void FetchFromDbMoney(object sender, ValueChangedEventArgs args)
@@ -60,9 +50,10 @@ public class TextController : MonoBehaviour
 
         if (args.Snapshot.Exists)
         {
-            moneyText.text = args.Snapshot.Value.ToString();
+            moneyText.text = args.Snapshot.Value.ToString() + "k";
         }
     }
+
     void FetchFromDbSupport(object sender, ValueChangedEventArgs args)
     {
         if (args.DatabaseError != null)
@@ -73,7 +64,7 @@ public class TextController : MonoBehaviour
 
         if (args.Snapshot.Exists)
         {
-            supportText.text = args.Snapshot.Value.ToString();
+            supportText.text = args.Snapshot.Value.ToString() + "%";
         }
     }
 }
