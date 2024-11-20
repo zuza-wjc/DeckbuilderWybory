@@ -229,11 +229,11 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                       // dbRefLobby.RemoveValueAsync(); na czas implementacji
+                        dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
-                        //  dbRef.Child(playerId).RemoveValueAsync(); na czas implementacji
+                        dbRef.Child(playerId).RemoveValueAsync();
                     }
                 }
                 else
@@ -340,8 +340,8 @@ public class LobbySceneController : MonoBehaviour
                 {
                     { "region1", new Dictionary<string, object> { { "maxSupport", 15 }, { "type", "Ambasada" } } },
                     { "region2", new Dictionary<string, object> { { "maxSupport", 19 }, { "type", "Metropolia" } } },
-                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Środowisko" } } },
-                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemysł" } } },
+                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "�rodowisko" } } },
+                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemys�" } } },
                     { "region5", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Metropolia" } } },
                     { "region6", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Ambasada" } } }
                 };

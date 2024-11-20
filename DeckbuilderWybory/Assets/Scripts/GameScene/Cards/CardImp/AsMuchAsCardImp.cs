@@ -47,7 +47,7 @@ public class AsMuchAsCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string cardIdDropped)
     {
         cost = -1;
         cardType = string.Empty;
@@ -117,11 +117,22 @@ public class AsMuchAsCardImp : MonoBehaviour
                 }
                 else
                 {
-                    cardUtilities.ProcessBonusOptions(budgetSnapshot, budgetBonusOptionsDictionary);
-                    cardUtilities.ProcessOptions(budgetSnapshot, budgetOptionsDictionary);
-                }
-            }
+                    DataSnapshot bonusSnapshot = budgetSnapshot.Child("bonus");
+                    if (bonusSnapshot.Exists)
+                    {
+                        cardUtilities.ProcessBonusOptions(bonusSnapshot, budgetBonusOptionsDictionary);
+                    }
 
+                    foreach (var optionSnapshot in budgetSnapshot.Children)
+                    {
+                        if (optionSnapshot.Key != "bonus")
+                        {
+                            cardUtilities.ProcessOptions(optionSnapshot, budgetOptionsDictionary);
+                        }
+                    }
+                }
+
+            }
 
             DataSnapshot incomeSnapshot = snapshot.Child("income");
             if (incomeSnapshot.Exists)
@@ -202,10 +213,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             await IncomeAction();
         }
 
-        if (!ignoreCost)
-        {
-            await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
-        }
+        await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
 
         dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
 

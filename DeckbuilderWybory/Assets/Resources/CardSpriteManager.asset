@@ -91,17 +91,3 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: 7a90828e0cc5a42428c8929718b777c0, type: 3}
   - cardId: AS062
     cardSprite: {fileID: 21300000, guid: d5e529379785d2440b1a49fea8a40ce8, type: 3}
-  - cardId: CA015
-    cardSprite: {fileID: 21300000, guid: 8eda264bd72dd4e448fb9c2250e3b7f7, type: 3}
-  - cardId: CA017
-    cardSprite: {fileID: 21300000, guid: 931c5ff736aaf0f4db6e95e0d2a46dbc, type: 3}
-  - cardId: CA031
-    cardSprite: {fileID: 21300000, guid: 072529845886bb0459c1ad5fb152b02e, type: 3}
-  - cardId: CA033
-    cardSprite: {fileID: 21300000, guid: 835df151ac92de5488aa320583feaeec, type: 3}
-  - cardId: CA070
-    cardSprite: {fileID: 21300000, guid: 807563ada4a584747a8eec2dad69367d, type: 3}
-  - cardId: CA077
-    cardSprite: {fileID: 21300000, guid: e84ccb220c3dee0418ccfcc654238348, type: 3}
-  - cardId: CA085
-    cardSprite: {fileID: 21300000, guid: eff942b20e687f744b02988dbf24028d, type: 3}
