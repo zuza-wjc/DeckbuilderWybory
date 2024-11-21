@@ -557,7 +557,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1191905922}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -910,9 +910,9 @@ MonoBehaviour:
   scrollViewContent: {fileID: 1191905921}
   textTemplate: {fileID: 8224675254308820580, guid: 2728b7796cf0e924f8a3e9bb9bfda95f, type: 3}
   readyButton: {fileID: 1641716298}
+  selected: {fileID: 21300000, guid: e7c4cf3bb1f48764498a6cd4aa33d664, type: 3}
+  notSelected: {fileID: 21300000, guid: c73ba54616b070b4c99e5cafd4967cb4, type: 3}
   copyButton: {fileID: 1667679761}
-  readySprite: {fileID: 21300000, guid: 584766454360745428ffdf0ac0e0cd2b, type: 3}
-  notReadySprite: {fileID: 21300000, guid: c85bbdee90191de4ca23fd81cbd9f84b, type: 3}
   playerCountsText: {fileID: 1265338362}
 --- !u!1 &1163527929
 GameObject:
@@ -1048,7 +1048,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 0
+  m_Spacing: 25
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -1140,7 +1140,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'GOTOWI GRACZE: 0/8'
+  m_Text: 
 --- !u!222 &1265338363
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1700,6 +1700,50 @@ Transform:
   - {fileID: 1061341940}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1923479661
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1923479662}
+  - component: {fileID: 1923479663}
+  m_Layer: 0
+  m_Name: DeckController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1923479662
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923479661}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1207.5323, y: 501.5617, z: -9.81975}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1923479663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1923479661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d56d4d63d1984014caa164ed42897396, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &2009472230
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1986,3 +2030,4 @@ SceneRoots:
   - {fileID: 856371498}
   - {fileID: 2135856909}
   - {fileID: 1739659259}
+  - {fileID: 1923479662}

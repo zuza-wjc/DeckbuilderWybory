@@ -37,8 +37,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1387.3375, y: -774.28894}
-  m_SizeDelta: {x: 895, y: 300}
+  m_AnchoredPosition: {x: -1142, y: -543}
+  m_SizeDelta: {x: 773.6708, y: 229.3586}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7811532625002325926
 CanvasRenderer:
@@ -68,7 +68,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: ffaeb7aff69382e42951e4d95b6d527b, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c73ba54616b070b4c99e5cafd4967cb4, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -134,8 +134,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9671f7664786cf245ac666ee31418bcf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultSprite: {fileID: 21300000, guid: ffaeb7aff69382e42951e4d95b6d527b, type: 3}
-  pressedSprite: {fileID: 21300000, guid: 10e15fc2e90b6214a940f8e8624753f7, type: 3}
+  defaultSprite: {fileID: 21300000, guid: c73ba54616b070b4c99e5cafd4967cb4, type: 3}
+  pressedSprite: {fileID: 21300000, guid: e7c4cf3bb1f48764498a6cd4aa33d664, type: 3}
 --- !u!1 &8404375382138477417
 GameObject:
   m_ObjectHideFlags: 0
@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 7552874150501617893}
   - component: {fileID: 5579180093862433782}
   m_Layer: 5
-  m_Name: playerName
+  m_Name: lobbyName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -170,7 +170,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 16.5, y: 24.0261}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -39, y: -48.052}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7552874150501617893
@@ -203,7 +203,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: c26eb0cc19caf6043ba35efa06e8c21f, type: 3}
-    m_FontSize: 100
+    m_FontSize: 80
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 1
@@ -214,4 +214,4 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: playerName
+  m_Text: GRACZ
