@@ -5,32 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c850f2d-f4a0-4c5d-9c82-7f137fcf5a7a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/Button example.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/Button example.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/CircleBackground.prefab" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/CircleBackground.prefab.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Sprites/UI/map/Button Icon Map Stats.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Sprites/UI/map/Button Icon Map Stats.png.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Sprites/UI/map/circle.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Sprites/UI/map/circle.png.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Sprites/UI/map/rect5890.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Sprites/UI/map/rect5890.png.meta" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DeckbuilderWybory/UpgradeLog4.htm" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameBoard.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameBoard.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/CreateLobbyManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/CreateLobbyManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/MapManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/MapManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/JoinLobbyByCode.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/JoinLobbyByCode.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/LobbyListManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/LobbyListManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/TextMesh Pro/Resources/Fonts &amp; Materials/LiberationSans SDF - Fallback.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker0.log" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker0.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker1.log" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker1.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-AssetImportWorker0.log" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-AssetImportWorker0.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe0.log" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe0.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Join Lobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Join Lobby.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Lobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Lobby.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapDisplay.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapDisplay.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker0.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker1.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-AssetImportWorker0.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Layouts/default-2022.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Layouts/default-2022.dwlt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Search.settings" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Search.settings" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,13 +32,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/2002a/Documents/GitHub/DeckbuilderWybory&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Users/2002a/Documents/GitHub/DeckbuilderWybory/DeckbuilderWybory/Assets/Scripts/GameScene"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\2002a\Documents\GitHub\DeckbuilderWybory\DeckbuilderWybory\Assets\Scripts\GameScene" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
