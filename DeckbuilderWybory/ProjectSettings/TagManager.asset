@@ -68,6 +68,9 @@ TagManager:
   - OP011
   - OP013
   - OP014
+  - RA004
+  - RA010
+  - RA012
   layers:
   - Default
   - TransparentFX
