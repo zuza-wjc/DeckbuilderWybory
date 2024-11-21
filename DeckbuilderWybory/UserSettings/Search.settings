@@ -8,7 +8,7 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"last_search.FD7A1EDD" = "ref=\"Assets/Sprites/UI/buttons/buttonDefault.png\""
+	"last_search.FD7A1EDD" = "ref=\"Assets/Scripts/GameScene/Stats/TextController.cs\""
 	"OpenInspectorPreview.FD7A1EDD" = "0"
 	"currentGroup.FD7A1EDD" = "all"
 }
