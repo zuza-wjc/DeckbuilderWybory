@@ -6,6 +6,7 @@ public class CardTypeManager : MonoBehaviour
     public AsMuchAsCardImp asMuchAsCardImp;
     public CardCardImp cardCardImp;
     public OptionsCardImp optionsCardImp;
+    public RandomCardImp randomCardImp;
 
     public void OnCardDropped(string cardIdDropped, bool ignoreCost)
     {
@@ -24,6 +25,9 @@ public class CardTypeManager : MonoBehaviour
                 break;
             case "OP":
                 optionsCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                break;
+            case "RA":
+                randomCardImp.CardLibrary(cardIdDropped, ignoreCost);
                 break;
 
         }
