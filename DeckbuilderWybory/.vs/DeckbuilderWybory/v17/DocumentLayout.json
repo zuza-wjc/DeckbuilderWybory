@@ -1,12 +1,41 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\DeckbuilderWybory\\DeckbuilderWybory\\",
-  "Documents": [],
+  "WorkspaceRootPath": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\ciao ella\\documents\\github\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\deckcreationscene\\panelcontroler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\deckcreationscene\\panelcontroler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PanelControler.cs",
+              "DocumentMoniker": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\DeckCreationScene\\PanelControler.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\DeckCreationScene\\PanelControler.cs",
+              "ToolTip": "C:\\Users\\Ciao ella\\Documents\\GitHub\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\DeckCreationScene\\PanelControler.cs",
+              "RelativeToolTip": "Assets\\Scripts\\DeckCreationScene\\PanelControler.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACoAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-22T14:33:31.531Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
