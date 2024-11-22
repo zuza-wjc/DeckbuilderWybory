@@ -2979,6 +2979,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moneyText: {fileID: 1101106108}
   supportText: {fileID: 1966205644}
+  incomeText: {fileID: 1833809835}
 --- !u!1 &1058565278
 GameObject:
   m_ObjectHideFlags: 0
