@@ -23,13 +23,6 @@ public class MapDisplay : MonoBehaviour
 
     public Text[] regionText;
 
-    /*public TextMeshProUGUI region1Text;
-    public TextMeshProUGUI region2Text;
-    public TextMeshProUGUI region3Text;
-    public TextMeshProUGUI region4Text;
-    public TextMeshProUGUI region5Text;
-    public TextMeshProUGUI region6Text;*/
-
     public Button region1Button;
     public Button region2Button;
     public Button region3Button;

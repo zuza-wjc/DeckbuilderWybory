@@ -162,4 +162,12 @@ public class CardSelectionUI : MonoBehaviour
             Destroy(child.gameObject);
         }
     }
+
+    void OnDestroy()
+    {
+        if (submitButton != null)
+        {
+            submitButton.onClick.RemoveAllListeners();
+        }
+    }
 }

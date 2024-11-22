@@ -438,4 +438,29 @@ public class LobbySceneController : MonoBehaviour
             }
         });
     }
+
+    void OnDestroy()
+    {
+        if (dbRef != null)
+        {
+            dbRef.ChildAdded -= HandleChildAdded;
+            dbRef.ChildRemoved -= HandleChildRemoved;
+            dbRef.ChildChanged -= HandleChildChanged;
+        }
+
+        if (dbRefLobby != null)
+        {
+            dbRefLobby.Child("isStarted").ValueChanged -= HandleIsStartedChanged;
+        }
+
+        if (readyButton != null)
+        {
+            readyButton.onClick.RemoveListener(ToggleReady);
+        }
+
+        if (copyButton != null)
+        {
+            copyButton.onClick.RemoveListener(CopyFromClipboard);
+        }
+    }
 }

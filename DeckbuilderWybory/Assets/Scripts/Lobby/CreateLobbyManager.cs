@@ -218,4 +218,27 @@ public class CreateLobbyManager : MonoBehaviour
 
         return lobbyId;
     }
+
+    void OnDestroy()
+    {
+        if (publicButton != null)
+        {
+            publicButton.onClick.RemoveListener(() => TogglePublic(true));
+        }
+
+        if (privateButton != null)
+        {
+            privateButton.onClick.AddListener(() => TogglePublic(false));
+        }
+
+        if (plusButton != null)
+        {
+            plusButton.onClick.AddListener(IncreaseLobbySize);
+        }
+
+        if (minusButton != null)
+        {
+            minusButton.onClick.AddListener(DecreaseLobbySize);
+        }
+    }
 }

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
-public class GameSceneExitListener : MonoBehaviour
+public class GameExitListener : MonoBehaviour
 {
     DatabaseReference dbRef;
     DatabaseReference dbRefPlayers;
