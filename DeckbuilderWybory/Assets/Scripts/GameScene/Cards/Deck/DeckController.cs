@@ -10,7 +10,7 @@ public class DeckController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    public void InitializeDeck ()
+    public void InitializeDeck()
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
@@ -23,35 +23,48 @@ public class DeckController : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
-        // Dodaj karty do decka
+        AddCardToDeck("CA070", true);
+        AddCardToDeck("UN039", true);
         AddCardToDeck("UN086", true);
-        AddCardToDeck("AD023", true);
-        AddCardToDeck("AD058", true);
+        AddCardToDeck("CA077", true);
+        AddCardToDeck("CA031", true);
+        AddCardToDeck("CA070", false);
+        AddCardToDeck("UN039", false);
+        AddCardToDeck("UN086", false);
+        AddCardToDeck("CA077", false);
+        AddCardToDeck("CA031", false);
 
         Debug.Log("Deck loaded");
     }
 
     private void AddCardToDeck(string cardId, bool isOnHand)
     {
-   
-        bool onHand = isOnHand;  
-        bool played = false; 
+        string instanceId = GenerateInstanceId(cardId);
+
+        bool onHand = isOnHand;
+        bool played = false;
 
         Dictionary<string, object> cardDataDict = new()
-        {
+    {
+        { "cardId", cardId },
         { "onHand", onHand },
         { "played", played }
     };
 
-        dbRef.Child(playerId).Child("deck").Child(cardId.ToString()).SetValueAsync(cardDataDict)
+        dbRef.Child(playerId).Child("deck").Child(instanceId).SetValueAsync(cardDataDict)
             .ContinueWith(task => {
                 if (!task.IsCompleted)
                 {
-                    Debug.LogError($"Failed to add card {cardId} to the deck: {task.Exception}");
+                    Debug.LogError($"Failed to add card {instanceId} to the deck: {task.Exception}");
                 }
-              
             });
     }
+
+    private string GenerateInstanceId(string cardId)
+    {
+        return cardId + "_" + System.Guid.NewGuid().ToString();
+    }
+
 
     public async Task GetCardFromDeck(string source, string target)
     {
@@ -90,12 +103,10 @@ public class DeckController : MonoBehaviour
             var onHandSnapshot = cardSnapshot.Child("onHand");
             var playedSnapshot = cardSnapshot.Child("played");
 
-            if (onHandSnapshot.Exists && bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && !onHand)
+            if (onHandSnapshot.Exists && bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && !onHand &&
+                playedSnapshot.Exists && bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
             {
-                if (playedSnapshot.Exists && bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
-                {
-                    availableCards.Add(cardSnapshot.Key);
-                }
+                availableCards.Add(cardSnapshot.Key);
             }
         }
 
@@ -107,43 +118,65 @@ public class DeckController : MonoBehaviour
 
         System.Random random = new();
         int randomIndex = random.Next(availableCards.Count);
-        string selectedCardId = availableCards[randomIndex];
+        string selectedInstanceId = availableCards[randomIndex];
+
+        var selectedCardSnapshot = await sourceDeckRef.Child(selectedInstanceId).Child("cardId").GetValueAsync();
+        if (!selectedCardSnapshot.Exists)
+        {
+            Debug.LogError($"CardId for instance {selectedInstanceId} not found in source deck.");
+            return;
+        }
+
+        string selectedCardId = selectedCardSnapshot.Value.ToString();
 
         if (source == target)
         {
-            await sourceDeckRef.Child(selectedCardId).Child("onHand").SetValueAsync(true)
+            await sourceDeckRef.Child(selectedInstanceId).Child("onHand").SetValueAsync(true)
                 .ContinueWith(task =>
                 {
                     if (!task.IsCompleted)
                     {
-                        Debug.LogError($"Failed to mark card {selectedCardId} as 'onHand: true' for player {target}: {task.Exception}");
+                        Debug.LogError($"Failed to mark card {selectedInstanceId} as 'onHand: true' for player {target}: {task.Exception}");
                     }
                 });
         }
         else
         {
-            await targetDeckRef.Child(selectedCardId).SetValueAsync(new Dictionary<string, object>
+            var cardData = new Dictionary<string, object>
         {
             { "onHand", true },
-            { "played", false }
-        })
-            .ContinueWith(task =>
-            {
-                if (!task.IsCompleted)
+            { "played", false },
+            { "cardId", selectedCardId }
+        };
+
+            await targetDeckRef.Child(selectedInstanceId).SetValueAsync(cardData)
+                .ContinueWith(task =>
                 {
-                    Debug.LogError($"Failed to assign card {selectedCardId} to target player {target}: {task.Exception}");
-                }
-            });
+                    if (!task.IsCompleted)
+                    {
+                        Debug.LogError($"Failed to assign card {selectedInstanceId} to target player {target}: {task.Exception}");
+                    }
+                });
+
+            await sourceDeckRef.Child(selectedInstanceId).RemoveValueAsync()
+                .ContinueWith(task =>
+                {
+                    if (!task.IsCompleted)
+                    {
+                        Debug.LogError($"Failed to remove card {selectedInstanceId} from source player {source}: {task.Exception}");
+                    }
+                });
         }
     }
 
-    public async Task RejectCard(string source, string cardId)
+
+    public async Task RejectCard(string source, string instanceId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
-        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(cardId))
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(instanceId))
         {
-            Debug.LogError("Lobby ID, source, or cardId is null or empty. Cannot reject card.");
+            Debug.LogError("Lobby ID, source, or instanceId is null or empty. Cannot reject card.");
             return;
         }
 
@@ -154,14 +187,14 @@ public class DeckController : MonoBehaviour
             .Child(source)
             .Child("deck");
 
-        var cardSnapshot = await sourceDeckRef.Child(cardId).GetValueAsync();
+        var cardSnapshot = await sourceDeckRef.Child(instanceId).GetValueAsync();
         if (!cardSnapshot.Exists)
         {
-            Debug.LogError($"Card {cardId} not found for player {source} in lobby {lobbyId}.");
+            Debug.LogError($"Card {instanceId} not found for player {source} in lobby {lobbyId}.");
             return;
         }
 
-        await sourceDeckRef.Child(cardId).UpdateChildrenAsync(new Dictionary<string, object>
+        await sourceDeckRef.Child(instanceId).UpdateChildrenAsync(new Dictionary<string, object>
     {
         { "onHand", false },
         { "played", true }
@@ -170,12 +203,12 @@ public class DeckController : MonoBehaviour
         {
             if (!task.IsCompleted)
             {
-                Debug.LogError($"Failed to reject card {cardId} for player {source}: {task.Exception}");
+                Debug.LogError($"Failed to reject card {instanceId} for player {source}: {task.Exception}");
             }
         });
     }
 
-    public async Task ExchangeCards(string playerId, string cardId)
+    public async Task ExchangeCards(string playerId, string instanceId)
     {
         string lobbyId = DataTransfer.LobbyId;
         if (string.IsNullOrEmpty(lobbyId))
@@ -227,7 +260,7 @@ public class DeckController : MonoBehaviour
             List<string> availableCards = new();
             foreach (var cardSnapshot in currentPlayerSnapshot.Children)
             {
-                if(cardId ==  cardSnapshot.Key && playerId == currentPlayerId) { continue;  }
+                if (instanceId == cardSnapshot.Key && playerId == currentPlayerId) { continue; }
 
                 var onHandSnapshot = cardSnapshot.Child("onHand");
                 var playedSnapshot = cardSnapshot.Child("played");
@@ -246,7 +279,7 @@ public class DeckController : MonoBehaviour
             }
 
             int randomIndex = random.Next(availableCards.Count);
-            string selectedCardId = availableCards[randomIndex];
+            string selectedInstanceId = availableCards[randomIndex];
 
             var nextPlayerSnapshot = await nextPlayerDeckRef.GetValueAsync();
             if (!nextPlayerSnapshot.Exists)
@@ -255,7 +288,7 @@ public class DeckController : MonoBehaviour
                 continue;
             }
 
-            await nextPlayerDeckRef.Child(selectedCardId).SetValueAsync(new Dictionary<string, object>
+            await nextPlayerDeckRef.Child(selectedInstanceId).SetValueAsync(new Dictionary<string, object>
         {
             { "onHand", true },
             { "played", false }
@@ -264,24 +297,24 @@ public class DeckController : MonoBehaviour
             {
                 if (!task.IsCompleted)
                 {
-                    Debug.LogError($"Failed to assign card {selectedCardId} to next player {nextPlayerId}: {task.Exception}");
+                    Debug.LogError($"Failed to assign card {selectedInstanceId} to next player {nextPlayerId}: {task.Exception}");
                 }
             });
 
-            await currentPlayerDeckRef.Child(selectedCardId).RemoveValueAsync()
+            await currentPlayerDeckRef.Child(selectedInstanceId).RemoveValueAsync()
             .ContinueWith(task =>
             {
                 if (!task.IsCompleted)
                 {
-                    Debug.LogError($"Failed to remove card {selectedCardId} from player {currentPlayerId}: {task.Exception}");
+                    Debug.LogError($"Failed to remove card {selectedInstanceId} from player {currentPlayerId}: {task.Exception}");
                 }
             });
 
-            Debug.Log($"Player {currentPlayerId} exchanged card {selectedCardId} with player {nextPlayerId}.");
+            Debug.Log($"Player {currentPlayerId} exchanged card {selectedInstanceId} with player {nextPlayerId}.");
         }
     }
 
-    public async Task GetCardFromHand(string source, string target, List<string> cards)
+    public async Task GetCardFromHand(string source, string target, List<KeyValuePair<string, string>> cards)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -299,21 +332,27 @@ public class DeckController : MonoBehaviour
             .Child(target)
             .Child("deck");
 
-        foreach (string cardId in cards)
+        foreach (var card in cards)
         {
-            var sourceCardRef = sourceDeckRef.Child(cardId);
+            string instanceId = card.Key;
+            string cardId = card.Value;
+
+            var sourceCardRef = sourceDeckRef.Child(instanceId);
             await sourceCardRef.RemoveValueAsync();
-            var targetCardRef = targetDeckRef.Child(cardId);
+
+            var targetCardRef = targetDeckRef.Child(instanceId);
             var targetCardSnapshot = await targetCardRef.GetValueAsync();
+
             if (!targetCardSnapshot.Exists)
             {
+                await targetCardRef.Child("cardId").SetValueAsync(cardId);
                 await targetCardRef.Child("onHand").SetValueAsync(true);
                 await targetCardRef.Child("played").SetValueAsync(false);
             }
         }
     }
 
-    public async Task ExchangeFromHandToDeck(string source, string cardIdFromHand, string cardIdFromDeck)
+    public async Task ExchangeFromHandToDeck(string source, string instanceIdFromHand, string instanceIdFromDeck)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -324,11 +363,12 @@ public class DeckController : MonoBehaviour
             .Child(source)
             .Child("deck");
 
-        var cardFromHandRef = sourceDeckRef.Child(cardIdFromHand);
+        var cardFromHandRef = sourceDeckRef.Child(instanceIdFromHand);
         await cardFromHandRef.Child("onHand").SetValueAsync(false);
 
-        var cardFromDeckRef = sourceDeckRef.Child(cardIdFromDeck);
+        var cardFromDeckRef = sourceDeckRef.Child(instanceIdFromDeck);
         await cardFromDeckRef.Child("onHand").SetValueAsync(true);
     }
+
 
 }

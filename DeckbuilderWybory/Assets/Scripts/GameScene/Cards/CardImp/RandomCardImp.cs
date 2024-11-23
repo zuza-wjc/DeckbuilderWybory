@@ -20,7 +20,7 @@ public class RandomCardImp : MonoBehaviour
         playerListManager.Initialize(lobbyId, playerId);
     }
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
         DatabaseReference dbRefCard;
         DatabaseReference dbRefPlayerStats;
@@ -135,8 +135,7 @@ public class RandomCardImp : MonoBehaviour
 
         if (supportChange)
         {
-           isBonusRegion = await SupportAction(cardIdDropped, isBonusRegion, chosenRegion,cardType,supportOptionsDictionary,
-    supportBonusOptionsDictionary);
+           isBonusRegion = await SupportAction(cardIdDropped, isBonusRegion, chosenRegion,cardType,supportOptionsDictionary,supportBonusOptionsDictionary);
         }
 
         if (budgetChange)
@@ -149,15 +148,14 @@ public class RandomCardImp : MonoBehaviour
             await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
         await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> BudgetAction(DatabaseReference dbRefPlayerStats,
-        bool isBonusRegion,Dictionary<int, OptionData> budgetOptionsDictionary,Dictionary<int, OptionData> budgetBonusOptionsDictionary,
-        string enemyId,int playerBudget)
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> BudgetAction(DatabaseReference dbRefPlayerStats,bool isBonusRegion,Dictionary<int, OptionData> budgetOptionsDictionary,
+        Dictionary<int, OptionData> budgetBonusOptionsDictionary,string enemyId,int playerBudget)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? budgetBonusOptionsDictionary : budgetOptionsDictionary;
@@ -197,8 +195,8 @@ public class RandomCardImp : MonoBehaviour
         }
         return (dbRefPlayerStats, playerBudget);
     }
-    private async Task<bool> SupportAction(string cardId, bool isBonusRegion,int chosenRegion, string cardType,
-        Dictionary<int, OptionData> supportOptionsDictionary,Dictionary<int, OptionData> supportBonusOptionsDictionary)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion,int chosenRegion, string cardType,Dictionary<int, OptionData> supportOptionsDictionary,
+        Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
         chosenRegion = await mapManager.SelectArea();
         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
@@ -228,7 +226,6 @@ public class RandomCardImp : MonoBehaviour
         }
         return isBonusRegion;
     }
-
     public static Dictionary<int, OptionData> RandomizeOption(Dictionary<int, OptionData> optionsDictionary)
     {
         if (optionsDictionary == null || optionsDictionary.Count == 0)

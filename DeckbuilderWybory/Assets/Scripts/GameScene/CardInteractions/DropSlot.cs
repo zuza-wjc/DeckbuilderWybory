@@ -7,6 +7,7 @@ public class DropSlot : MonoBehaviour, IDropHandler
     public GameObject playerListPanel;
     public GameObject mapPanel;
 
+    string instanceId;
     string cardId;
 
     public CardTypeManager cardTypeManager;
@@ -21,24 +22,20 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
         playerListPanel.SetActive(false);
         mapPanel.SetActive(false);
-
     }
+
     public void OnDrop(PointerEventData eventData)
     {
         GameObject dropped = eventData.pointerDrag;
         DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
 
-        Debug.Log("Card dropped: "+ draggableItem.tag);
-
         if (draggableItem != null)
         {
-            cardId = draggableItem.tag;
+            instanceId = draggableItem.instanceId;
+            cardId = draggableItem.cardId;
 
-            cardTypeManager.OnCardDropped(cardId, false);
-
-        }                                  
-        
+            // Przekazujemy zarówno instanceId, jak i cardId do OnCardDropped
+            cardTypeManager.OnCardDropped(instanceId, cardId, false);
+        }
     }
 }
-
-

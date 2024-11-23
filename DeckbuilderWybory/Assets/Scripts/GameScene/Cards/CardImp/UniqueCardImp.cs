@@ -23,7 +23,7 @@ public class UniqueCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId,string cardIdDropped, bool ignoreCost)
     {
         DatabaseReference dbRefCard;
         DatabaseReference dbRefPlayerStats;
@@ -37,9 +37,6 @@ public class UniqueCardImp : MonoBehaviour
 
         int chosenRegion = -1;
         bool isBonusRegion = false;
-
-        List<string> selectedCardIds = new();
-        selectedCardIds.Clear();
 
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
@@ -124,21 +121,20 @@ public class UniqueCardImp : MonoBehaviour
             return;
         }
 
-        playerBudget = await SwitchCase(dbRefPlayerStats,playerIncome, playerBudget, cardIdDropped, chosenRegion,
-            isBonusRegion, cardType,enemyId, selectedCardIds);
+        playerBudget = await SwitchCase(instanceId,dbRefPlayerStats,playerIncome, playerBudget, cardIdDropped, chosenRegion,isBonusRegion, cardType,enemyId);
 
         if (!ignoreCost)
         {
             await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
         await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<int> SwitchCase(DatabaseReference dbRefPlayerStats,int playerIncome, int playerBudget, string cardId, int chosenRegion, bool isBonusRegion, string cardType, string enemyId, List<string> selectedCardIds)
+    private async Task<int> SwitchCase(string instanceId,DatabaseReference dbRefPlayerStats,int playerIncome, int playerBudget, string cardId, int chosenRegion, bool isBonusRegion, string cardType, string enemyId)
     {
         switch (cardId)
         {
@@ -175,9 +171,22 @@ public class UniqueCardImp : MonoBehaviour
                 await ExchangeSupport(chosenRegion, enemyId, isBonusRegion);
                 break;
             case "UN039":
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, 1, cardId, true);
-                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
-                cardTypeManager.OnCardDropped(selectedCardIds[0], true);
+                List<KeyValuePair<string, string>> selectedCards = await cardSelectionUI.ShowCardSelection(playerId, 1, instanceId, true);
+
+                if (selectedCards.Count > 0)
+                {
+                    string selectedInstanceId = selectedCards[0].Key;
+                    string selectedCardId = selectedCards[0].Value;
+
+                    Debug.Log($"Wybrana karta: {selectedInstanceId} ({selectedCardId})");
+
+                    cardTypeManager.OnCardDropped(selectedInstanceId,selectedCardId, true);
+                }
+                else
+                {
+                    Debug.LogWarning("Nie wybrano ¿adnej karty.");
+                }
+
                 break;
             case "UN055":
                 playerBudget += playerIncome;
@@ -186,7 +195,7 @@ public class UniqueCardImp : MonoBehaviour
             case "UN086":
                 chosenRegion = await mapManager.SelectArea();
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
-                await ChangeIncomePerCard(chosenRegion, isBonusRegion, cardId);
+                await ChangeIncomePerCard(chosenRegion, isBonusRegion, instanceId);
                 break;
 
             default:
@@ -275,7 +284,6 @@ public class UniqueCardImp : MonoBehaviour
                 return;
             }
 
-            // Aktualizacja poparcia
             support += value;
             await dbRefSupport.SetValueAsync(support);
 
@@ -395,6 +403,8 @@ public class UniqueCardImp : MonoBehaviour
 
     private async Task<int> CountCardsOnHand(string playerId)
     {
+        string lobbyId = DataTransfer.LobbyId;
+
         var deckRef = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
@@ -425,7 +435,7 @@ public class UniqueCardImp : MonoBehaviour
         return cardsOnHand;
     }
 
-    private async Task ChangeIncomePerCard(int chosenRegion, bool isBonus, string cardId)
+    private async Task ChangeIncomePerCard(int chosenRegion, bool isBonus, string instanceId)
     {
         var playersRef = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -460,7 +470,7 @@ public class UniqueCardImp : MonoBehaviour
 
             if (currentPlayerId == playerId)
             {
-                var cardRef = playersRef.Child(currentPlayerId).Child("deck").Child(cardId);
+                var cardRef = playersRef.Child(currentPlayerId).Child("deck").Child(instanceId);
                 var cardSnapshot = await cardRef.GetValueAsync();
 
                 if (cardSnapshot.Exists &&
@@ -485,8 +495,5 @@ public class UniqueCardImp : MonoBehaviour
             }
         }
     }
-
-
-
 
 }
