@@ -15,7 +15,7 @@ public class CardOnHandController : MonoBehaviour
     string lobbyId;
     string playerId;
 
-    private Dictionary<string, GameObject> cardObjects = new Dictionary<string, GameObject>();
+    private Dictionary<string, GameObject> cardObjects = new();
 
     private void Awake()
     {
@@ -71,7 +71,7 @@ public class CardOnHandController : MonoBehaviour
         Image cardImage = newCard.GetComponent<Image>();
 
         cardImage.sprite = cardSpriteManager.GetCardSprite(cardId);
-        newCard.gameObject.tag = cardId;
+        newCard.tag = cardId;
 
         cardObjects[cardId] = newCard;
 

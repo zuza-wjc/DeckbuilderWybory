@@ -15,32 +15,6 @@ public class AsMuchAsCardImp : MonoBehaviour
     public CardUtilities cardUtilities;
     public MapManager mapManager;
 
-    private DatabaseReference dbRefCard;
-    private DatabaseReference dbRefPlayerStats;
-    private DatabaseReference dbRefPlayerDeck;
-
-    private int cost;
-    private string cardType;
-    private int playerBudget;
-    private int playerIncome;
-    private int chosenRegion;
-    private int supportValue;
-    private string enemyId;
-
-    private bool budgetChange;
-    private bool supportChange;
-    private bool isBonusRegion;
-    private bool incomeChange;
-
-    private Dictionary<int, OptionData> budgetOptionsDictionary = new();
-    private Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
-    private Dictionary<int, OptionDataPerCard> incomeOptionsDictionary = new();
-    private Dictionary<int, OptionDataPerCard> incomeBonusOptionsDictionary = new();
-    private Dictionary<int, OptionDataPerCard> supportOptionsDictionary = new();
-    private Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary = new();
-    private Dictionary<int, OptionDataPerCard> budgetOptionsPerCardDictionary = new();
-    private Dictionary<int, OptionDataPerCard> budgetBonusOptionsPerCardDictionary = new();
-
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -49,18 +23,30 @@ public class AsMuchAsCardImp : MonoBehaviour
 
     public async void CardLibrary(string cardIdDropped, bool ignoreCost)
     {
-        cost = -1;
-        cardType = string.Empty;
-        playerBudget = -1;
-        playerIncome = -1;
-        chosenRegion = -1;
-        supportValue = 0;
-        enemyId = string.Empty;
+        DatabaseReference dbRefCard;
+        DatabaseReference dbRefPlayerStats;
+        DatabaseReference dbRefPlayerDeck;
 
-        budgetChange = false;
-        supportChange = false;
-        isBonusRegion = false;
-        incomeChange = false;
+        int cost;
+        string cardType;
+        int playerBudget;
+        int playerIncome;
+        int chosenRegion = -1;
+        string enemyId = string.Empty;
+
+        bool budgetChange = false;
+        bool supportChange = false;
+        bool isBonusRegion = false;
+        bool incomeChange = false;
+
+        Dictionary<int, OptionData> budgetOptionsDictionary = new();
+        Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
+        Dictionary<int, OptionDataPerCard> incomeOptionsDictionary = new();
+        Dictionary<int, OptionDataPerCard> incomeBonusOptionsDictionary = new();
+        Dictionary<int, OptionDataPerCard> supportOptionsDictionary = new();
+        Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary = new();
+        Dictionary<int, OptionDataPerCard> budgetOptionsPerCardDictionary = new();
+        Dictionary<int, OptionDataPerCard> budgetBonusOptionsPerCardDictionary = new();
 
         budgetOptionsDictionary.Clear();
         budgetBonusOptionsDictionary.Clear();
@@ -158,7 +144,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (moneySnapshot.Exists)
             {
                 playerBudget = Convert.ToInt32(moneySnapshot.Value);
-                if (playerBudget < cost)
+                if (!ignoreCost && playerBudget < cost)
                 {
                     Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                     return;
@@ -189,17 +175,21 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         if(supportChange)
         {
-            await SupportAction(cardIdDropped);
+            isBonusRegion = await SupportAction(cardIdDropped,isBonusRegion,supportOptionsDictionary,supportBonusOptionsDictionary,
+                chosenRegion,cardType);
         }
 
         if (budgetChange)
         {
-            await BudgetAction(cardIdDropped);
+            (dbRefPlayerStats, isBonusRegion, playerBudget) = await BudgetAction(dbRefPlayerStats,cardIdDropped,isBonusRegion,
+                budgetOptionsDictionary,budgetBonusOptionsDictionary,budgetOptionsPerCardDictionary,
+                budgetBonusOptionsPerCardDictionary,playerBudget,enemyId,cardType);
         }
 
         if (incomeChange)
         {
-            await IncomeAction();
+            dbRefPlayerStats = await IncomeAction(isBonusRegion,incomeOptionsDictionary,incomeBonusOptionsDictionary,
+                playerIncome,cardType,dbRefPlayerStats);
         }
 
         if (!ignoreCost)
@@ -213,7 +203,9 @@ public class AsMuchAsCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task IncomeAction()
+    private async Task<DatabaseReference> IncomeAction(bool isBonusRegion, Dictionary<int, OptionDataPerCard> incomeOptionsDictionary,
+        Dictionary<int, OptionDataPerCard> incomeBonusOptionsDictionary, int playerIncome, string cardType,
+        DatabaseReference dbRefPlayerStats)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? incomeBonusOptionsDictionary : incomeOptionsDictionary;
@@ -221,7 +213,7 @@ public class AsMuchAsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return;
+            return dbRefPlayerStats;
         }
 
         if (isBonus)
@@ -244,8 +236,14 @@ public class AsMuchAsCardImp : MonoBehaviour
                 await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
             }
         }
+
+        return dbRefPlayerStats;
     }
-    private async Task BudgetAction(string cardId)
+    private async Task<(DatabaseReference dbRefPlayerStats,bool isBonusRegion,int playerBudget)>
+        BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
+        Dictionary<int, OptionData> budgetOptionsDictionary,Dictionary<int, OptionData> budgetBonusOptionsDictionary,
+        Dictionary<int, OptionDataPerCard> budgetOptionsPerCardDictionary,Dictionary<int, OptionDataPerCard> budgetBonusOptionsPerCardDictionary,
+        int playerBudget, string enemyId, string cardType)
     {
         var isBonus = isBonusRegion;
         object optionsToApply;
@@ -264,7 +262,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (optionsData?.Values == null || !optionsData.Values.Any())
             {
                 Debug.LogError("No options to apply.");
-                return;
+                return(dbRefPlayerStats,false,-1);
             }
 
             if (isBonus)
@@ -283,6 +281,7 @@ public class AsMuchAsCardImp : MonoBehaviour
                 if (data.Target == "player")
                 {
                     playerBudget += data.Number;
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
             }
         }
@@ -292,7 +291,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (optionsPerCard?.Values == null || !optionsPerCard.Values.Any())
             {
                 Debug.LogError("No options to apply.");
-                return;
+                return (dbRefPlayerStats, false, -1);
             }
 
             if (isBonus)
@@ -316,22 +315,26 @@ public class AsMuchAsCardImp : MonoBehaviour
                         if (string.IsNullOrEmpty(enemyId))
                         {
                             Debug.LogError("Failed to select an enemy player.");
-                            return;
+                            return (dbRefPlayerStats, false, -1);
                         }
                     }
 
                     int howMany = await CalculateValueFromHand(playerId, cardType);
                     int changeBudget = howMany * data.NumberPerCard;
                     await cardUtilities.ChangeEnemyStat(enemyId, changeBudget, "money", playerBudget);
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
             }
         }
         else
         {
             Debug.LogError("Unexpected optionsToApply type.");
+            return (dbRefPlayerStats, false, -1);
         }
+        return (dbRefPlayerStats, isBonusRegion, playerBudget);
     }
-    private async Task SupportAction(string cardId)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, Dictionary<int, OptionDataPerCard> supportOptionsDictionary,
+    Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary, int chosenRegion, string cardType)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? supportBonusOptionsDictionary : supportOptionsDictionary;
@@ -339,7 +342,7 @@ public class AsMuchAsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No support options available.");
-            return;
+            return false;
         }
 
         if (isBonus)
@@ -362,11 +365,12 @@ public class AsMuchAsCardImp : MonoBehaviour
                     chosenRegion = await mapManager.SelectArea();
                 }
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
-                supportValue = await CalculateValueFromHand(playerId, cardType);
+                int supportValue = await CalculateValueFromHand(playerId, cardType);
                 Debug.Log($"Poparcie zwiêksza siê o {supportValue}");
                 await cardUtilities.ChangeSupport(playerId, supportValue, chosenRegion, cardId, mapManager);
             }
         }
+        return isBonusRegion;
     }
 
     private void ProcessOptionsPerCard(DataSnapshot snapshot, Dictionary<int, OptionDataPerCard> optionsDictionary, string optionType)

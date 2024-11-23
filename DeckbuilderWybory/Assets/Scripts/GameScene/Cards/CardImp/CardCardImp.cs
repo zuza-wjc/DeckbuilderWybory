@@ -18,30 +18,6 @@ public class CardCardImp : MonoBehaviour
     public CardSelectionUI cardSelectionUI;
     public CardTypeManager cardTypeManager;
 
-    private DatabaseReference dbRefCard;
-    private DatabaseReference dbRefPlayerStats;
-    private DatabaseReference dbRefPlayerDeck;
-
-    private int cost;
-    private string cardType;
-    private int playerBudget;
-    private int chosenRegion;
-    private string enemyId;
-    private string source;
-    private string target;
-
-    List<string> selectedCardIds = new();
-
-    private bool supportChange;
-    private bool isBonusRegion;
-    private bool cardsChange;
-    private bool onHandChanged;
-
-    private Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
-    private Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
-    private Dictionary<int, OptionData> supportOptionsDictionary = new();
-    private Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
-
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -50,21 +26,34 @@ public class CardCardImp : MonoBehaviour
 
     public async void CardLibrary(string cardIdDropped, bool ignoreCost)
     {
-        cost = -1;
-        cardType = string.Empty;
-        playerBudget = -1;
-        chosenRegion = -1;
-        enemyId = string.Empty;
-        source = string.Empty;
-        target = string.Empty ;
+        DatabaseReference dbRefCard;
+        DatabaseReference dbRefPlayerStats;
+        DatabaseReference dbRefPlayerDeck;
 
-        supportChange = false;
-        isBonusRegion = false;
-        cardsChange = false;
-        onHandChanged = false;
+        int cost;
+        string cardType;
+        int playerBudget;
+        int chosenRegion = -1;
+        string enemyId = string.Empty;
+        string source = string.Empty;
+        string target = string.Empty;
+
+        List<string> selectedCardIds = new();
+
+        bool supportChange = false;
+        bool isBonusRegion = false;
+        bool cardsChange = false;
+        bool onHandChanged = false;
+
+        Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
+        Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
+        Dictionary<int, OptionData> supportOptionsDictionary = new();
+        Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
 
         cardsOptionsDictionary.Clear();
         cardsBonusOptionsDictionary.Clear();
+        supportBonusOptionsDictionary.Clear();
+        supportOptionsDictionary.Clear();
 
         selectedCardIds.Clear();
 
@@ -135,7 +124,7 @@ public class CardCardImp : MonoBehaviour
                 if (moneySnapshot.Exists)
                 {
                     playerBudget = Convert.ToInt32(moneySnapshot.Value);
-                    if (playerBudget < cost)
+                    if (!ignoreCost && playerBudget < cost)
                     {
                         Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                         return;
@@ -155,13 +144,15 @@ public class CardCardImp : MonoBehaviour
 
             if (supportChange)
             {
-                await SupportAction(cardIdDropped);
+                isBonusRegion = await SupportAction(cardIdDropped,isBonusRegion,chosenRegion,cardType,supportOptionsDictionary,
+                    supportBonusOptionsDictionary);
             }
 
             if (cardsChange)
             {
     
-                await CardsAction(cardIdDropped);
+                (dbRefPlayerStats,playerBudget) = await CardsAction(dbRefPlayerStats,cardIdDropped,isBonusRegion,
+                    cardsOptionsDictionary,cardsBonusOptionsDictionary,enemyId,playerBudget,source,target,selectedCardIds);
             }
 
             if(!ignoreCost)
@@ -181,7 +172,8 @@ public class CardCardImp : MonoBehaviour
 
     }
    
-    private async Task SupportAction(string cardId)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion,string cardType,
+        Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
         if (cardId == "CA085")
         {
@@ -195,7 +187,7 @@ public class CardCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No support options available.");
-            return;
+            return false;
         }
 
         foreach (var data in optionsToApply.Values)
@@ -210,9 +202,13 @@ public class CardCardImp : MonoBehaviour
                 isBonusRegion = false;
             }
         }
-        }
+        return isBonusRegion;
+     }
 
-    private async Task CardsAction(string cardId)
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> CardsAction(DatabaseReference dbRefPlayerStats,
+        string cardId, bool isBonusRegion,Dictionary<int, OptionDataCard> cardsOptionsDictionary,
+        Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary,string enemyId, int playerBudget,string source,
+        string target, List<string> selectedCardIds)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? cardsBonusOptionsDictionary : cardsOptionsDictionary;
@@ -220,7 +216,7 @@ public class CardCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return;
+            return (dbRefPlayerStats,-1);
         }
 
         if (isBonus)
@@ -246,9 +242,10 @@ public class CardCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
-                        return;
+                        return (dbRefPlayerStats, -1);
                     }
                     await cardUtilities.ChangeEnemyStat(enemyId, -budgetValue, "money", playerBudget);
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 } else
                 {
                     if (data.Source == "player-deck") { source = playerId; }
@@ -301,7 +298,7 @@ public class CardCardImp : MonoBehaviour
                 if (string.IsNullOrEmpty(enemyId))
                 {
                     Debug.LogError("Failed to select an enemy player.");
-                    return;
+                    return (dbRefPlayerStats, -1);
                 }
                 target = enemyId;
                 if(data.Source == "player") { source = playerId; }
@@ -311,7 +308,8 @@ public class CardCardImp : MonoBehaviour
                 }
             }
         }
-        }
+        return (dbRefPlayerStats, playerBudget);
+     }
 
     private async Task<int> ValueAsCost()
     {
@@ -321,7 +319,7 @@ public class CardCardImp : MonoBehaviour
             return -1;
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
+        DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players")
@@ -360,7 +358,7 @@ public class CardCardImp : MonoBehaviour
         int randomIndex = random.Next(availableCards.Count);
         string selectedCardId = availableCards[randomIndex];
 
-        string cardLetters = selectedCardId.Substring(0, 2);
+        string cardLetters = selectedCardId[..2];
         string type = "";
 
         switch (cardLetters)
@@ -385,7 +383,7 @@ public class CardCardImp : MonoBehaviour
                 break;
         }
 
-        dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child(type).Child(selectedCardId).Child("cost");
+        DatabaseReference dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child(type).Child(selectedCardId).Child("cost");
 
         var costSnapshot = await dbRefCard.GetValueAsync();
 
@@ -400,57 +398,6 @@ public class CardCardImp : MonoBehaviour
         return cardCost;
     }
 
-    public async Task PlayCardFromDeck(List<string> selectedCardIds, string playerId)
-    {
-        if (selectedCardIds == null || selectedCardIds.Count == 0)
-        {
-            Debug.LogError("Brak wybranych kart.");
-            return;
-        }
-
-        string selectedCardId = selectedCardIds[0];
-        string cardLetters = selectedCardId.Substring(0, 2);
-        string type = "";
-
-        switch (cardLetters)
-        {
-            case "AD":
-                type = "addRemove";
-                break;
-            case "AS":
-                type = "asMuchAs";
-                break;
-            case "CA":
-                type = "cards";
-                break;
-            case "OP":
-                type = "options";
-                break;
-            case "RA":
-                type = "random";
-                break;
-            case "UN":
-                type = "unique";
-                break;
-        } 
-
-        DatabaseReference cardCostRef = FirebaseInitializer.DatabaseReference
-            .Child("cards")
-            .Child("id")
-            .Child(type)
-            .Child(selectedCardId)
-            .Child("cost");
-
-        try
-        {
-            await cardCostRef.SetValueAsync(0);
-            cardTypeManager.OnCardDropped(selectedCardId, true);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Wyst¹pi³ b³¹d podczas zmiany kosztu karty: {ex.Message}");
-        }
-    }
 
 }
 

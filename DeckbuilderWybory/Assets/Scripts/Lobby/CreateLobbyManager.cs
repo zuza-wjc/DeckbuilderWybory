@@ -169,7 +169,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
             { "readyPlayers", readyPlayers },
-            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", new int[6] { 5, 5, 5, 5, 5, 5 } }, { "playerTurn", false } }  } } } } }
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", 10 }, { "support", new int[6] { 4,4,4,4,4,4 } }, { "playerTurn", false } }  } } } } }
         };
 
         // Dodawanie danych do bazy Firebase

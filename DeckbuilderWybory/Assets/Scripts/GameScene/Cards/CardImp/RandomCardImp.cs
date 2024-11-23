@@ -8,28 +8,8 @@ using UnityEngine;
 
 public class RandomCardImp : MonoBehaviour
 {
-    private DatabaseReference dbRefCard;
-    private DatabaseReference dbRefPlayerStats;
-    private DatabaseReference dbRefPlayerDeck;
-
     private readonly string lobbyId = DataTransfer.LobbyId;
     private readonly string playerId = DataTransfer.PlayerId;
-
-    private bool budgetChange;
-    private bool supportChange;
-
-    private int cost;
-    private int playerBudget;
-    private string enemyId;
-    private string cardType;
-
-    private int chosenRegion;
-    private bool isBonusRegion;
-
-    private Dictionary<int, OptionData> budgetOptionsDictionary = new();
-    private Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
-    private Dictionary<int, OptionData> supportOptionsDictionary = new();
-    private Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
 
     public PlayerListManager playerListManager;
     public MapManager mapManager;
@@ -40,20 +20,27 @@ public class RandomCardImp : MonoBehaviour
         playerListManager.Initialize(lobbyId, playerId);
     }
 
-
     public async void CardLibrary(string cardIdDropped, bool ignoreCost)
     {
+        DatabaseReference dbRefCard;
+        DatabaseReference dbRefPlayerStats;
+        DatabaseReference dbRefPlayerDeck;
 
-        budgetChange = false;
-        supportChange = false;
-        isBonusRegion = false;
+        bool budgetChange = false;
+        bool supportChange = false;
 
-        cost = -1;
-        playerBudget = -1;
-        enemyId = string.Empty;
-        cardType = string.Empty;
+        int cost;
+        int playerBudget;
+        string enemyId = string.Empty;
+        string cardType;
 
-        chosenRegion = -1;
+        int chosenRegion = -1;
+        bool isBonusRegion = false;
+
+        Dictionary<int, OptionData> budgetOptionsDictionary = new();
+        Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
+        Dictionary<int, OptionData> supportOptionsDictionary = new();
+        Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
 
         budgetOptionsDictionary.Clear();
         supportOptionsDictionary.Clear();
@@ -127,7 +114,7 @@ public class RandomCardImp : MonoBehaviour
             if (moneySnapshot.Exists)
             {
                 playerBudget = Convert.ToInt32(moneySnapshot.Value);
-                if (playerBudget < cost)
+                if (!ignoreCost && playerBudget < cost)
                 {
                     Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                     return;
@@ -148,12 +135,13 @@ public class RandomCardImp : MonoBehaviour
 
         if (supportChange)
         {
-            await SupportAction(cardIdDropped);
+           isBonusRegion = await SupportAction(cardIdDropped, isBonusRegion, chosenRegion,cardType,supportOptionsDictionary,
+    supportBonusOptionsDictionary);
         }
 
         if (budgetChange)
         {
-            await BudgetAction(cardIdDropped);
+           (dbRefPlayerStats, playerBudget) = await BudgetAction(dbRefPlayerStats,isBonusRegion, budgetOptionsDictionary, budgetBonusOptionsDictionary,enemyId, playerBudget);
         }
 
         if (!ignoreCost)
@@ -167,7 +155,9 @@ public class RandomCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task BudgetAction(string cardId)
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> BudgetAction(DatabaseReference dbRefPlayerStats,
+        bool isBonusRegion,Dictionary<int, OptionData> budgetOptionsDictionary,Dictionary<int, OptionData> budgetBonusOptionsDictionary,
+        string enemyId,int playerBudget)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? budgetBonusOptionsDictionary : budgetOptionsDictionary;
@@ -177,7 +167,7 @@ public class RandomCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return;
+            return (dbRefPlayerStats, -1);
         }
 
         if (isBonus)
@@ -195,19 +185,21 @@ public class RandomCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
-                        return;
+                        return (dbRefPlayerStats, -1);
                     }
                 }
                 await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
 
                 playerBudget += 10 + data.Number;
+
+                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
             }
         }
+        return (dbRefPlayerStats, playerBudget);
     }
-
-    private async Task SupportAction(string cardId)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion,int chosenRegion, string cardType,
+        Dictionary<int, OptionData> supportOptionsDictionary,Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
-
         chosenRegion = await mapManager.SelectArea();
         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
 
@@ -219,7 +211,7 @@ public class RandomCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return;
+            return false;
         }
 
         if (isBonus)
@@ -234,6 +226,7 @@ public class RandomCardImp : MonoBehaviour
                 await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
             }
         }
+        return isBonusRegion;
     }
 
     public static Dictionary<int, OptionData> RandomizeOption(Dictionary<int, OptionData> optionsDictionary)
@@ -244,7 +237,7 @@ public class RandomCardImp : MonoBehaviour
         int minNumber = optionsDictionary.Values.Min(option => option.Number);
         int maxNumber = optionsDictionary.Values.Max(option => option.Number);
 
-        System.Random random = new System.Random();
+        System.Random random = new();
         int randomNumber = random.Next(minNumber, maxNumber + 1);
 
         Debug.Log($"Wylosowana liczba to: {randomNumber}");
