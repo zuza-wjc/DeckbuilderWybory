@@ -71,12 +71,6 @@ TagManager:
   - RA004
   - RA010
   - RA012
-  - UN018
-  - UN089
-  - UN025
-  - UN039
-  - UN055
-  - UN086
   layers:
   - Default
   - TransparentFX

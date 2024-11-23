@@ -7,7 +7,6 @@ public class CardTypeManager : MonoBehaviour
     public CardCardImp cardCardImp;
     public OptionsCardImp optionsCardImp;
     public RandomCardImp randomCardImp;
-    public UniqueCardImp uniqueCardImp;
 
     public void OnCardDropped(string cardIdDropped, bool ignoreCost)
     {
@@ -29,12 +28,6 @@ public class CardTypeManager : MonoBehaviour
                 break;
             case "RA":
                 randomCardImp.CardLibrary(cardIdDropped, ignoreCost);
-                break;
-            case "UN":
-                uniqueCardImp.CardLibrary(cardIdDropped, ignoreCost);
-                break;
-            default:
-                Debug.LogError($"Unknown card type: {cardIdDropped}");
                 break;
 
         }

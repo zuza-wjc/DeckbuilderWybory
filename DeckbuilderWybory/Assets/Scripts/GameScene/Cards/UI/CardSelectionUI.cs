@@ -14,8 +14,8 @@ public class CardSelectionUI : MonoBehaviour
     public Sprite selectedSprite;
     public ScrollRect cardScrollView;
 
-    private List<string> selectedCards = new();
-    private Dictionary<string, bool> cardSelectionStates = new();
+    private List<string> selectedCards = new List<string>();
+    private Dictionary<string, bool> cardSelectionStates = new Dictionary<string, bool>();
     private int numberOfCardsToSelect = 0;
     private string playerId;
     private bool selectionConfirmed = false;
@@ -41,13 +41,7 @@ public class CardSelectionUI : MonoBehaviour
             .Child("deck");
 
         var snapshot = await playerDeckRef.GetValueAsync();
-        if (!snapshot.Exists)
-        {
-            Debug.LogWarning("No deck data found for the player.");
-            return null;
-        }
-
-        bool anyCardAdded = false;
+        if (!snapshot.Exists) return null;
 
         foreach (var cardSnapshot in snapshot.Children)
         {
@@ -73,16 +67,8 @@ public class CardSelectionUI : MonoBehaviour
                 {
                     string cardName = cardNameSnapshot.Value.ToString();
                     AddCardToUI(cardId, cardName);
-                    anyCardAdded = true;
                 }
             }
-        }
-
-        if (!anyCardAdded)
-        {
-            Debug.LogWarning("No cards available to select.");
-            HideCardSelectionPanel();
-            return null;
         }
 
         submitButton.onClick.RemoveAllListeners();
@@ -97,20 +83,19 @@ public class CardSelectionUI : MonoBehaviour
         return new List<string>(selectedCards);
     }
 
-
     private string GetCardType(string cardId)
     {
-        string cardLetters = cardId[..2];
-        return cardLetters switch
+        string cardLetters = cardId.Substring(0, 2);
+        switch (cardLetters)
         {
-            "AD" => "addRemove",
-            "AS" => "asMuchAs",
-            "CA" => "cards",
-            "OP" => "options",
-            "RA" => "random",
-            "UN" => "unique",
-            _ => "unknown",
-        };
+            case "AD": return "addRemove";
+            case "AS": return "asMuchAs";
+            case "CA": return "cards";
+            case "OP": return "options";
+            case "RA": return "random";
+            case "UN": return "unique";
+            default: return "unknown";
+        }
     }
 
     private void AddCardToUI(string cardId, string cardName)
@@ -151,6 +136,7 @@ public class CardSelectionUI : MonoBehaviour
             cardImage.sprite = unselectedSprite;
         }
 
+        // Poka¿ przycisk Submit tylko, gdy wybrano wystarczaj¹c¹ liczbê kart
         submitButton.gameObject.SetActive(selectedCards.Count == numberOfCardsToSelect);
     }
 

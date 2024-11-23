@@ -8,8 +8,40 @@ using UnityEngine;
 
 public class AddRemoveCardImp : MonoBehaviour
 {
+    private DatabaseReference dbRefCard;
+    private DatabaseReference dbRefPlayerStats;
+    private DatabaseReference dbRefPlayerDeck;
+    private DatabaseReference dbRefSupport;
+    private DatabaseReference dbRefAllPlayersStats;
+    private DatabaseReference dbRefRounds;
+
     private readonly string lobbyId = DataTransfer.LobbyId;
     private readonly string playerId = DataTransfer.PlayerId;
+
+    private bool budgetChange;
+    private bool incomeChange;
+    private bool supportChange;
+    private int roundChange;
+    private bool cardsChange;
+
+    private int cost;
+    private int playerBudget;
+    private int playerIncome;
+    private string enemyId;
+    private string cardType;
+
+    private int chosenRegion;
+    private bool isBonusRegion;
+
+    private Dictionary<int, OptionData> budgetOptionsDictionary = new();
+    private Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
+    private Dictionary<int, OptionData> incomeOptionsDictionary = new();
+    private Dictionary<int, OptionData> incomeBonusOptionsDictionary = new();
+    private Dictionary<int, OptionData> supportOptionsDictionary = new();
+    private Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
+
+    private Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
+    private Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
 
     public PlayerListManager playerListManager;
     public MapManager mapManager;
@@ -24,34 +56,21 @@ public class AddRemoveCardImp : MonoBehaviour
 
     public async void CardLibrary(string cardIdDropped, bool ignoreCost)
     {
-        DatabaseReference dbRefCard;
-        DatabaseReference dbRefPlayerStats;
-        DatabaseReference dbRefPlayerDeck;
 
-        bool budgetChange = false;
-        bool incomeChange = false;
-        bool supportChange = false;
-        int roundChange = -1;
-        bool cardsChange = false;
+        budgetChange = false;
+        incomeChange = false;
+        supportChange = false;
+        isBonusRegion = false;
+        roundChange = 0;
+        cardsChange = false;
 
-        int cost;
-        int playerBudget;
-        int playerIncome;
-        string enemyId = string.Empty;
-        string cardType;
+        cost = -1;
+        playerBudget = -1;
+        playerIncome = -1;
+        enemyId = string.Empty;
+        cardType = string.Empty;
 
-        int chosenRegion =1;
-        bool isBonusRegion = false;
-
-        Dictionary<int, OptionData> budgetOptionsDictionary = new();
-        Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
-        Dictionary<int, OptionData> incomeOptionsDictionary = new();
-        Dictionary<int, OptionData> incomeBonusOptionsDictionary = new();
-        Dictionary<int, OptionData> supportOptionsDictionary = new();
-        Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
-
-        Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
-        Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
+        chosenRegion = -1;
 
         budgetOptionsDictionary.Clear();
         incomeOptionsDictionary.Clear();
@@ -152,7 +171,7 @@ public class AddRemoveCardImp : MonoBehaviour
             if (moneySnapshot.Exists)
             {
                 playerBudget = Convert.ToInt32(moneySnapshot.Value);
-                if (!ignoreCost && playerBudget < cost)
+                if (playerBudget < cost)
                 {
                     Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                     return;
@@ -183,26 +202,22 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (supportChange)
         {
-            (chosenRegion, isBonusRegion, enemyId)  = await SupportAction(cardIdDropped,chosenRegion,isBonusRegion,cardType,
-                enemyId,cardsChange,supportOptionsDictionary,supportBonusOptionsDictionary,cardsBonusOptionsDictionary);
+            await SupportAction(cardIdDropped);
         }
 
         if (budgetChange)
         {
-            (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats,
-                cardIdDropped, chosenRegion,isBonusRegion,cardType,budgetOptionsDictionary,budgetBonusOptionsDictionary,
-                playerBudget,enemyId);
+            await BudgetAction(cardIdDropped);
         }
 
         if (incomeChange)
         {
-            (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion,incomeOptionsDictionary,enemyId,
-                incomeBonusOptionsDictionary,playerIncome,dbRefPlayerStats,chosenRegion,playerBudget);
+            await IncomeAction();
         }
 
         if(roundChange != 0)
         {
-            await RoundAction(roundChange);
+            await RoundAction();
         }
 
         if(!ignoreCost)
@@ -216,10 +231,7 @@ public class AddRemoveCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>
-        BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion, bool isBonusRegion, string cardType,
-        Dictionary<int, OptionData> budgetOptionsDictionary, Dictionary<int, OptionData> budgetBonusOptionsDictionary,
-        int playerBudget, string enemyId)
+    private async Task BudgetAction(string cardId)
     {
         if(cardId == "AD090")
         {
@@ -233,7 +245,7 @@ public class AddRemoveCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return (dbRefPlayerStats,-1,false,-1,null);
+            return;
         }
 
         if (isBonus)
@@ -256,12 +268,10 @@ public class AddRemoveCardImp : MonoBehaviour
                     int areas = await CountMinSupport(playerId, data.Number);
                     int budgetMulti = data.Number * areas;
                     playerBudget += budgetMulti;
-                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
 
                 } else
                 {
                     playerBudget += data.Number;
-                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
 
             }
@@ -279,7 +289,6 @@ public class AddRemoveCardImp : MonoBehaviour
                     {
                         enemyId = await HighestSupportInArea(chosenRegion);
                         await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money",playerBudget);
-                        await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     }
                     else {
                         if (string.IsNullOrEmpty(enemyId))
@@ -288,21 +297,17 @@ public class AddRemoveCardImp : MonoBehaviour
                             if (string.IsNullOrEmpty(enemyId))
                             {
                                 Debug.LogError("Failed to select an enemy player.");
-                                return (dbRefPlayerStats, -1, false, -1, null); ;
+                                return;
                             }
                         }
                         await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
-                        await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     }
                 }
             }
         }
-        return (dbRefPlayerStats,chosenRegion,isBonusRegion,playerBudget,enemyId);
     }
 
-    private async Task<(int chosenRegion,bool isBonusRegion, string enemyId)> SupportAction(string cardId, int chosenRegion,
-        bool isBonusRegion, string cardType, string enemyId, bool cardsChange,Dictionary<int, OptionData> supportOptionsDictionary,
-        Dictionary<int, OptionData> supportBonusOptionsDictionary,Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary)
+    private async Task SupportAction(string cardId)
     {
         if (cardId == "AD091")
         {
@@ -316,7 +321,7 @@ public class AddRemoveCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No support options available.");
-            return (-1,false,null);
+            return;
         }
 
         if (cardId == "AD069" || cardId == "AD071")
@@ -369,7 +374,7 @@ public class AddRemoveCardImp : MonoBehaviour
                             if (string.IsNullOrEmpty(enemyId))
                             {
                                 Debug.LogError("No enemy player found in the area.");
-                                return (-1, false, null);
+                                return;
                             }
                             await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
 
@@ -378,7 +383,7 @@ public class AddRemoveCardImp : MonoBehaviour
                                 if (cardsBonusOptionsDictionary?.Values == null || !cardsBonusOptionsDictionary.Values.Any())
                                 {
                                     Debug.LogError("No card options available.");
-                                    return (-1, false, null);
+                                    return;
                                 }
 
                                 foreach (var cardData in cardsBonusOptionsDictionary.Values)
@@ -449,20 +454,16 @@ public class AddRemoveCardImp : MonoBehaviour
                 await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
             }
         }
-
-        return (chosenRegion, isBonusRegion, enemyId);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats,int playerBudget)> IncomeAction(bool isBonusRegion,
-        Dictionary<int, OptionData> incomeOptionsDictionary,string enemyId,Dictionary<int, OptionData> incomeBonusOptionsDictionary,
-        int playerIncome, DatabaseReference dbRefPlayerStats,int chosenRegion, int playerBudget)
+    private async Task IncomeAction()
     {
         var optionsToApply = isBonusRegion ? incomeBonusOptionsDictionary : incomeOptionsDictionary;
 
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogWarning("No income options available.");
-            return (dbRefPlayerStats,-1);
+            return;
         }
 
         if (isBonusRegion)
@@ -505,12 +506,11 @@ public class AddRemoveCardImp : MonoBehaviour
                         if (string.IsNullOrEmpty(enemyId))
                         {
                             Debug.LogError("Failed to select an enemy player.");
-                            return (dbRefPlayerStats, -1);
+                            return;
                         }
                     }
 
                     await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "income", playerBudget);
-                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
             }
             else if (data.Target == "enemy-region")
@@ -521,12 +521,11 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
             }
         }
-        return (dbRefPlayerStats, playerBudget);
     }
 
-    private async Task RoundAction(int roundChange)
+    private async Task RoundAction()
     {
-        DatabaseReference dbRefRounds = FirebaseInitializer.DatabaseReference
+        dbRefRounds = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("rounds");
@@ -565,7 +564,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task ChangeAreaIncome(int areaId, int value, string cardholderId)
     {
-        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+        dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         try
         {
@@ -626,7 +625,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task ChangeAreaSupport(int areaId, int value, string cardholderId)
     {
-        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+        dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         var snapshot = await dbRefAllPlayersStats.GetValueAsync();
 
@@ -682,7 +681,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task ChangeAllSupport(int value)
     {
-        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference
+        dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
@@ -736,7 +735,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task ChangeAllStats(int value, string cardholderId, string statType)
     {
-        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference
+        dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
@@ -791,7 +790,7 @@ public class AddRemoveCardImp : MonoBehaviour
             return -1;
         }
 
-        DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
+        dbRefSupport = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players")
@@ -832,7 +831,7 @@ public class AddRemoveCardImp : MonoBehaviour
             return null;
         }
 
-        DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
+        dbRefSupport = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
@@ -847,11 +846,11 @@ public class AddRemoveCardImp : MonoBehaviour
                 return null;
             }
 
-            List<int> regionsWithHighestSupport = new();
+            List<int> regionsWithHighestSupport = new List<int>();
 
-            Dictionary<int, int> highestSupportInRegion = new();
+            Dictionary<int, int> highestSupportInRegion = new Dictionary<int, int>();
 
-            Dictionary<int, string> regionWithMaxSupport = new();
+            Dictionary<int, string> regionWithMaxSupport = new Dictionary<int, string>();
 
             foreach (var playerSnapshot in snapshot.Children)
             {
@@ -903,7 +902,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task<string> HighestSupportInArea(int chosenRegion)
     {
-        DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
+        dbRefSupport = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
@@ -916,7 +915,7 @@ public class AddRemoveCardImp : MonoBehaviour
             return null;
         }
 
-        Dictionary<string, int> playerSupport = new();
+        Dictionary<string, int> playerSupport = new Dictionary<string, int>();
         int maxSupportValue = int.MinValue;
 
         foreach (var playerSnapshot in snapshot.Children)
@@ -949,7 +948,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (playerSupport.Count > 1)
         {
-            System.Random rand = new();
+            System.Random rand = new System.Random();
             int randomIndex = rand.Next(playerSupport.Count);
             return playerSupport.Keys.ToArray()[randomIndex];
         }
@@ -959,7 +958,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task<string> LowestSupportInArea(int chosenRegion)
     {
-        DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
+        dbRefSupport = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
@@ -972,7 +971,7 @@ public class AddRemoveCardImp : MonoBehaviour
             return null;
         }
 
-        Dictionary<string, int> playerSupport = new();
+        Dictionary<string, int> playerSupport = new Dictionary<string, int>();
         int minSupportValue = int.MaxValue;
 
         foreach (var playerSnapshot in snapshot.Children)
@@ -1014,7 +1013,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (playerSupport.Count > 1)
         {
-            System.Random rand = new();
+            System.Random rand = new System.Random();
             int randomIndex = rand.Next(playerSupport.Count);
             return playerSupport.Keys.ToArray()[randomIndex];
         }

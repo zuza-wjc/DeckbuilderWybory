@@ -8,8 +8,30 @@ using UnityEngine;
 
 public class OptionsCardImp : MonoBehaviour
 {
+    private DatabaseReference dbRefCard;
+    private DatabaseReference dbRefPlayerStats;
+    private DatabaseReference dbRefPlayerDeck;
+
     private readonly string lobbyId = DataTransfer.LobbyId;
     private readonly string playerId = DataTransfer.PlayerId;
+
+    private bool budgetChange;
+    private bool supportChange;
+
+    private int cost;
+    private int playerBudget;
+    private string enemyId;
+    private string cardType;
+
+    private int chosenRegion;
+    private bool isBonusRegion;
+
+    private Dictionary<int, OptionDataRandom> budgetOptionsDictionary = new();
+    private Dictionary<int, OptionDataRandom> budgetBonusOptionsDictionary = new();
+    private Dictionary<int, OptionDataRandom> incomeOptionsDictionary = new();
+    private Dictionary<int, OptionDataRandom> incomeBonusOptionsDictionary = new();
+    private Dictionary<int, OptionDataRandom> supportOptionsDictionary = new();
+    private Dictionary<int, OptionDataRandom> supportBonusOptionsDictionary = new();
 
     public PlayerListManager playerListManager;
     public MapManager mapManager;
@@ -23,27 +45,17 @@ public class OptionsCardImp : MonoBehaviour
 
     public async void CardLibrary(string cardIdDropped, bool ignoreCost)
     {
-        DatabaseReference dbRefCard;
-        DatabaseReference dbRefPlayerStats;
-        DatabaseReference dbRefPlayerDeck;
 
-        bool budgetChange = false;
-        bool supportChange = false;
+        budgetChange = false;
+        supportChange = false;
+        isBonusRegion = false;
 
-        int cost;
-        int playerBudget;
-        string enemyId = string.Empty;
-        string cardType;
+        cost = -1;
+        playerBudget = -1;
+        enemyId = string.Empty;
+        cardType = string.Empty;
 
-        int chosenRegion = -1;
-        bool isBonusRegion = false;
-
-        Dictionary<int, OptionDataRandom> budgetOptionsDictionary = new();
-        Dictionary<int, OptionDataRandom> budgetBonusOptionsDictionary = new();
-        Dictionary<int, OptionDataRandom> incomeOptionsDictionary = new();
-        Dictionary<int, OptionDataRandom> incomeBonusOptionsDictionary = new();
-        Dictionary<int, OptionDataRandom> supportOptionsDictionary = new();
-        Dictionary<int, OptionDataRandom> supportBonusOptionsDictionary = new();
+        chosenRegion = -1;
 
         budgetOptionsDictionary.Clear();
         incomeOptionsDictionary.Clear();
@@ -84,7 +96,7 @@ public class OptionsCardImp : MonoBehaviour
             {
                 Debug.LogError("Branch type does not exist.");
                 return;
-            }
+            }   
 
             DataSnapshot budgetSnapshot = snapshot.Child("budget");
             if (budgetSnapshot.Exists)
@@ -119,7 +131,7 @@ public class OptionsCardImp : MonoBehaviour
             if (moneySnapshot.Exists)
             {
                 playerBudget = Convert.ToInt32(moneySnapshot.Value);
-                if (!ignoreCost && playerBudget < cost)
+                if (playerBudget < cost)
                 {
                     Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                     return;
@@ -140,14 +152,12 @@ public class OptionsCardImp : MonoBehaviour
 
         if (supportChange)
         {
-            (playerBudget, ignoreCost, isBonusRegion, enemyId) = await SupportAction(budgetChange, playerBudget, cardIdDropped,
-                ignoreCost, chosenRegion, isBonusRegion, cardType, supportOptionsDictionary, supportBonusOptionsDictionary,
-                enemyId, budgetOptionsDictionary);
+            await SupportAction(cardIdDropped, ignoreCost);
         }
 
         if (budgetChange)
         {
-            (dbRefPlayerStats, playerBudget) = await BudgetAction(dbRefPlayerStats, isBonusRegion, budgetOptionsDictionary, budgetBonusOptionsDictionary, playerBudget, enemyId);
+            await BudgetAction(cardIdDropped);
         }
 
         if (!ignoreCost)
@@ -161,9 +171,7 @@ public class OptionsCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> BudgetAction(DatabaseReference dbRefPlayerStats,
-        bool isBonusRegion,Dictionary<int, OptionDataRandom> budgetOptionsDictionary,Dictionary<int, OptionDataRandom> budgetBonusOptionsDictionary,
-        int playerBudget, string enemyId)
+    private async Task BudgetAction(string cardId)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? budgetBonusOptionsDictionary : budgetOptionsDictionary;
@@ -173,7 +181,7 @@ public class OptionsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return (dbRefPlayerStats,-1);
+            return;
         }
 
         if (isBonus)
@@ -186,7 +194,6 @@ public class OptionsCardImp : MonoBehaviour
             if(data.Target == "player")
             {
                 playerBudget += data.Number;
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
 
             } else if(data.Target == "enemy")
             {
@@ -196,20 +203,15 @@ public class OptionsCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
-                        return (dbRefPlayerStats, -1);
+                        return;
                     }
                 }
                 await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
             }
         }
-        return (dbRefPlayerStats, playerBudget);
-    }
+        }
 
-    private async Task<(int playerBudget, bool ignoreCost, bool isBonusRegion, string enemyId)> 
-        SupportAction(bool budgetChange,int playerBudget, string cardId, bool ignoreCost, int chosenRegion, bool isBonusRegion,
-        string cardType,Dictionary<int, OptionDataRandom> supportOptionsDictionary,Dictionary<int, OptionDataRandom> supportBonusOptionsDictionary,
-        string enemyId, Dictionary<int, OptionDataRandom> budgetOptionsDictionary)
+    private async Task SupportAction(string cardId, bool ignoreCost)
     {
         if (cardId == "OP011")
         {
@@ -228,7 +230,7 @@ public class OptionsCardImp : MonoBehaviour
 
         if (cardId == "OP006")
         {
-            CheckBudget(ref optionsToApply, playerBudget);
+            CheckBudget(ref optionsToApply);
         }
         else
         {
@@ -239,7 +241,7 @@ public class OptionsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return (-1,false,false,null);
+            return;
         }
 
         if (isBonus)
@@ -275,8 +277,8 @@ public class OptionsCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("No enemy player found in the area.");
-                        return (-1, false, false, null);
-                }
+                        return;
+                    }
 
                     await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
                 
@@ -294,8 +296,6 @@ public class OptionsCardImp : MonoBehaviour
                 if (cardId == "OP013") { budgetChange = false; }
             }
         }
-
-        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
     }
 
     public void ProcessOptions(DataSnapshot snapshot, Dictionary<int, OptionDataRandom> optionsDictionary)
@@ -408,7 +408,7 @@ public class OptionsCardImp : MonoBehaviour
         }
     }
 
-    public void CheckBudget(ref Dictionary<int, OptionDataRandom> supportOptionsDictionary, int playerBudget)
+    public void CheckBudget(ref Dictionary<int, OptionDataRandom> supportOptionsDictionary)
     {
         if (playerBudget > 30)
         {
