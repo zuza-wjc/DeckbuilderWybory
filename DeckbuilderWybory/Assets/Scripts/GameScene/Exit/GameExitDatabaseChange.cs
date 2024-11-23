@@ -4,9 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class GameSceneExitButton : MonoBehaviour
+public class GameExitDatabaseChange : MonoBehaviour
 {
-
     DatabaseReference dbRef;
     DatabaseReference dbRefPlayers;
     string lobbyId;
@@ -39,7 +38,7 @@ public class GameSceneExitButton : MonoBehaviour
         dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
         SetAllPlayersInGameToFalse();
         // wyjscie do main menu dla gracza ktory kliknal guzik
-        SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
+        //SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
     }
 
     void SetAllPlayersInGameToFalse()
@@ -57,5 +56,13 @@ public class GameSceneExitButton : MonoBehaviour
                 }
             }
         });
+    }
+
+    void OnDestroy()
+    {
+        if (backButton != null)
+        {
+            backButton.onClick.RemoveListener(ToggleInGame);
+        }
     }
 }

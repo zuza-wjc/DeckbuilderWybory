@@ -206,4 +206,17 @@ public class JoinLobbyByCode : MonoBehaviour
         await Task.Delay(3000); // Odczekaj 3 sekundy
         feedbackText.gameObject.SetActive(false);
     }
+
+    void OnDestroy()
+    {
+        if (joinButton != null)
+        {
+            joinButton.onClick.RemoveListener(JoinLobby);
+        }
+
+        if (pasteButton != null)
+        {
+            pasteButton.onClick.RemoveListener(PasteFromClipboard);
+        }
+    }
 }

@@ -16,6 +16,7 @@ public class MapManager : MonoBehaviour
     string lobbyId;
     string playerId;
     string playerName;
+    string regionNumber;
     int support;
     int supportAddValueReload;
     int supportOnMap;
@@ -72,7 +73,7 @@ public class MapManager : MonoBehaviour
                     foreach (var regionSnapshot in childSnapshot.Children)
                     {
                         string regionName = regionSnapshot.Key;
-                        string regionValue = regionSnapshot.Value.ToString();
+                        string regionValue = regionSnapshot.Child("currentSupport").Value.ToString();
                         SetRegionValue(regionName, regionValue);
                     }
                 }
@@ -88,12 +89,12 @@ public class MapManager : MonoBehaviour
 
     void InitializeRegionButtons()
     {
-        region1Button.onClick.AddListener(() => RegionClicked("region1", cardIdMap));
-        region2Button.onClick.AddListener(() => RegionClicked("region2", cardIdMap));
-        region3Button.onClick.AddListener(() => RegionClicked("region3", cardIdMap));
-        region4Button.onClick.AddListener(() => RegionClicked("region4", cardIdMap));
-        region5Button.onClick.AddListener(() => RegionClicked("region5", cardIdMap));
-        region6Button.onClick.AddListener(() => RegionClicked("region6", cardIdMap));
+        region1Button.onClick.AddListener(() => RegionClicked("region1", cardIdMap, "1"));
+        region2Button.onClick.AddListener(() => RegionClicked("region2", cardIdMap, "2"));
+        region3Button.onClick.AddListener(() => RegionClicked("region3", cardIdMap, "3"));
+        region4Button.onClick.AddListener(() => RegionClicked("region4", cardIdMap, "4"));
+        region5Button.onClick.AddListener(() => RegionClicked("region5", cardIdMap, "5"));
+        region6Button.onClick.AddListener(() => RegionClicked("region6", cardIdMap, "6"));
     }
 
     void SetRegionValue(string regionName, string regionValue)
@@ -124,7 +125,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    async void RegionClicked(string regionName, string cardId)
+    async void RegionClicked(string regionName, string cardId, string regionNumber)
     {
         bool sessionExists = await SessionExists();
         if (!sessionExists)
@@ -142,25 +143,29 @@ public class MapManager : MonoBehaviour
         int cardValue = int.Parse(cardValueSnapshot.Value.ToString());
 
         var supportSnapshot = await dbRef.Child("players").Child(playerId).Child("stats").Child("support").GetValueAsync();
+        var regionSupportSnapshot = await dbRef.Child("players").Child(playerId).Child("stats").Child("regionSupport").Child(regionNumber).GetValueAsync();
         if (supportSnapshot == null)
         {
             Debug.Log("Support value not found.");
             return;
         }
         int currentSupport = int.Parse(supportSnapshot.Value.ToString());
+        int regionNumberSupport = int.Parse(regionSupportSnapshot.Value.ToString());
 
         currentSupport += cardValue;
+        regionNumberSupport += cardValue;
         await dbRef.Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(currentSupport);
+        await dbRef.Child("players").Child(playerId).Child("stats").Child("regionSupport").Child(regionNumber).SetValueAsync(regionNumberSupport);
 
         await ReloadMapValues(regionName, cardValue);
 
-        // Zamkniêcie overlay po zakoñczeniu wszystkich operacji
+        // Zamkniï¿½cie overlay po zakoï¿½czeniu wszystkich operacji
         mapPanel.SetActive(false);
     }
 
     async Task ReloadMapValues(string regionName, int supportSubstractValue)
     {
-        var snapshot = await dbRef.Child("map").Child(regionName).GetValueAsync();
+        var snapshot = await dbRef.Child("map").Child(regionName).Child("currentSupport").GetValueAsync();
         if (snapshot == null)
         {
             Debug.LogError("Error fetching supportOnMap value.");
@@ -169,7 +174,7 @@ public class MapManager : MonoBehaviour
 
         int supportOnMap = int.Parse(snapshot.Value.ToString());
         supportOnMap -= supportSubstractValue;
-        await dbRef.Child("map").Child(regionName).SetValueAsync(supportOnMap);
+        await dbRef.Child("map").Child(regionName).Child("currentSupport").SetValueAsync(supportOnMap);
     }
 
     async Task<bool> SessionExists()

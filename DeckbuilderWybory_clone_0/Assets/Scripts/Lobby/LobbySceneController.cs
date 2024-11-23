@@ -419,15 +419,15 @@ public class LobbySceneController : MonoBehaviour
                 DataSnapshot sessionSnapshot = sessionTask.Result;
                 if (sessionSnapshot.Exists)
                 {
-                    Dictionary<string, object> mapData = new Dictionary<string, object>
-                    {
-                        { "region1", 15 },
-                        { "region2", 19 },
-                        { "region3", 16 },
-                        { "region4", 18 },
-                        { "region5", 16 },
-                        { "region6", 16 }
-                    };
+                    Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
+                {
+                    { "region1", new Dictionary<string, object> { {"currentSupport",15}, { "maxSupport", 15 }, { "type", "Ambasada" } } },
+                    { "region2", new Dictionary<string, object> { {"currentSupport",19}, { "maxSupport", 19 }, { "type", "Metropolia" } } },
+                    { "region3", new Dictionary<string, object> { {"currentSupport",16}, { "maxSupport", 16 }, { "type", "�rodowisko" } } },
+                    { "region4", new Dictionary<string, object> { {"currentSupport",18}, { "maxSupport", 18 }, { "type", "Przemys�" } } },
+                    { "region5", new Dictionary<string, object> { {"currentSupport",16}, { "maxSupport", 16 }, { "type", "Metropolia" } } },
+                    { "region6", new Dictionary<string, object> { {"currentSupport",16}, { "maxSupport", 16 }, { "type", "Ambasada" } } }
+                };
 
                     dbRefLobby.Child("map").SetValueAsync(mapData);
                 }

@@ -551,7 +551,7 @@ GameObject:
   - component: {fileID: 1501636881491734180}
   - component: {fileID: 8136371007831974486}
   - component: {fileID: 7061591878358652787}
-  - component: {fileID: 5614165130343602396}
+  - component: {fileID: 6714604305537690480}
   m_Layer: 5
   m_Name: StatsCard
   m_TagString: Untagged
@@ -620,7 +620,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5614165130343602396
+--- !u!114 &6714604305537690480
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -635,6 +635,7 @@ MonoBehaviour:
   playerNameText: {fileID: 3404135984943828473}
   playerSupportText: {fileID: 5905642894867199451}
   playerMoneyText: {fileID: 2587511011977466635}
+  playerIncomeText: {fileID: 9139198789290671353}
 --- !u!1 &3826251555943058340
 GameObject:
   m_ObjectHideFlags: 0
