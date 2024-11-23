@@ -949,6 +949,7 @@ MonoBehaviour:
   cardCardImp: {fileID: 565922105}
   optionsCardImp: {fileID: 191542289}
   randomCardImp: {fileID: 216645782}
+  uniqueCardImp: {fileID: 736010642}
 --- !u!224 &352419056
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1969,6 +1970,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 682388753}
   m_CullTransparentMesh: 1
+--- !u!1 &736010640
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 736010641}
+  - component: {fileID: 736010642}
+  m_Layer: 0
+  m_Name: UniqueCardController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &736010641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 736010640}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1805188050}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &736010642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 736010640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b818fd6154b2954592a6e31192ab204, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerListManager: {fileID: 1225893522}
+  mapManager: {fileID: 1437424667}
+  cardUtilities: {fileID: 399039783}
+  cardSelectionUI: {fileID: 859441751}
+  cardTypeManager: {fileID: 308241388}
 --- !u!1 &745041914
 GameObject:
   m_ObjectHideFlags: 0
@@ -6585,6 +6635,7 @@ Transform:
   - {fileID: 565922104}
   - {fileID: 191542288}
   - {fileID: 216645781}
+  - {fileID: 736010641}
   m_Father: {fileID: 1500998787}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1813155497

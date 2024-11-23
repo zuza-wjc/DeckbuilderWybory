@@ -125,3 +125,15 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: 32e0c23ed689d74438038e36815a7db5, type: 3}
   - cardId: RA012
     cardSprite: {fileID: 21300000, guid: 2108f2f0584371e44a927bf85ff7723f, type: 3}
+  - cardId: UN018
+    cardSprite: {fileID: 21300000, guid: 74e375d2121e4d343832d474907e7ec7, type: 3}
+  - cardId: UN089
+    cardSprite: {fileID: 21300000, guid: 96ca3c488aeb55844ba546eda65d7e39, type: 3}
+  - cardId: UN025
+    cardSprite: {fileID: 21300000, guid: c839bda2512a84d43aab12e70ae3f9b5, type: 3}
+  - cardId: UN039
+    cardSprite: {fileID: 21300000, guid: 89543ef91fcfbda4da4f8e7b98e17ff6, type: 3}
+  - cardId: UN055
+    cardSprite: {fileID: 21300000, guid: 5250b81b3a3c27541b0c5a04c4a19a79, type: 3}
+  - cardId: UN086
+    cardSprite: {fileID: 21300000, guid: a6c01dc5e693fb1409b43e2d7045c9aa, type: 3}
