@@ -34,7 +34,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
             instanceId = draggableItem.instanceId;
             cardId = draggableItem.cardId;
 
-            // Przekazujemy zarówno instanceId, jak i cardId do OnCardDropped
             cardTypeManager.OnCardDropped(instanceId, cardId, false);
         }
     }

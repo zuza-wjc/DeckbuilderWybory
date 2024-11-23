@@ -7,8 +7,11 @@ using UnityEngine.UI;
 
 public class CardOnHandController : MonoBehaviour
 {
-    public GameObject cardPrefab;
-    public GameObject cardListContainer;
+    public GameObject cardPrefab;  
+    public GameObject cardListContainer; 
+    public GameObject cardPanel;    
+    public Image panelImage;           
+    public Button closeButton;       
     public CardSpriteManager cardSpriteManager;
 
     DatabaseReference dbRef;
@@ -86,12 +89,7 @@ public class CardOnHandController : MonoBehaviour
             }
         }
 
-        if (cardPrefab == null)
-        {
-            return;
-        }
-
-        if (cardListContainer == null)
+        if (cardPrefab == null || cardListContainer == null)
         {
             return;
         }
@@ -112,6 +110,10 @@ public class CardOnHandController : MonoBehaviour
         DraggableItem draggableItem = newCard.GetComponent<DraggableItem>();
         if (draggableItem != null)
         {
+            draggableItem.cardPanel = cardPanel;  
+            draggableItem.panelImage = panelImage; 
+            draggableItem.closeButton = closeButton; 
+            draggableItem.image = newCard.GetComponent<Image>();
             draggableItem.instanceId = instanceId;
             draggableItem.cardId = cardId;
         }
@@ -149,7 +151,6 @@ public class CardOnHandController : MonoBehaviour
             {
                 if (cardObjects.ContainsKey(instanceId))
                 {
-
                     GameObject cardToRemove = cardObjects[instanceId];
                     if (cardToRemove != null)
                     {
@@ -162,7 +163,6 @@ public class CardOnHandController : MonoBehaviour
             ForceUpdateUI();
         };
     }
-
 
     private void ListenForCardPlayed(string instanceId)
     {
@@ -198,7 +198,6 @@ public class CardOnHandController : MonoBehaviour
         };
     }
 
-
     private void ListenForNewCards()
     {
         dbRef.ChildAdded += (sender, args) =>
@@ -209,39 +208,22 @@ public class CardOnHandController : MonoBehaviour
                 return;
             }
 
-            // Uzyskiwanie Instance ID z Snapshot, sprawdzamy czy istnieje
             string instanceId = args.Snapshot.Key;
-            if (string.IsNullOrEmpty(instanceId))
-            {
-                Debug.LogError("Instance ID is null or empty.");
-                return;
-            }
-
-            // Uzyskiwanie cardId z Snapshot, sprawdzamy czy istnieje
             string cardId = args.Snapshot.Child("cardId").Value as string;
-            if (string.IsNullOrEmpty(cardId))
-            {
-                Debug.LogError($"Card ID is null or empty for instance ID: {instanceId}.");
-                return;
-            }
-
             bool onHand = args.Snapshot.Child("onHand").Value as bool? ?? false;
             bool played = args.Snapshot.Child("played").Value as bool? ?? false;
-
 
             if (onHand && !played)
             {
                 if (!cardObjects.ContainsKey(instanceId))
                 {
                     AddCardToUI(instanceId, cardId);
-
                     ListenForCardOnHandChange(instanceId);
                     ListenForCardPlayed(instanceId);
                 }
             }
         };
     }
-
 
     private void ListenForCardRemoved()
     {
@@ -259,7 +241,6 @@ public class CardOnHandController : MonoBehaviour
             }
         };
     }
-
 
     private void ForceUpdateUI()
     {
