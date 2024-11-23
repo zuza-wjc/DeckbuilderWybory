@@ -88,7 +88,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db35c5ac3e43f504ab13f9ca3f56bfcf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  image: {fileID: 8625040970020303902}
+  image: {fileID: 0}
   backgroundOverlay: {fileID: 0}
   parentAfterDrag: {fileID: 0}
   tapThreshold: 10
+  instanceId: 
+  cardId: 
+  cardPanel: {fileID: 0}
+  panelImage: {fileID: 0}
+  closeButton: {fileID: 0}
