@@ -28,8 +28,15 @@ public class CardOnHandController : MonoBehaviour
             return;
         }
 
-        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck");
+        dbRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
 
+        ListenForNewCards();
+        ListenForCardRemoved();
         StartCoroutine(LoadCardsOnHand());
     }
 
@@ -47,13 +54,13 @@ public class CardOnHandController : MonoBehaviour
         DataSnapshot snapshot = task.Result;
         foreach (DataSnapshot cardSnapshot in snapshot.Children)
         {
-            bool onHand = (bool)cardSnapshot.Child("onHand").Value;
-            bool played = (bool)cardSnapshot.Child("played").Value;
+            bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+            bool played = cardSnapshot.Child("played").Value as bool? ?? false;
 
             if (onHand && !played)
             {
                 string instanceId = cardSnapshot.Key;
-                string cardId = (string)cardSnapshot.Child("cardId").Value;
+                string cardId = cardSnapshot.Child("cardId").Value as string;
 
                 if (!cardObjects.ContainsKey(instanceId))
                 {
@@ -67,12 +74,40 @@ public class CardOnHandController : MonoBehaviour
 
     private void AddCardToUI(string instanceId, string cardId)
     {
-        if (cardObjects.ContainsKey(instanceId)) return;
+        if (cardObjects.ContainsKey(instanceId))
+        {
+            if (cardObjects[instanceId] == null)
+            {
+                cardObjects.Remove(instanceId);
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        if (cardPrefab == null)
+        {
+            return;
+        }
+
+        if (cardListContainer == null)
+        {
+            return;
+        }
 
         GameObject newCard = Instantiate(cardPrefab, cardListContainer.transform);
-        Image cardImage = newCard.GetComponent<Image>();
 
-        cardImage.sprite = cardSpriteManager.GetCardSprite(cardId);
+        if (newCard == null)
+        {
+            return;
+        }
+
+        Image cardImage = newCard.GetComponent<Image>();
+        if (cardImage != null)
+        {
+            cardImage.sprite = cardSpriteManager.GetCardSprite(cardId);
+        }
 
         DraggableItem draggableItem = newCard.GetComponent<DraggableItem>();
         if (draggableItem != null)
@@ -84,23 +119,29 @@ public class CardOnHandController : MonoBehaviour
         cardObjects[instanceId] = newCard;
     }
 
+
     private void ListenForCardOnHandChange(string instanceId)
     {
         dbRef.Child(instanceId).Child("onHand").ValueChanged += (sender, args) =>
         {
             if (args.DatabaseError != null)
             {
-                Debug.LogError("Error while listening for card onHand status change: " + args.DatabaseError.Message);
+                Debug.LogError($"Error in 'onHand' listener: {args.DatabaseError.Message}");
                 return;
             }
 
-            bool onHand = (bool)args.Snapshot.Value;
+            if (!cardObjects.ContainsKey(instanceId) || cardObjects[instanceId] == null)
+            {
+                return;
+            }
+
+            bool onHand = args.Snapshot.Value != null && (bool)args.Snapshot.Value;
 
             if (onHand)
             {
                 if (!cardObjects.ContainsKey(instanceId))
                 {
-                    string cardId = (string)args.Snapshot.Child("cardId").Value;
+                    string cardId = args.Snapshot.Child("cardId").Value.ToString();
                     AddCardToUI(instanceId, cardId);
                 }
             }
@@ -108,7 +149,12 @@ public class CardOnHandController : MonoBehaviour
             {
                 if (cardObjects.ContainsKey(instanceId))
                 {
-                    Destroy(cardObjects[instanceId]);
+
+                    GameObject cardToRemove = cardObjects[instanceId];
+                    if (cardToRemove != null)
+                    {
+                        Destroy(cardToRemove);
+                    }
                     cardObjects.Remove(instanceId);
                 }
             }
@@ -117,28 +163,103 @@ public class CardOnHandController : MonoBehaviour
         };
     }
 
+
     private void ListenForCardPlayed(string instanceId)
     {
         dbRef.Child(instanceId).Child("played").ValueChanged += (sender, args) =>
         {
             if (args.DatabaseError != null)
             {
-                Debug.LogError("Error while listening for card played status change: " + args.DatabaseError.Message);
+                Debug.LogError($"Error in 'played' listener: {args.DatabaseError.Message}");
                 return;
             }
 
-            bool played = (bool)args.Snapshot.Value;
+            if (!cardObjects.ContainsKey(instanceId) || cardObjects[instanceId] == null)
+            {
+                return;
+            }
+
+            bool played = args.Snapshot.Value != null && (bool)args.Snapshot.Value;
 
             if (played)
             {
                 if (cardObjects.ContainsKey(instanceId))
                 {
-                    Destroy(cardObjects[instanceId]);
+                    GameObject cardToRemove = cardObjects[instanceId];
+                    if (cardToRemove != null)
+                    {
+                        Destroy(cardToRemove);
+                    }
                     cardObjects.Remove(instanceId);
+                }
+            }
+
+            ForceUpdateUI();
+        };
+    }
+
+
+    private void ListenForNewCards()
+    {
+        dbRef.ChildAdded += (sender, args) =>
+        {
+            if (args.Snapshot == null)
+            {
+                Debug.LogError("Snapshot is null.");
+                return;
+            }
+
+            // Uzyskiwanie Instance ID z Snapshot, sprawdzamy czy istnieje
+            string instanceId = args.Snapshot.Key;
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                Debug.LogError("Instance ID is null or empty.");
+                return;
+            }
+
+            // Uzyskiwanie cardId z Snapshot, sprawdzamy czy istnieje
+            string cardId = args.Snapshot.Child("cardId").Value as string;
+            if (string.IsNullOrEmpty(cardId))
+            {
+                Debug.LogError($"Card ID is null or empty for instance ID: {instanceId}.");
+                return;
+            }
+
+            bool onHand = args.Snapshot.Child("onHand").Value as bool? ?? false;
+            bool played = args.Snapshot.Child("played").Value as bool? ?? false;
+
+
+            if (onHand && !played)
+            {
+                if (!cardObjects.ContainsKey(instanceId))
+                {
+                    AddCardToUI(instanceId, cardId);
+
+                    ListenForCardOnHandChange(instanceId);
+                    ListenForCardPlayed(instanceId);
                 }
             }
         };
     }
+
+
+    private void ListenForCardRemoved()
+    {
+        dbRef.ChildRemoved += (sender, args) =>
+        {
+            string instanceId = args.Snapshot.Key;
+            if (cardObjects.ContainsKey(instanceId))
+            {
+                GameObject cardToRemove = cardObjects[instanceId];
+                if (cardToRemove != null)
+                {
+                    Destroy(cardToRemove);
+                }
+                cardObjects.Remove(instanceId);
+            }
+        };
+    }
+
 
     private void ForceUpdateUI()
     {

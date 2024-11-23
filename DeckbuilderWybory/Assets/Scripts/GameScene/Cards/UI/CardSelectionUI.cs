@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Firebase.Database;
 using System.Threading.Tasks;
+using System.Linq;
 
 public class CardSelectionUI : MonoBehaviour
 {
@@ -20,7 +21,7 @@ public class CardSelectionUI : MonoBehaviour
     private string playerId;
     private bool selectionConfirmed = false;
 
-    public async Task<List<KeyValuePair<string, string>>> ShowCardSelection(string playerId, int numberOfCardsToSelect, string playedCardId, bool fromHand)
+    public async Task<List<KeyValuePair<string, string>>> ShowCardSelection(string playerId,int numberOfCardsToSelect,string playedCardId, bool fromHand,List<KeyValuePair<string, string>> excludedCards = null)
     {
         this.playerId = playerId;
         this.numberOfCardsToSelect = numberOfCardsToSelect;
@@ -51,14 +52,17 @@ public class CardSelectionUI : MonoBehaviour
 
         foreach (var cardSnapshot in snapshot.Children)
         {
-            if (playedCardId == cardSnapshot.Key) continue;
+            string instanceId = cardSnapshot.Key;
+
+            if (excludedCards != null && excludedCards.Any(excluded => excluded.Key == instanceId)) continue;
+
+            if (instanceId == playedCardId) continue;
 
             bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
             bool played = cardSnapshot.Child("played").Value as bool? ?? false;
 
             if ((fromHand && onHand && !played) || (!fromHand && !onHand && !played))
             {
-                string instanceId = cardSnapshot.Key;
                 string cardId = (string)cardSnapshot.Child("cardId").Value;
                 string cardType = GetCardType(cardId);
 
@@ -97,6 +101,8 @@ public class CardSelectionUI : MonoBehaviour
         HideCardSelectionPanel();
         return new List<KeyValuePair<string, string>>(selectedCards);
     }
+
+
 
     private string GetCardType(string cardId)
     {

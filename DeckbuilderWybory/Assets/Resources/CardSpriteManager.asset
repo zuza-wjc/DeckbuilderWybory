@@ -137,3 +137,7 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: 5250b81b3a3c27541b0c5a04c4a19a79, type: 3}
   - cardId: UN086
     cardSprite: {fileID: 21300000, guid: a6c01dc5e693fb1409b43e2d7045c9aa, type: 3}
+  - cardId: CA033
+    cardSprite: {fileID: 21300000, guid: 835df151ac92de5488aa320583feaeec, type: 3}
+  - cardId: CA067
+    cardSprite: {fileID: 21300000, guid: c45f508e313bd0141b9a8eb7e0c57eb2, type: 3}

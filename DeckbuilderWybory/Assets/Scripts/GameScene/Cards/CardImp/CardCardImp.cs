@@ -229,8 +229,13 @@ public class CardCardImp : MonoBehaviour
             {
                 if(data.TargetNumber == 8)
                 {
-                    await deckController.ExchangeCards(playerId,cardId);
+                    await deckController.ExchangeCards(playerId,instanceId);
+                } else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
+                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
                 }
+
             } else if (data.Target == "player")
             {
                 if (cardId == "CA017")
@@ -290,14 +295,23 @@ public class CardCardImp : MonoBehaviour
                         }
 
                     }
-                    else
+                    else if (cardId == "CA033")
+                    {
+                        await deckController.GetRandomCardsFromHand(playerId, enemyId, data.CardNumber,selectedCardIds);
+
+                    } else if (cardId == "CA067")
+                    {
+                        enemyId = await RandomEnemy();
+                        await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true, selectedCardIds);
+                        await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
+                    } else
                     {
                         for (int i = 0; i < data.CardNumber; i++)
                         {
                             await deckController.GetCardFromDeck(source, target);
                         }
 
-                        // obs³uga karty ca033
                     }
                 }
             } else if (data.Target == "player-deck") {
@@ -334,10 +348,7 @@ public class CardCardImp : MonoBehaviour
                 }
                 target = enemyId;
                 if(data.Source == "player") { source = playerId; }
-                for (int i = 0; i < data.CardNumber; i++)
-                {
-                    await deckController.GetCardFromHand(source, target, selectedCardIds);
-                }
+                await deckController.GetCardFromHand(source, target, selectedCardIds);
             }
         }
         return (dbRefPlayerStats, playerBudget);
@@ -437,6 +448,50 @@ public class CardCardImp : MonoBehaviour
         }
     }
 
+    private async Task<string> RandomEnemy()
+    {
+
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Lobby ID or Player ID is null or empty.");
+            return null;
+        }
+
+        DatabaseReference playersRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        var playersSnapshot = await playersRef.GetValueAsync();
+        if (!playersSnapshot.Exists)
+        {
+            Debug.LogError($"No players found in lobby {lobbyId}.");
+            return null;
+        }
+
+        List<string> enemyIds = new();
+        foreach (var playerSnapshot in playersSnapshot.Children)
+        {
+            string id = playerSnapshot.Key;
+            if (id != playerId)
+            {
+                enemyIds.Add(id);
+            }
+        }
+
+        if (enemyIds.Count == 0)
+        {
+            Debug.LogWarning("No enemies available in the session.");
+            return null;
+        }
+
+        System.Random random = new();
+        int randomIndex = random.Next(enemyIds.Count);
+        string randomEnemyId = enemyIds[randomIndex];
+
+        Debug.Log($"Random enemy selected: {randomEnemyId}");
+        return randomEnemyId;
+    }
 
 }
 
