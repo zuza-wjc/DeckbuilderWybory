@@ -14,13 +14,13 @@ public class CardSelectionUI : MonoBehaviour
     public Sprite selectedSprite;
     public ScrollRect cardScrollView;
 
-    private List<string> selectedCards = new();
+    private List<KeyValuePair<string, string>> selectedCards = new();
     private Dictionary<string, bool> cardSelectionStates = new();
     private int numberOfCardsToSelect = 0;
     private string playerId;
     private bool selectionConfirmed = false;
 
-    public async Task<List<string>> ShowCardSelection(string playerId, int numberOfCardsToSelect, string playedCardId, bool fromHand)
+    public async Task<List<KeyValuePair<string, string>>> ShowCardSelection(string playerId, int numberOfCardsToSelect, string playedCardId, bool fromHand)
     {
         this.playerId = playerId;
         this.numberOfCardsToSelect = numberOfCardsToSelect;
@@ -58,7 +58,8 @@ public class CardSelectionUI : MonoBehaviour
 
             if ((fromHand && onHand && !played) || (!fromHand && !onHand && !played))
             {
-                string cardId = cardSnapshot.Key;
+                string instanceId = cardSnapshot.Key;
+                string cardId = (string)cardSnapshot.Child("cardId").Value;
                 string cardType = GetCardType(cardId);
 
                 DatabaseReference cardRef = FirebaseInitializer.DatabaseReference
@@ -72,7 +73,7 @@ public class CardSelectionUI : MonoBehaviour
                 if (cardNameSnapshot.Exists)
                 {
                     string cardName = cardNameSnapshot.Value.ToString();
-                    AddCardToUI(cardId, cardName);
+                    AddCardToUI(instanceId, cardName, cardId);
                     anyCardAdded = true;
                 }
             }
@@ -94,9 +95,8 @@ public class CardSelectionUI : MonoBehaviour
         }
 
         HideCardSelectionPanel();
-        return new List<string>(selectedCards);
+        return new List<KeyValuePair<string, string>>(selectedCards);
     }
-
 
     private string GetCardType(string cardId)
     {
@@ -113,7 +113,7 @@ public class CardSelectionUI : MonoBehaviour
         };
     }
 
-    private void AddCardToUI(string cardId, string cardName)
+    private void AddCardToUI(string instanceId, string cardName, string cardId)
     {
         GameObject newButton = Instantiate(cardCheckboxPrefab, cardListContainer);
 
@@ -123,31 +123,31 @@ public class CardSelectionUI : MonoBehaviour
 
         nameText.text = cardName;
         cardImage.sprite = unselectedSprite;
-        cardSelectionStates[cardId] = false;
+        cardSelectionStates[instanceId] = false;
 
-        button.onClick.AddListener(() => ToggleCardState(cardId, cardImage));
+        button.onClick.AddListener(() => ToggleCardState(instanceId, cardImage, cardId));
     }
 
-    private void ToggleCardState(string cardId, Image cardImage)
+    private void ToggleCardState(string instanceId, Image cardImage, string cardId)
     {
-        bool isSelected = cardSelectionStates[cardId];
-        cardSelectionStates[cardId] = !isSelected;
+        bool isSelected = cardSelectionStates[instanceId];
+        cardSelectionStates[instanceId] = !isSelected;
 
-        if (cardSelectionStates[cardId])
+        if (cardSelectionStates[instanceId])
         {
             if (selectedCards.Count < numberOfCardsToSelect)
             {
-                selectedCards.Add(cardId);
+                selectedCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
                 cardImage.sprite = selectedSprite;
             }
             else
             {
-                cardSelectionStates[cardId] = false;
+                cardSelectionStates[instanceId] = false;
             }
         }
         else
         {
-            selectedCards.Remove(cardId);
+            selectedCards.Remove(new KeyValuePair<string, string>(instanceId, cardId));
             cardImage.sprite = unselectedSprite;
         }
 

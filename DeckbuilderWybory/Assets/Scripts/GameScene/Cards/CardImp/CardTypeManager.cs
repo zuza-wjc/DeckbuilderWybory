@@ -9,29 +9,29 @@ public class CardTypeManager : MonoBehaviour
     public RandomCardImp randomCardImp;
     public UniqueCardImp uniqueCardImp;
 
-    public void OnCardDropped(string cardIdDropped, bool ignoreCost)
+    public void OnCardDropped(string instanceId, string cardIdDropped, bool ignoreCost)
     {
         string cardType = cardIdDropped.Substring(0, 2);
 
         switch (cardType)
         {
             case "AD":
-                addRemoveCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                addRemoveCardImp.CardLibrary(instanceId,cardIdDropped, ignoreCost);
                 break;
             case "AS":
-                asMuchAsCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                asMuchAsCardImp.CardLibrary(instanceId,cardIdDropped, ignoreCost);
                 break;
             case "CA":
-                cardCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                cardCardImp.CardLibrary(instanceId,cardIdDropped, ignoreCost);
                 break;
             case "OP":
-                optionsCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                optionsCardImp.CardLibrary(instanceId,cardIdDropped, ignoreCost);
                 break;
             case "RA":
-                randomCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                randomCardImp.CardLibrary(instanceId,cardIdDropped, ignoreCost);
                 break;
             case "UN":
-                uniqueCardImp.CardLibrary(cardIdDropped, ignoreCost);
+                uniqueCardImp.CardLibrary(instanceId,cardIdDropped, ignoreCost);
                 break;
             default:
                 Debug.LogError($"Unknown card type: {cardIdDropped}");

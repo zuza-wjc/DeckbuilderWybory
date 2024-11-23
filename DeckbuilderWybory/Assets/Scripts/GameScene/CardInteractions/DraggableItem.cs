@@ -21,6 +21,9 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     private Canvas canvas;
 
+    [HideInInspector] public string instanceId;
+    [HideInInspector] public string cardId;
+
     private void Start()
     {
         originalScale = transform.localScale;

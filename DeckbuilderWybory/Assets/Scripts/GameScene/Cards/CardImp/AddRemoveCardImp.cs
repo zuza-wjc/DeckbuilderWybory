@@ -22,7 +22,7 @@ public class AddRemoveCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId,string cardIdDropped, bool ignoreCost)
     {
         DatabaseReference dbRefCard;
         DatabaseReference dbRefPlayerStats;
@@ -183,21 +183,19 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (supportChange)
         {
-            (chosenRegion, isBonusRegion, enemyId)  = await SupportAction(cardIdDropped,chosenRegion,isBonusRegion,cardType,
-                enemyId,cardsChange,supportOptionsDictionary,supportBonusOptionsDictionary,cardsBonusOptionsDictionary);
+            (chosenRegion, isBonusRegion, enemyId)  = await SupportAction(cardIdDropped,chosenRegion,isBonusRegion,cardType,enemyId,cardsChange,supportOptionsDictionary,supportBonusOptionsDictionary,
+                cardsBonusOptionsDictionary);
         }
 
         if (budgetChange)
         {
-            (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats,
-                cardIdDropped, chosenRegion,isBonusRegion,cardType,budgetOptionsDictionary,budgetBonusOptionsDictionary,
-                playerBudget,enemyId);
+            (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats,cardIdDropped, chosenRegion,isBonusRegion,cardType,budgetOptionsDictionary,
+                budgetBonusOptionsDictionary,playerBudget,enemyId);
         }
 
         if (incomeChange)
         {
-            (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion,incomeOptionsDictionary,enemyId,
-                incomeBonusOptionsDictionary,playerIncome,dbRefPlayerStats,chosenRegion,playerBudget);
+            (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion,incomeOptionsDictionary,enemyId,incomeBonusOptionsDictionary,playerIncome,dbRefPlayerStats,chosenRegion,playerBudget);
         }
 
         if(roundChange != 0)
@@ -210,16 +208,14 @@ public class AddRemoveCardImp : MonoBehaviour
             await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
         await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>
-        BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion, bool isBonusRegion, string cardType,
-        Dictionary<int, OptionData> budgetOptionsDictionary, Dictionary<int, OptionData> budgetBonusOptionsDictionary,
-        int playerBudget, string enemyId)
+    private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion,
+        bool isBonusRegion, string cardType,Dictionary<int, OptionData> budgetOptionsDictionary, Dictionary<int, OptionData> budgetBonusOptionsDictionary,int playerBudget, string enemyId)
     {
         if(cardId == "AD090")
         {
@@ -300,9 +296,8 @@ public class AddRemoveCardImp : MonoBehaviour
         return (dbRefPlayerStats,chosenRegion,isBonusRegion,playerBudget,enemyId);
     }
 
-    private async Task<(int chosenRegion,bool isBonusRegion, string enemyId)> SupportAction(string cardId, int chosenRegion,
-        bool isBonusRegion, string cardType, string enemyId, bool cardsChange,Dictionary<int, OptionData> supportOptionsDictionary,
-        Dictionary<int, OptionData> supportBonusOptionsDictionary,Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary)
+    private async Task<(int chosenRegion,bool isBonusRegion, string enemyId)> SupportAction(string cardId, int chosenRegion,bool isBonusRegion, string cardType, string enemyId, bool cardsChange,
+        Dictionary<int, OptionData> supportOptionsDictionary,Dictionary<int, OptionData> supportBonusOptionsDictionary,Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary)
     {
         if (cardId == "AD091")
         {

@@ -21,7 +21,7 @@ public class AsMuchAsCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId,string cardIdDropped, bool ignoreCost)
     {
         DatabaseReference dbRefCard;
         DatabaseReference dbRefPlayerStats;
@@ -175,21 +175,18 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         if(supportChange)
         {
-            isBonusRegion = await SupportAction(cardIdDropped,isBonusRegion,supportOptionsDictionary,supportBonusOptionsDictionary,
-                chosenRegion,cardType);
+            isBonusRegion = await SupportAction(cardIdDropped,isBonusRegion,supportOptionsDictionary,supportBonusOptionsDictionary,chosenRegion,cardType);
         }
 
         if (budgetChange)
         {
-            (dbRefPlayerStats, isBonusRegion, playerBudget) = await BudgetAction(dbRefPlayerStats,cardIdDropped,isBonusRegion,
-                budgetOptionsDictionary,budgetBonusOptionsDictionary,budgetOptionsPerCardDictionary,
+            (dbRefPlayerStats, isBonusRegion, playerBudget) = await BudgetAction(dbRefPlayerStats,cardIdDropped,isBonusRegion,budgetOptionsDictionary,budgetBonusOptionsDictionary,budgetOptionsPerCardDictionary,
                 budgetBonusOptionsPerCardDictionary,playerBudget,enemyId,cardType);
         }
 
         if (incomeChange)
         {
-            dbRefPlayerStats = await IncomeAction(isBonusRegion,incomeOptionsDictionary,incomeBonusOptionsDictionary,
-                playerIncome,cardType,dbRefPlayerStats);
+            dbRefPlayerStats = await IncomeAction(isBonusRegion,incomeOptionsDictionary,incomeBonusOptionsDictionary,playerIncome,cardType,dbRefPlayerStats);
         }
 
         if (!ignoreCost)
@@ -197,7 +194,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
         await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
@@ -239,11 +236,9 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         return dbRefPlayerStats;
     }
-    private async Task<(DatabaseReference dbRefPlayerStats,bool isBonusRegion,int playerBudget)>
-        BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
-        Dictionary<int, OptionData> budgetOptionsDictionary,Dictionary<int, OptionData> budgetBonusOptionsDictionary,
-        Dictionary<int, OptionDataPerCard> budgetOptionsPerCardDictionary,Dictionary<int, OptionDataPerCard> budgetBonusOptionsPerCardDictionary,
-        int playerBudget, string enemyId, string cardType)
+    private async Task<(DatabaseReference dbRefPlayerStats,bool isBonusRegion,int playerBudget)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
+        Dictionary<int, OptionData> budgetOptionsDictionary,Dictionary<int, OptionData> budgetBonusOptionsDictionary,Dictionary<int, OptionDataPerCard> budgetOptionsPerCardDictionary,
+        Dictionary<int, OptionDataPerCard> budgetBonusOptionsPerCardDictionary,int playerBudget, string enemyId, string cardType)
     {
         var isBonus = isBonusRegion;
         object optionsToApply;
@@ -333,8 +328,8 @@ public class AsMuchAsCardImp : MonoBehaviour
         }
         return (dbRefPlayerStats, isBonusRegion, playerBudget);
     }
-    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, Dictionary<int, OptionDataPerCard> supportOptionsDictionary,
-    Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary, int chosenRegion, string cardType)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, Dictionary<int, OptionDataPerCard> supportOptionsDictionary,Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary,
+        int chosenRegion, string cardType)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? supportBonusOptionsDictionary : supportOptionsDictionary;
@@ -430,7 +425,6 @@ public class AsMuchAsCardImp : MonoBehaviour
         }
     }
 
-
     private async Task<int> CalculateValueFromHand(string playerId, string cardType)
     {
         int cardCount = 0;
@@ -452,12 +446,14 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         foreach (var cardSnapshot in snapshot.Children)
         {
-            string onHandValue = cardSnapshot.Child("onHand").Value.ToString();
-            string playedValue = cardSnapshot.Child("played").Value.ToString();
+            var onHandSnapshot = cardSnapshot.Child("onHand");
+            var playedSnapshot = cardSnapshot.Child("played");
+            var cardIdSnapshot = cardSnapshot.Child("cardId");
 
-            if (onHandValue == "True" && playedValue == "False")
+            if (bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && onHand &&
+                bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
             {
-                string cardId = cardSnapshot.Key;
+                string cardId = cardIdSnapshot.Value.ToString();
                 string type = await GetCardType(cardId);
 
                 if (type == cardType)

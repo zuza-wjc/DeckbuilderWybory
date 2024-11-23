@@ -52,34 +52,41 @@ public class CardOnHandController : MonoBehaviour
 
             if (onHand && !played)
             {
-                string cardId = cardSnapshot.Key;
-                if (!cardObjects.ContainsKey(cardId)) 
+                string instanceId = cardSnapshot.Key;
+                string cardId = (string)cardSnapshot.Child("cardId").Value;
+
+                if (!cardObjects.ContainsKey(instanceId))
                 {
-                    AddCardToUI(cardId);
-                    ListenForCardOnHandChange(cardId);
-                    ListenForCardPlayed(cardId);
+                    AddCardToUI(instanceId, cardId);
+                    ListenForCardOnHandChange(instanceId);
+                    ListenForCardPlayed(instanceId);
                 }
             }
         }
     }
 
-    private void AddCardToUI(string cardId)
+    private void AddCardToUI(string instanceId, string cardId)
     {
-        if (cardObjects.ContainsKey(cardId)) return;
+        if (cardObjects.ContainsKey(instanceId)) return;
 
         GameObject newCard = Instantiate(cardPrefab, cardListContainer.transform);
         Image cardImage = newCard.GetComponent<Image>();
 
         cardImage.sprite = cardSpriteManager.GetCardSprite(cardId);
-        newCard.tag = cardId;
 
-        cardObjects[cardId] = newCard;
+        DraggableItem draggableItem = newCard.GetComponent<DraggableItem>();
+        if (draggableItem != null)
+        {
+            draggableItem.instanceId = instanceId;
+            draggableItem.cardId = cardId;
+        }
 
+        cardObjects[instanceId] = newCard;
     }
 
-    private void ListenForCardOnHandChange(string cardId)
+    private void ListenForCardOnHandChange(string instanceId)
     {
-        dbRef.Child(cardId).Child("onHand").ValueChanged += (sender, args) =>
+        dbRef.Child(instanceId).Child("onHand").ValueChanged += (sender, args) =>
         {
             if (args.DatabaseError != null)
             {
@@ -91,17 +98,18 @@ public class CardOnHandController : MonoBehaviour
 
             if (onHand)
             {
-                if (!cardObjects.ContainsKey(cardId))
+                if (!cardObjects.ContainsKey(instanceId))
                 {
-                    AddCardToUI(cardId);
+                    string cardId = (string)args.Snapshot.Child("cardId").Value;
+                    AddCardToUI(instanceId, cardId);
                 }
             }
             else
             {
-                if (cardObjects.ContainsKey(cardId))
+                if (cardObjects.ContainsKey(instanceId))
                 {
-                    Destroy(cardObjects[cardId]);
-                    cardObjects.Remove(cardId);
+                    Destroy(cardObjects[instanceId]);
+                    cardObjects.Remove(instanceId);
                 }
             }
 
@@ -109,9 +117,9 @@ public class CardOnHandController : MonoBehaviour
         };
     }
 
-    private void ListenForCardPlayed(string cardId)
+    private void ListenForCardPlayed(string instanceId)
     {
-        dbRef.Child(cardId).Child("played").ValueChanged += (sender, args) =>
+        dbRef.Child(instanceId).Child("played").ValueChanged += (sender, args) =>
         {
             if (args.DatabaseError != null)
             {
@@ -123,10 +131,10 @@ public class CardOnHandController : MonoBehaviour
 
             if (played)
             {
-                if (cardObjects.ContainsKey(cardId))
+                if (cardObjects.ContainsKey(instanceId))
                 {
-                    Destroy(cardObjects[cardId]);
-                    cardObjects.Remove(cardId);
+                    Destroy(cardObjects[instanceId]);
+                    cardObjects.Remove(instanceId);
                 }
             }
         };
@@ -141,7 +149,4 @@ public class CardOnHandController : MonoBehaviour
 
         StartCoroutine(LoadCardsOnHand());
     }
-
-
-
 }

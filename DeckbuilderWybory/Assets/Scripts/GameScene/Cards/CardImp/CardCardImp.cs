@@ -24,7 +24,7 @@ public class CardCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
         DatabaseReference dbRefCard;
         DatabaseReference dbRefPlayerStats;
@@ -38,7 +38,8 @@ public class CardCardImp : MonoBehaviour
         string source = string.Empty;
         string target = string.Empty;
 
-        List<string> selectedCardIds = new();
+        List<KeyValuePair<string, string>> selectedCardIds = new List<KeyValuePair<string, string>>();
+
 
         bool supportChange = false;
         bool isBonusRegion = false;
@@ -144,15 +145,14 @@ public class CardCardImp : MonoBehaviour
 
             if (supportChange)
             {
-                isBonusRegion = await SupportAction(cardIdDropped,isBonusRegion,chosenRegion,cardType,supportOptionsDictionary,
-                    supportBonusOptionsDictionary);
+                isBonusRegion = await SupportAction(cardIdDropped,isBonusRegion,chosenRegion,cardType,supportOptionsDictionary,supportBonusOptionsDictionary);
             }
 
             if (cardsChange)
             {
     
-                (dbRefPlayerStats,playerBudget) = await CardsAction(dbRefPlayerStats,cardIdDropped,isBonusRegion,
-                    cardsOptionsDictionary,cardsBonusOptionsDictionary,enemyId,playerBudget,source,target,selectedCardIds);
+                (dbRefPlayerStats,playerBudget) = await CardsAction(instanceId,dbRefPlayerStats,cardIdDropped,isBonusRegion,cardsOptionsDictionary,cardsBonusOptionsDictionary,enemyId,playerBudget,source,target,
+                    selectedCardIds);
             }
 
             if(!ignoreCost)
@@ -160,7 +160,7 @@ public class CardCardImp : MonoBehaviour
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
             }
 
-            dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+            dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
             if(!onHandChanged)
             {
@@ -172,8 +172,7 @@ public class CardCardImp : MonoBehaviour
 
     }
    
-    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion,string cardType,
-        Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion,string cardType,Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
         if (cardId == "CA085")
         {
@@ -205,10 +204,9 @@ public class CardCardImp : MonoBehaviour
         return isBonusRegion;
      }
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> CardsAction(DatabaseReference dbRefPlayerStats,
-        string cardId, bool isBonusRegion,Dictionary<int, OptionDataCard> cardsOptionsDictionary,
-        Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary,string enemyId, int playerBudget,string source,
-        string target, List<string> selectedCardIds)
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> CardsAction(string instanceId,DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
+        Dictionary<int, OptionDataCard> cardsOptionsDictionary,Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary,string enemyId, int playerBudget,string source,string target,
+        List<KeyValuePair<string, string>> selectedCardIds)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? cardsBonusOptionsDictionary : cardsOptionsDictionary;
@@ -253,19 +251,44 @@ public class CardCardImp : MonoBehaviour
 
                    if(cardId == "CA070")
                     {
-                        string cardFromHand = selectedCardIds[0];
+                        string cardFromHandInstanceId = selectedCardIds[0].Key;
+
                         selectedCardIds.Clear();
-                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, false);
-                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
-                        string cardFromDeck = selectedCardIds[0];
-                        await deckController.ExchangeFromHandToDeck(source,cardFromHand,cardFromDeck);
 
-                    } else if (cardId == "CA077")
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardFromHandInstanceId, false);
+
+                        Debug.Log($"Wybrane karty z decku: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+
+                        if (selectedCardIds.Count > 0)
+                        {
+                            string cardFromDeckInstanceId = selectedCardIds[0].Key;
+                            await deckController.ExchangeFromHandToDeck(source, cardFromHandInstanceId, cardFromDeckInstanceId);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Nie wybrano ¿adnej karty z decku.");
+                        }
+
+
+                    }
+                    else if (cardId == "CA077")
                     {
-                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, false);
-                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, false);
 
-                        cardTypeManager.OnCardDropped(selectedCardIds[0],true);
+                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+
+                        if (selectedCardIds.Count > 0)
+                        {
+                            string cardFromDeckInstanceId = selectedCardIds[0].Key;
+                            string cardFromDeckCardId = selectedCardIds[0].Value;
+
+                            cardTypeManager.OnCardDropped(cardFromDeckInstanceId, cardFromDeckCardId, true);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Nie wybrano ¿adnej karty.");
+                        }
+
                     }
                     else
                     {
@@ -279,21 +302,30 @@ public class CardCardImp : MonoBehaviour
                 }
             } else if (data.Target == "player-deck") {
 
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, true);
-                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
-                if (data.Source == "player") { source = playerId; }
+                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
 
-                if(cardId == "CA031")
+                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+
+                if (data.Source == "player")
                 {
-                    foreach (string selectedCardId in selectedCardIds)
+                    source = playerId;
+                }
+
+                if (cardId == "CA031")
+                {
+                    foreach (var selectedCard in selectedCardIds)
                     {
-                        await deckController.RejectCard(source, selectedCardId);
+                        string selectedInstanceId = selectedCard.Key;
+
+                        await deckController.RejectCard(source, selectedInstanceId);
                     }
                 }
-            } else if (data.Target == "enemy-chosen")
+
+            }
+            else if (data.Target == "enemy-chosen")
             {
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, true);
-                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
+                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
+                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
                 enemyId = await playerListManager.SelectEnemyPlayer();
                 if (string.IsNullOrEmpty(enemyId))
                 {
@@ -333,17 +365,20 @@ public class CardCardImp : MonoBehaviour
             return -1;
         }
 
-        List<string> availableCards = new();
+        List<KeyValuePair<string, string>> availableCards = new();
+
         foreach (var cardSnapshot in snapshot.Children)
         {
-            var onHandSnapshot = cardSnapshot.Child("onHand");
-            var playedSnapshot = cardSnapshot.Child("played");
-
-            if (onHandSnapshot.Exists && bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && !onHand)
+            if (cardSnapshot.Child("onHand").Exists &&
+                bool.TryParse(cardSnapshot.Child("onHand").Value.ToString(), out bool onHand) && !onHand &&
+                cardSnapshot.Child("played").Exists &&
+                bool.TryParse(cardSnapshot.Child("played").Value.ToString(), out bool played) && !played)
             {
-                if (playedSnapshot.Exists && bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
+                string instanceId = cardSnapshot.Key;
+                string cardId = cardSnapshot.Child("cardId").Value?.ToString();
+                if (!string.IsNullOrEmpty(cardId))
                 {
-                    availableCards.Add(cardSnapshot.Key);
+                    availableCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
                 }
             }
         }
@@ -356,46 +391,50 @@ public class CardCardImp : MonoBehaviour
 
         System.Random random = new();
         int randomIndex = random.Next(availableCards.Count);
-        string selectedCardId = availableCards[randomIndex];
+        var selectedCard = availableCards[randomIndex];
+        string selectedCardId = selectedCard.Value;
 
-        string cardLetters = selectedCardId[..2];
-        string type = "";
-
-        switch (cardLetters)
+        string cardLetters = selectedCardId.Substring(0, 2);
+        string type = cardLetters switch
         {
-            case "AD":
-                type = "addRemove";
-                break;
-            case "AS":
-                type = "asMuchAs";
-                break;
-            case "CA":
-                type = "cards";
-                break;
-            case "OP":
-                type = "options";
-                break;
-            case "RA":
-                type = "random";
-                break;
-            case "UN":
-                type = "unique";
-                break;
+            "AD" => "addRemove",
+            "AS" => "asMuchAs",
+            "CA" => "cards",
+            "OP" => "options",
+            "RA" => "random",
+            "UN" => "unique",
+            _ => "unknown"
+        };
+
+        if (type == "unknown")
+        {
+            Debug.LogError($"Unknown card type for card ID: {selectedCardId}");
+            return -1;
         }
 
-        DatabaseReference dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child(type).Child(selectedCardId).Child("cost");
+        DatabaseReference dbRefCard = FirebaseInitializer.DatabaseReference
+            .Child("cards")
+            .Child("id")
+            .Child(type)
+            .Child(selectedCardId)
+            .Child("cost");
 
         var costSnapshot = await dbRefCard.GetValueAsync();
-
         if (!costSnapshot.Exists)
         {
             Debug.LogError($"Cost for card {selectedCardId} not found.");
             return -1;
         }
 
-        int cardCost = Convert.ToInt32(costSnapshot.Value);
-
-        return cardCost;
+        if (int.TryParse(costSnapshot.Value.ToString(), out int cardCost))
+        {
+            return cardCost;
+        }
+        else
+        {
+            Debug.LogError($"Failed to parse cost for card {selectedCardId}.");
+            return -1;
+        }
     }
 
 

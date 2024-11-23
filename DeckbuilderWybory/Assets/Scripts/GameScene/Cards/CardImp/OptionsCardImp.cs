@@ -21,7 +21,7 @@ public class OptionsCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
         DatabaseReference dbRefCard;
         DatabaseReference dbRefPlayerStats;
@@ -140,9 +140,8 @@ public class OptionsCardImp : MonoBehaviour
 
         if (supportChange)
         {
-            (playerBudget, ignoreCost, isBonusRegion, enemyId) = await SupportAction(budgetChange, playerBudget, cardIdDropped,
-                ignoreCost, chosenRegion, isBonusRegion, cardType, supportOptionsDictionary, supportBonusOptionsDictionary,
-                enemyId, budgetOptionsDictionary);
+            (playerBudget, ignoreCost, isBonusRegion, enemyId) = await SupportAction(budgetChange, playerBudget, cardIdDropped,ignoreCost, chosenRegion, isBonusRegion, cardType, supportOptionsDictionary,
+                supportBonusOptionsDictionary,enemyId, budgetOptionsDictionary);
         }
 
         if (budgetChange)
@@ -155,15 +154,14 @@ public class OptionsCardImp : MonoBehaviour
             await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
         await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> BudgetAction(DatabaseReference dbRefPlayerStats,
-        bool isBonusRegion,Dictionary<int, OptionDataRandom> budgetOptionsDictionary,Dictionary<int, OptionDataRandom> budgetBonusOptionsDictionary,
-        int playerBudget, string enemyId)
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> BudgetAction(DatabaseReference dbRefPlayerStats,bool isBonusRegion,Dictionary<int, OptionDataRandom> budgetOptionsDictionary,
+        Dictionary<int, OptionDataRandom> budgetBonusOptionsDictionary,int playerBudget, string enemyId)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? budgetBonusOptionsDictionary : budgetOptionsDictionary;
@@ -206,10 +204,8 @@ public class OptionsCardImp : MonoBehaviour
         return (dbRefPlayerStats, playerBudget);
     }
 
-    private async Task<(int playerBudget, bool ignoreCost, bool isBonusRegion, string enemyId)> 
-        SupportAction(bool budgetChange,int playerBudget, string cardId, bool ignoreCost, int chosenRegion, bool isBonusRegion,
-        string cardType,Dictionary<int, OptionDataRandom> supportOptionsDictionary,Dictionary<int, OptionDataRandom> supportBonusOptionsDictionary,
-        string enemyId, Dictionary<int, OptionDataRandom> budgetOptionsDictionary)
+    private async Task<(int playerBudget, bool ignoreCost, bool isBonusRegion, string enemyId)> SupportAction(bool budgetChange,int playerBudget, string cardId, bool ignoreCost, int chosenRegion, bool isBonusRegion,
+        string cardType,Dictionary<int, OptionDataRandom> supportOptionsDictionary,Dictionary<int, OptionDataRandom> supportBonusOptionsDictionary,string enemyId, Dictionary<int, OptionDataRandom> budgetOptionsDictionary)
     {
         if (cardId == "OP011")
         {
