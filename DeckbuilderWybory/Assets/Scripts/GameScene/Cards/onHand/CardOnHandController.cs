@@ -121,7 +121,6 @@ public class CardOnHandController : MonoBehaviour
         cardObjects[instanceId] = newCard;
     }
 
-
     private void ListenForCardOnHandChange(string instanceId)
     {
         dbRef.Child(instanceId).Child("onHand").ValueChanged += (sender, args) =>
