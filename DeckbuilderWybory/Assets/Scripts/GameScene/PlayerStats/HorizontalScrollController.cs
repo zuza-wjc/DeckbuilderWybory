@@ -11,11 +11,13 @@ public class HorizontalScrollController : MonoBehaviour
 
     DatabaseReference dbRef;
     string lobbyId;
+    string playerId;
     int lobbySize;
 
     void Start()
     {
         lobbyId = DataTransfer.LobbyId;
+        playerId = DataTransfer.PlayerId;
 
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
@@ -44,10 +46,19 @@ public class HorizontalScrollController : MonoBehaviour
                 if (snapshot.Exists)
                 {
                     List<(string, string, string, string, int, string)> playersData = new List<(string, string, string, string, int, string)>();
+                    (string, string, string, string, int, string)? currentPlayerData = null;
 
                     foreach (var childSnapshot in snapshot.Child("players").Children)
                     {
+                        string currentPlayerId = childSnapshot.Key;
+
                         string playerName = childSnapshot.Child("playerName").Value?.ToString() ?? "Unknown";
+
+                        if (currentPlayerId == playerId)
+                        {
+                            playerName = "Ty";
+                        }
+
                         string playerMoney = childSnapshot.Child("stats").Child("money").Value?.ToString() ?? "0";
                         string playerIncome = childSnapshot.Child("stats").Child("income").Value?.ToString() ?? "0";
 
@@ -95,7 +106,7 @@ public class HorizontalScrollController : MonoBehaviour
                                 var regionSnapshot = regionsSnapshot.Child(i.ToString());
                                 int regionSupport = int.TryParse(regionSnapshot.Value?.ToString(), out int value) ? value : 0;
 
-                                if (regionSupport > 0) 
+                                if (regionSupport > 0)
                                 {
                                     regionSupports.Add($"{i + 1}:{regionSupport}%");
                                 }
@@ -104,7 +115,19 @@ public class HorizontalScrollController : MonoBehaviour
                             regionSupportText = string.Join(" ", regionSupports);
                         }
 
-                        playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText));
+                        if (currentPlayerId == playerId)
+                        {
+                            currentPlayerData = (playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText);
+                        }
+                        else
+                        {
+                            playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText));
+                        }
+                    }
+
+                    if (currentPlayerData.HasValue)
+                    {
+                        playersData.Insert(0, currentPlayerData.Value);
                     }
 
                     if (int.TryParse(snapshot.Child("lobbySize").Value.ToString(), out lobbySize))
@@ -127,6 +150,7 @@ public class HorizontalScrollController : MonoBehaviour
             }
         });
     }
+
 
     void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupportText)
     {
