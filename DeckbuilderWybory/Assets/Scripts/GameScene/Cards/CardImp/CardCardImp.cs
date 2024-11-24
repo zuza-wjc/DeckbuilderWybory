@@ -303,6 +303,7 @@ public class CardCardImp : MonoBehaviour
                     {
                         enemyId = await RandomEnemy();
                         await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
+                        Debug.Log("Now choosing from enemy hand");
                         selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true, selectedCardIds);
                         await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
                     } else

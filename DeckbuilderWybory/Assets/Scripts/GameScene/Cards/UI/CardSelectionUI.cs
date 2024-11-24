@@ -154,11 +154,11 @@ public class CardSelectionUI : MonoBehaviour
 
         // Dodaj listener na klikniêcie
         Button button = newCardUI.GetComponent<Button>();
-        button.onClick.AddListener(() => ToggleCardState(instanceId, border));
+        button.onClick.AddListener(() => ToggleCardState(instanceId, cardId, border));
     }
 
     // Zmiana stanu zaznaczenia karty
-    private void ToggleCardState(string instanceId, GameObject border)
+    private void ToggleCardState(string instanceId, string cardId, GameObject border)
     {
         bool isSelected = cardSelectionStates[instanceId];
         cardSelectionStates[instanceId] = !isSelected;
@@ -167,7 +167,7 @@ public class CardSelectionUI : MonoBehaviour
         {
             if (selectedCards.Count < numberOfCardsToSelect)
             {
-                selectedCards.Add(new KeyValuePair<string, string>(instanceId, instanceId));
+                selectedCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
                 border.SetActive(true); // Poka¿ obramowanie, gdy karta jest zaznaczona
             }
             else

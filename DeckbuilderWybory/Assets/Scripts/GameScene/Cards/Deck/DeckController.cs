@@ -322,6 +322,7 @@ public class DeckController : MonoBehaviour
 
     public async Task GetCardFromHand(string source, string target, List<KeyValuePair<string, string>> cards)
     {
+
         string lobbyId = DataTransfer.LobbyId;
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -343,8 +344,12 @@ public class DeckController : MonoBehaviour
             string instanceId = card.Key;
             string cardId = card.Value;
 
+            Debug.Log($"Now removing card: {instanceId} {cardId}");
+
             var sourceCardRef = sourceDeckRef.Child(instanceId);
             await sourceCardRef.RemoveValueAsync();
+
+            Debug.Log($"Now adding card: {instanceId} {cardId}");
 
             var targetCardRef = targetDeckRef.Child(instanceId);
             var targetCardSnapshot = await targetCardRef.GetValueAsync();
@@ -356,6 +361,8 @@ public class DeckController : MonoBehaviour
                 await targetCardRef.Child("onHand").SetValueAsync(true);
                 await targetCardRef.Child("played").SetValueAsync(false);
             }
+
+            
 
         }
 
