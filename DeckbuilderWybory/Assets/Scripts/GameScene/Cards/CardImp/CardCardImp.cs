@@ -238,7 +238,27 @@ public class CardCardImp : MonoBehaviour
 
             } else if (data.Target == "player")
             {
-                if (cardId == "CA017")
+                if(cardId == "CA073")
+                {
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    string playerCard = await RandomCardFromDeck(playerId);
+                    string enemyCard = await RandomCardFromDeck(enemyId);
+                    string keepCard, destroyCard;
+                    (keepCard,destroyCard) = await cardSelectionUI.ShowCardSelectionForPlayerAndEnemy(playerId, playerCard,enemyId,enemyCard);
+                    Debug.Log($"Selected card: {keepCard}, Card to destroy: {destroyCard}");
+                    await deckController.RejectCard(enemyId, enemyCard);
+                    if(destroyCard == playerCard)
+                    {
+                        await deckController.RejectCard(playerId, destroyCard);
+                        await AddCardToDeck(keepCard,enemyId);
+                    } 
+
+                } else if (cardId == "CA017")
                 {
                     int budgetValue = await ValueAsCost();
                     enemyId = await playerListManager.SelectEnemyPlayer();
@@ -339,17 +359,45 @@ public class CardCardImp : MonoBehaviour
             }
             else if (data.Target == "enemy-chosen")
             {
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
-                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+                if(cardId == "CA066")
+                {
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    await cardSelectionUI.ShowCardsForViewing(enemyId);
+                }
+                else if (cardId == "CA068")
+                {
+                    await deckController.GetRandomCardsFromDeck(enemyId, data.CardNumber, selectedCardIds);
+                } else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
+                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    target = enemyId;
+                    if (data.Source == "player") { source = playerId; }
+                    await deckController.GetCardFromHand(source, target, selectedCardIds);
+                }
+
+            }
+            else if (data.Target == "enemy-deck")
+            {
                 enemyId = await playerListManager.SelectEnemyPlayer();
                 if (string.IsNullOrEmpty(enemyId))
                 {
                     Debug.LogError("Failed to select an enemy player.");
                     return (dbRefPlayerStats, -1);
                 }
-                target = enemyId;
-                if(data.Source == "player") { source = playerId; }
-                await deckController.GetCardFromHand(source, target, selectedCardIds);
+                selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
+                await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
             }
         }
         return (dbRefPlayerStats, playerBudget);
@@ -493,6 +541,97 @@ public class CardCardImp : MonoBehaviour
         Debug.Log($"Random enemy selected: {randomEnemyId}");
         return randomEnemyId;
     }
+
+    private async Task<string> RandomCardFromDeck(string playerId)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Invalid player ID.");
+            return null;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+        if (string.IsNullOrEmpty(lobbyId))
+        {
+            Debug.LogError("Lobby ID is null or empty.");
+            return null;
+        }
+
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var playerDeckSnapshot = await playerDeckRef.GetValueAsync();
+        if (!playerDeckSnapshot.Exists)
+        {
+            Debug.LogError($"Deck not found for player {playerId} in lobby {lobbyId}.");
+            return null;
+        }
+
+        List<string> eligibleCards = new();
+
+        foreach (var cardSnapshot in playerDeckSnapshot.Children)
+        {
+            string instanceId = cardSnapshot.Key;
+            bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && !isOnHand;
+            bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && !isPlayed;
+
+            if (onHand && played)
+            {
+                eligibleCards.Add(instanceId);
+            }
+        }
+
+        if (eligibleCards.Count == 0)
+        {
+            Debug.LogWarning("No eligible cards found in deck.");
+            return null;
+        }
+
+        System.Random random = new();
+        int randomIndex = random.Next(eligibleCards.Count);
+
+        string selectedCardId = eligibleCards[randomIndex];
+
+        return selectedCardId;
+    }
+
+    private async Task AddCardToDeck(string instanceId, string enemyId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference enemyCardRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId)
+            .Child("deck")
+            .Child(instanceId);
+
+        var enemyCardSnapshot = await enemyCardRef.GetValueAsync();
+        if (!enemyCardSnapshot.Exists)
+        {
+            Debug.LogWarning($"Card with instanceId {instanceId} not found in enemy's deck.");
+            return;
+        }
+
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck")
+            .Child(instanceId);
+
+        await playerDeckRef.SetValueAsync(enemyCardSnapshot.Value);
+
+        await playerDeckRef.Child("played").SetValueAsync(false);
+
+    }
+
 
 }
 

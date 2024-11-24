@@ -141,3 +141,11 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: 835df151ac92de5488aa320583feaeec, type: 3}
   - cardId: CA067
     cardSprite: {fileID: 21300000, guid: c45f508e313bd0141b9a8eb7e0c57eb2, type: 3}
+  - cardId: CA038
+    cardSprite: {fileID: 21300000, guid: 6c92a35f5d31a44409b79a901525834d, type: 3}
+  - cardId: CA066
+    cardSprite: {fileID: 21300000, guid: 492c87c1fb943f24286c2baf42ebeab9, type: 3}
+  - cardId: CA068
+    cardSprite: {fileID: 21300000, guid: 6fd21108f6a0a684d9e170942aba0ac3, type: 3}
+  - cardId: CA073
+    cardSprite: {fileID: 21300000, guid: 7f1d8b83476d2204d923bb3f1375d559, type: 3}
