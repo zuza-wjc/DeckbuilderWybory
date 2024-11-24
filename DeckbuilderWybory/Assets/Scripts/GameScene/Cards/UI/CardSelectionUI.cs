@@ -7,13 +7,13 @@ using System.Linq;
 
 public class CardSelectionUI : MonoBehaviour
 {
-    public GameObject cardCheckboxPrefab;
-    public Transform cardListContainer;
-    public Button submitButton;
-    public GameObject cardSelectionPanel;
-    public Sprite unselectedSprite;
-    public Sprite selectedSprite;
-    public ScrollRect cardScrollView;
+    public GameObject cardPrefab;  // Prefab karty
+    public Transform cardListContainer;  // Kontener na karty w UI
+    public Button submitButton;  // Przycisk zatwierdzaj¹cy wybór kart
+    public GameObject cardSelectionPanel;  // Panel wyboru kart
+    public ScrollRect cardScrollView;  // Scroll do przewijania kart
+
+    public CardSpriteManager cardSpriteManager;  // Odwo³anie do CardSpriteManager
 
     private List<KeyValuePair<string, string>> selectedCards = new();
     private Dictionary<string, bool> cardSelectionStates = new();
@@ -21,7 +21,10 @@ public class CardSelectionUI : MonoBehaviour
     private string playerId;
     private bool selectionConfirmed = false;
 
-    public async Task<List<KeyValuePair<string, string>>> ShowCardSelection(string playerId,int numberOfCardsToSelect,string playedCardId, bool fromHand,List<KeyValuePair<string, string>> excludedCards = null)
+    // Metoda do pokazania ekranu wyboru kart
+    public async Task<List<KeyValuePair<string, string>>> ShowCardSelection(
+        string playerId, int numberOfCardsToSelect, string playedCardId,
+        bool fromHand, List<KeyValuePair<string, string>> excludedCards = null)
     {
         this.playerId = playerId;
         this.numberOfCardsToSelect = numberOfCardsToSelect;
@@ -77,7 +80,7 @@ public class CardSelectionUI : MonoBehaviour
                 if (cardNameSnapshot.Exists)
                 {
                     string cardName = cardNameSnapshot.Value.ToString();
-                    AddCardToUI(instanceId, cardName, cardId);
+                    AddCardToUI(instanceId, cardId);
                     anyCardAdded = true;
                 }
             }
@@ -102,8 +105,7 @@ public class CardSelectionUI : MonoBehaviour
         return new List<KeyValuePair<string, string>>(selectedCards);
     }
 
-
-
+    // Funkcja do rozpoznania typu karty na podstawie ID
     private string GetCardType(string cardId)
     {
         string cardLetters = cardId[..2];
@@ -119,22 +121,44 @@ public class CardSelectionUI : MonoBehaviour
         };
     }
 
-    private void AddCardToUI(string instanceId, string cardName, string cardId)
+    // Dodawanie karty do UI
+    private void AddCardToUI(string instanceId, string cardId)
     {
-        GameObject newButton = Instantiate(cardCheckboxPrefab, cardListContainer);
+        GameObject newCardUI = Instantiate(cardPrefab, cardListContainer);
 
-        Button button = newButton.GetComponent<Button>();
-        Image cardImage = newButton.GetComponent<Image>();
-        Text nameText = newButton.GetComponentInChildren<Text>();
+        // Pobierz komponenty
+        Image cardImage = newCardUI.transform.Find("cardImage").GetComponent<Image>();
+        Transform borderTransform = newCardUI.transform.Find("Border");
 
-        nameText.text = cardName;
-        cardImage.sprite = unselectedSprite;
+        if (borderTransform == null)
+        {
+            Debug.LogError("Border object not found in card prefab.");
+            return;
+        }
+
+        GameObject border = borderTransform.gameObject;
+        border.SetActive(false); // Ukryj border na pocz¹tku
+
+        // Pobierz sprite karty
+        Sprite cardSprite = cardSpriteManager?.GetCardSprite(cardId);
+        if (cardSprite == null)
+        {
+            Debug.LogError($"No sprite found for cardId: {cardId}");
+            return;
+        }
+
+        cardImage.sprite = cardSprite;
+
+        // Zapisz stan karty
         cardSelectionStates[instanceId] = false;
 
-        button.onClick.AddListener(() => ToggleCardState(instanceId, cardImage, cardId));
+        // Dodaj listener na klikniêcie
+        Button button = newCardUI.GetComponent<Button>();
+        button.onClick.AddListener(() => ToggleCardState(instanceId, border));
     }
 
-    private void ToggleCardState(string instanceId, Image cardImage, string cardId)
+    // Zmiana stanu zaznaczenia karty
+    private void ToggleCardState(string instanceId, GameObject border)
     {
         bool isSelected = cardSelectionStates[instanceId];
         cardSelectionStates[instanceId] = !isSelected;
@@ -143,8 +167,8 @@ public class CardSelectionUI : MonoBehaviour
         {
             if (selectedCards.Count < numberOfCardsToSelect)
             {
-                selectedCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
-                cardImage.sprite = selectedSprite;
+                selectedCards.Add(new KeyValuePair<string, string>(instanceId, instanceId));
+                border.SetActive(true); // Poka¿ obramowanie, gdy karta jest zaznaczona
             }
             else
             {
@@ -153,13 +177,14 @@ public class CardSelectionUI : MonoBehaviour
         }
         else
         {
-            selectedCards.Remove(new KeyValuePair<string, string>(instanceId, cardId));
-            cardImage.sprite = unselectedSprite;
+            selectedCards.Remove(new KeyValuePair<string, string>(instanceId, instanceId));
+            border.SetActive(false); // Ukryj obramowanie, gdy karta jest odznaczona
         }
 
         submitButton.gameObject.SetActive(selectedCards.Count == numberOfCardsToSelect);
     }
 
+    // Potwierdzenie wyboru kart
     private void ConfirmSelection()
     {
         if (selectedCards.Count == numberOfCardsToSelect)
@@ -168,6 +193,7 @@ public class CardSelectionUI : MonoBehaviour
         }
     }
 
+    // Ukrywanie panelu wyboru kart
     private void HideCardSelectionPanel()
     {
         cardSelectionPanel.SetActive(false);
@@ -175,6 +201,7 @@ public class CardSelectionUI : MonoBehaviour
         ClearUI();
     }
 
+    // Czyszczenie UI z wczeœniej za³adowanych kart
     private void ClearUI()
     {
         foreach (Transform child in cardListContainer)
