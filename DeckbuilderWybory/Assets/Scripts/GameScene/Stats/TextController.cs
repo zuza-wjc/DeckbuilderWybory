@@ -37,11 +37,15 @@ public class TextController : MonoBehaviour
 
     void OnDestroy()
     {
-        // Usun nasluchiwanie
-        dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
-        dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
-        dbRef.Child("stats").Child("income").ValueChanged -= FetchFromDbIncome;
+        if (dbRef != null)
+        {
+            dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
+            dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
+            dbRef.Child("stats").Child("income").ValueChanged -= FetchFromDbIncome;
+        }
+
     }
+
 
     void FetchFromDbIncome(object sender, ValueChangedEventArgs args)
     {

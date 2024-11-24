@@ -43,7 +43,7 @@ public class HorizontalScrollController : MonoBehaviour
 
                 if (snapshot.Exists)
                 {
-                    List<(string, string, string, string, int)> playersData = new List<(string, string, string, string, int)>();
+                    List<(string, string, string, string, int, string)> playersData = new List<(string, string, string, string, int, string)>();
 
                     foreach (var childSnapshot in snapshot.Child("players").Children)
                     {
@@ -84,8 +84,27 @@ public class HorizontalScrollController : MonoBehaviour
                             }
                         }
 
+                        DataSnapshot regionsSnapshot = childSnapshot.Child("stats").Child("support");
+                        string regionSupportText = "";
 
-                        playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber));
+                        if (regionsSnapshot.Exists)
+                        {
+                            List<string> regionSupports = new List<string>();
+                            for (int i = 0; i < regionsSnapshot.ChildrenCount; i++)
+                            {
+                                var regionSnapshot = regionsSnapshot.Child(i.ToString());
+                                int regionSupport = int.TryParse(regionSnapshot.Value?.ToString(), out int value) ? value : 0;
+
+                                if (regionSupport > 0) 
+                                {
+                                    regionSupports.Add($"{i + 1}:{regionSupport}%");
+                                }
+                            }
+
+                            regionSupportText = string.Join(" ", regionSupports);
+                        }
+
+                        playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText));
                     }
 
                     if (int.TryParse(snapshot.Child("lobbySize").Value.ToString(), out lobbySize))
@@ -93,7 +112,7 @@ public class HorizontalScrollController : MonoBehaviour
                         for (int i = 0; i < playersData.Count && i < lobbySize; i++)
                         {
                             var playerData = playersData[i];
-                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4, playerData.Item5);
+                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4, playerData.Item5, playerData.Item6);
                         }
                     }
                     else
@@ -109,7 +128,7 @@ public class HorizontalScrollController : MonoBehaviour
         });
     }
 
-    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber)
+    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupportText)
     {
         if (statsCardPrefab == null || content == null)
         {
@@ -122,7 +141,7 @@ public class HorizontalScrollController : MonoBehaviour
 
         if (statsCard != null)
         {
-            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber);
+            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText);
         }
         else
         {
