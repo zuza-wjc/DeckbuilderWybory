@@ -4,6 +4,7 @@ using Firebase;
 using Firebase.Database;
 using System.Threading.Tasks;
 using System.Linq;
+using System;
 
 public class DeckController : MonoBehaviour
 {
@@ -24,9 +25,10 @@ public class DeckController : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
-        AddCardToDeck("CA015", true);
-        AddCardToDeck("CA033", true);
-        AddCardToDeck("CA067", true);
+        AddCardToDeck("CA068", true);
+        AddCardToDeck("CA066", true);
+        AddCardToDeck("CA073", true);
+        AddCardToDeck("AD053", false);
 
         Debug.Log("Deck loaded");
     }
@@ -322,7 +324,6 @@ public class DeckController : MonoBehaviour
 
     public async Task GetCardFromHand(string source, string target, List<KeyValuePair<string, string>> cards)
     {
-
         string lobbyId = DataTransfer.LobbyId;
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -344,28 +345,34 @@ public class DeckController : MonoBehaviour
             string instanceId = card.Key;
             string cardId = card.Value;
 
-            Debug.Log($"Now removing card: {instanceId} {cardId}");
-
             var sourceCardRef = sourceDeckRef.Child(instanceId);
             await sourceCardRef.RemoveValueAsync();
 
-            Debug.Log($"Now adding card: {instanceId} {cardId}");
-
             var targetCardRef = targetDeckRef.Child(instanceId);
-            var targetCardSnapshot = await targetCardRef.GetValueAsync();
 
-            if (!targetCardSnapshot.Exists)
+            Debug.Log("Now getting card");
+            try
             {
+                // Sprawdzamy czy operacja GetValueAsync zakoñczy siê b³êdem
+                var targetCardSnapshot = await targetCardRef.GetValueAsync();
 
-                await targetCardRef.Child("cardId").SetValueAsync(cardId);
-                await targetCardRef.Child("onHand").SetValueAsync(true);
-                await targetCardRef.Child("played").SetValueAsync(false);
+                Debug.Log("Now adding card");
+
+                // Jeœli dane istniej¹, wykonaj operacje
+                if (!targetCardSnapshot.Exists)
+                {
+                    await targetCardRef.Child("cardId").SetValueAsync(cardId);
+                    await targetCardRef.Child("onHand").SetValueAsync(true);
+                    await targetCardRef.Child("played").SetValueAsync(false);
+                }
             }
-
-            
-
+            catch (Exception ex)
+            {
+                // Logujemy szczegó³y b³êdu
+                Debug.LogError($"Error while fetching card {instanceId} for target {target}: {ex.Message}");
+                // Dodatkowo: mo¿esz chcieæ przerwaæ dalsze przetwarzanie kart lub podj¹æ inne dzia³ania
+            }
         }
-
     }
 
     public async Task ExchangeFromHandToDeck(string source, string instanceIdFromHand, string instanceIdFromDeck)
@@ -479,7 +486,127 @@ public class DeckController : MonoBehaviour
         }
     }
 
+    public async Task ReturnCardToDeck(string source, string instanceId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
 
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(instanceId))
+        {
+            Debug.LogError("Lobby ID, source, or instanceId is null or empty. Cannot return card to deck.");
+            return;
+        }
+
+        DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(source)
+            .Child("deck");
+
+        var cardSnapshot = await sourceDeckRef.Child(instanceId).GetValueAsync();
+
+        if (!cardSnapshot.Exists)
+        {
+            Debug.LogError($"Card {instanceId} not found for player {source} in lobby {lobbyId}.");
+            return;
+        }
+
+        try
+        {
+            await sourceDeckRef.Child(instanceId).UpdateChildrenAsync(new Dictionary<string, object>
+        {
+            { "onHand", false },
+            { "played", false }
+        });
+
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to return card {instanceId} for player {source}: {ex.Message}");
+        }
+    }
+
+    public async Task GetRandomCardsFromDeck(string target, int howMany, List<KeyValuePair<string, string>> cards)
+    {
+        if (string.IsNullOrEmpty(target) || howMany <= 0)
+        {
+            Debug.LogError("Invalid target or howMany parameter.");
+            return;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+        if (string.IsNullOrEmpty(lobbyId))
+        {
+            Debug.LogError("Lobby ID is null or empty.");
+            return;
+        }
+
+        DatabaseReference targetDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(target)
+            .Child("deck");
+
+        var targetDeckSnapshot = await targetDeckRef.GetValueAsync();
+        if (!targetDeckSnapshot.Exists)
+        {
+            Debug.LogError($"Target deck not found for player {target} in lobby {lobbyId}.");
+            return;
+        }
+
+        HashSet<string> excludedInstanceIds = new(cards.Select(card => card.Key));
+
+        List<string> eligibleCards = new();
+        foreach (var cardSnapshot in targetDeckSnapshot.Children)
+        {
+            string instanceId = cardSnapshot.Key;
+            bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && !isOnHand;
+            bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && !isPlayed;
+
+            if (onHand && played && !excludedInstanceIds.Contains(instanceId))
+            {
+                eligibleCards.Add(instanceId);
+            }
+        }
+
+        if (eligibleCards.Count == 0)
+        {
+            Debug.LogWarning("No eligible cards available to transfer.");
+            return;
+        }
+
+        System.Random random = new();
+        List<string> selectedCards = new();
+
+        for (int i = 0; i < howMany && eligibleCards.Count > 0; i++)
+        {
+            int randomIndex = random.Next(eligibleCards.Count);
+            selectedCards.Add(eligibleCards[randomIndex]);
+            eligibleCards.RemoveAt(randomIndex);
+        }
+
+        foreach (string instanceId in selectedCards)
+        {
+            var cardDataSnapshot = await targetDeckRef.Child(instanceId).GetValueAsync();
+            if (!cardDataSnapshot.Exists)
+            {
+                Debug.LogError($"Card {instanceId} does not exist in target deck.");
+                continue;
+            }
+
+            Dictionary<string, object> cardData = new();
+            foreach (var child in cardDataSnapshot.Children)
+            {
+                cardData[child.Key] = child.Value;
+            }
+
+            cardData["onHand"] = true;
+            cardData["played"] = false;
+
+            await targetDeckRef.Child(instanceId).SetValueAsync(cardData);
+        }
+    }
 
 
 }
