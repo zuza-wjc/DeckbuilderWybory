@@ -148,6 +148,62 @@ public class CardSelectionUI : MonoBehaviour
         }
     }
 
+    public async Task ShowDeckCardsForViewing(string playerId)
+    {
+        this.playerId = playerId;
+        selectedCards.Clear();
+        cardSelectionStates.Clear();
+        selectionConfirmed = false;
+        ClearUI();
+
+        cardSelectionPanel.SetActive(true);
+        submitButton.gameObject.SetActive(true);
+
+        infoText.text = "KARTY GRACZA";
+
+        submitButton.onClick.RemoveAllListeners();
+        submitButton.onClick.AddListener(ClosePanel);
+
+        string lobbyId = DataTransfer.LobbyId;
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var snapshot = await playerDeckRef.GetValueAsync();
+        if (!snapshot.Exists)
+        {
+            Debug.LogWarning("No deck data found for the player.");
+            return;
+        }
+
+        bool anyCardAdded = false;
+
+        foreach (var cardSnapshot in snapshot.Children)
+        {
+            string instanceId = cardSnapshot.Key;
+
+            bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+            bool played = cardSnapshot.Child("played").Value as bool? ?? false;
+
+            if (!onHand && !played)
+            {
+                string cardId = (string)cardSnapshot.Child("cardId").Value;
+                AddCardToUIForViewing(instanceId, cardId);
+                anyCardAdded = true;
+            }
+        }
+
+        if (!anyCardAdded)
+        {
+            Debug.LogWarning("No cards available to view.");
+            HideCardSelectionPanel();
+            return;
+        }
+    }
+
     public async Task<(string keepCard, string destroyCard)> ShowCardSelectionForPlayerAndEnemy(string playerId, string playerCard, string enemyId, string enemyCard)
     {
         this.numberOfCardsToSelect = 1;
