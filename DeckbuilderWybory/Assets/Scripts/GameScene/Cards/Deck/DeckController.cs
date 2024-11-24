@@ -28,6 +28,8 @@ public class DeckController : MonoBehaviour
         AddCardToDeck("CA068", true);
         AddCardToDeck("CA066", true);
         AddCardToDeck("CA073", true);
+        AddCardToDeck("CA073", false);
+        AddCardToDeck("AD053", true);
         AddCardToDeck("AD053", false);
 
         Debug.Log("Deck loaded");

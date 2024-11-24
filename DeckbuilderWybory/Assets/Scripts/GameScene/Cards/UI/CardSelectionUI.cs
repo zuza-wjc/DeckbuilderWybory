@@ -12,6 +12,7 @@ public class CardSelectionUI : MonoBehaviour
     public Button submitButton;
     public GameObject cardSelectionPanel;
     public ScrollRect cardScrollView;
+    public Text infoText;
 
     public CardSpriteManager cardSpriteManager;
 
@@ -33,6 +34,8 @@ public class CardSelectionUI : MonoBehaviour
 
         cardSelectionPanel.SetActive(true);
         submitButton.gameObject.SetActive(false);
+
+        infoText.text = "WYBIERZ KARTY";
 
         string lobbyId = DataTransfer.LobbyId;
         DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
@@ -100,6 +103,8 @@ public class CardSelectionUI : MonoBehaviour
         cardSelectionPanel.SetActive(true);
         submitButton.gameObject.SetActive(true);
 
+        infoText.text = "KARTY GRACZA";
+
         submitButton.onClick.RemoveAllListeners();
         submitButton.onClick.AddListener(ClosePanel);
 
@@ -154,6 +159,8 @@ public class CardSelectionUI : MonoBehaviour
 
         cardSelectionPanel.SetActive(true);
         submitButton.gameObject.SetActive(false);
+
+        infoText.text = "WYBIERZ KARTÊ DO ZACHOWANIA";
 
         string lobbyId = DataTransfer.LobbyId;
 

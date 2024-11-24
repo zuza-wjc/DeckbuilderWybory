@@ -13,6 +13,7 @@ public class CardOnHandController : MonoBehaviour
     public Image panelImage;           
     public Button closeButton;       
     public CardSpriteManager cardSpriteManager;
+    public ScrollViewController controller;
 
     DatabaseReference dbRef;
     string lobbyId;
@@ -119,6 +120,8 @@ public class CardOnHandController : MonoBehaviour
         }
 
         cardObjects[instanceId] = newCard;
+        controller.UpdateElementCount();
+
     }
 
     private void ListenForCardOnHandChange(string instanceId)
@@ -239,6 +242,9 @@ public class CardOnHandController : MonoBehaviour
                 cardObjects.Remove(instanceId);
             }
         };
+
+        controller.UpdateElementCount();
+
     }
 
     private void ForceUpdateUI()
@@ -249,5 +255,8 @@ public class CardOnHandController : MonoBehaviour
         }
 
         StartCoroutine(LoadCardsOnHand());
+
+        controller.UpdateElementCount();
+
     }
 }
