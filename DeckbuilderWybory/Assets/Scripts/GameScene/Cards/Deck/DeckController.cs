@@ -181,25 +181,22 @@ public class DeckController : MonoBehaviour
             .Child(lobbyId)
             .Child("players")
             .Child(source)
-            .Child("deck");
+            .Child("deck")
+            .Child(instanceId);
 
-        var cardSnapshot = await sourceDeckRef.Child(instanceId).GetValueAsync();
+        var cardSnapshot = await sourceDeckRef.GetValueAsync();
         if (!cardSnapshot.Exists)
         {
             Debug.LogError($"Card {instanceId} not found for player {source} in lobby {lobbyId}.");
             return;
         }
 
-        await sourceDeckRef.Child(instanceId).UpdateChildrenAsync(new Dictionary<string, object>
-    {
-        { "onHand", false },
-        { "played", true }
-    })
-        .ContinueWith(task =>
+        // Usuñ kartê
+        await sourceDeckRef.RemoveValueAsync().ContinueWith(task =>
         {
-            if (!task.IsCompleted)
+            if (task.IsFaulted || task.IsCanceled)
             {
-                Debug.LogError($"Failed to reject card {instanceId} for player {source}: {task.Exception}");
+                Debug.LogError($"Failed to remove card {instanceId} for player {source}: {task.Exception}");
             }
         });
     }

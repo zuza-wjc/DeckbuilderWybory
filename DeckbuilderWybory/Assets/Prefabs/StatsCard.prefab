@@ -636,6 +636,7 @@ MonoBehaviour:
   playerSupportText: {fileID: 5905642894867199451}
   playerMoneyText: {fileID: 2587511011977466635}
   playerIncomeText: {fileID: 9139198789290671353}
+  playerDeckCardNumber: {fileID: 5633510872605041447}
 --- !u!1 &3826251555943058340
 GameObject:
   m_ObjectHideFlags: 0

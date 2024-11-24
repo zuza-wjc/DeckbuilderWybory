@@ -251,12 +251,12 @@ public class CardCardImp : MonoBehaviour
                     string keepCard, destroyCard;
                     (keepCard,destroyCard) = await cardSelectionUI.ShowCardSelectionForPlayerAndEnemy(playerId, playerCard,enemyId,enemyCard);
                     Debug.Log($"Selected card: {keepCard}, Card to destroy: {destroyCard}");
-                    await deckController.RejectCard(enemyId, enemyCard);
-                    if(destroyCard == playerCard)
+                    if (destroyCard == playerCard)
                     {
                         await deckController.RejectCard(playerId, destroyCard);
-                        await AddCardToDeck(keepCard,enemyId);
-                    } 
+                        await AddCardToDeck(keepCard, enemyId);
+                    }
+                    await deckController.RejectCard(enemyId, enemyCard);
 
                 } else if (cardId == "CA017")
                 {

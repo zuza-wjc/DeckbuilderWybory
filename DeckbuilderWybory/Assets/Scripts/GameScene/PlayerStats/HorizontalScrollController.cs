@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Firebase.Database;
@@ -44,7 +43,7 @@ public class HorizontalScrollController : MonoBehaviour
 
                 if (snapshot.Exists)
                 {
-                    List<(string, string, string, string)> playersData = new List<(string, string, string, string)>();
+                    List<(string, string, string, string, int)> playersData = new List<(string, string, string, string, int)>();
 
                     foreach (var childSnapshot in snapshot.Child("players").Children)
                     {
@@ -52,7 +51,6 @@ public class HorizontalScrollController : MonoBehaviour
                         string playerMoney = childSnapshot.Child("stats").Child("money").Value?.ToString() ?? "0";
                         string playerIncome = childSnapshot.Child("stats").Child("income").Value?.ToString() ?? "0";
 
-                        // Oblicz sumê wsparcia
                         DataSnapshot supportSnapshot = childSnapshot.Child("stats").Child("support");
                         int supportSum = 0;
 
@@ -68,16 +66,34 @@ public class HorizontalScrollController : MonoBehaviour
                         }
 
                         string playerSupport = supportSum.ToString();
-                        playersData.Add((playerName, playerSupport, playerMoney, playerIncome));
+
+                        DataSnapshot deckSnapshot = childSnapshot.Child("deck");
+                        int playerCardNumber = 0;
+
+                        if (deckSnapshot.Exists)
+                        {
+                            foreach (var cardSnapshot in deckSnapshot.Children)
+                            {
+                                bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && isOnHand;
+                                bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && isPlayed;
+
+                                if (!onHand && !played)
+                                {
+                                    playerCardNumber++;
+                                }
+                            }
+                        }
+
+
+                        playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber));
                     }
 
-                    // Przetwarzanie liczby graczy w lobby
                     if (int.TryParse(snapshot.Child("lobbySize").Value.ToString(), out lobbySize))
                     {
                         for (int i = 0; i < playersData.Count && i < lobbySize; i++)
                         {
                             var playerData = playersData[i];
-                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4);
+                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4, playerData.Item5);
                         }
                     }
                     else
@@ -93,7 +109,7 @@ public class HorizontalScrollController : MonoBehaviour
         });
     }
 
-    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome)
+    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber)
     {
         if (statsCardPrefab == null || content == null)
         {
@@ -106,7 +122,7 @@ public class HorizontalScrollController : MonoBehaviour
 
         if (statsCard != null)
         {
-            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome);
+            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber);
         }
         else
         {
