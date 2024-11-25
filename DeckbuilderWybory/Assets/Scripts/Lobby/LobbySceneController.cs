@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using Firebase.Extensions;
 using System;
 using System.Linq;
+using System.Collections;
 
 public class LobbySceneController : MonoBehaviour
 {
@@ -374,11 +375,36 @@ public class LobbySceneController : MonoBehaviour
 
                 getTurnOrder(() =>
                 {
-                    SceneManager.LoadScene("Game", LoadSceneMode.Single);
+                    StartCoroutine(TransitionToGameScene());
                 });
             }
         }
     }
+
+    IEnumerator TransitionToGameScene()
+    {
+        // Czekaj na zapisanie wartości `inGame`
+        var inGameTask = dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
+
+        // Poczekaj, aż zadanie zakończy się
+        while (!inGameTask.IsCompleted)
+        {
+            yield return null; // Odczekaj jedną klatkę
+        }
+
+        if (inGameTask.IsFaulted || inGameTask.Exception != null)
+        {
+            Debug.LogError("Nie udało się zapisać wartości 'inGame' w bazie danych: " + inGameTask.Exception);
+            yield break; // Przerwij, jeśli zapis nie powiódł się
+        }
+
+        // Dodaj 1-sekundowe opóźnienie
+        yield return new WaitForSeconds(1f);
+
+        // Przejdź do sceny "Game"
+        SceneManager.LoadScene("Game", LoadSceneMode.Single);
+    }
+
 
     void getTurnOrder(Action onComplete)
     {
