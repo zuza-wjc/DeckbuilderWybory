@@ -102,7 +102,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 483
+  controlID: 94
 --- !u!114 &5
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -122,8 +122,8 @@ MonoBehaviour:
     y: 0
     width: 607
     height: 1307
-  m_MinSize: {x: 276, y: 71}
-  m_MaxSize: {x: 4001, y: 4021}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 13}
@@ -251,7 +251,7 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 100}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
-  controlID: 380
+  controlID: 37
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -377,10 +377,10 @@ MonoBehaviour:
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 868e0000
-    m_LastClickedID: 36486
-    m_ExpandedIDs: 00000000768e0000888e000000c80000
+    scrollPos: {x: 0, y: 37}
+    m_SelectedIDs: 9c650000
+    m_LastClickedID: 26012
+    m_ExpandedIDs: 00000000826500009c6500009e650000806b0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -408,7 +408,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000768e0000
+    m_ExpandedIDs: 0000000082650000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -550,7 +550,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: cafffdffa201feff3002feffbc08feff2009feffe40afefff60dfeff6818feff981afefffac2000026c300006cc5000098c50000
+      m_ExpandedIDs: 5e9dffffaa9dffffa49fffffc49fffff18a4ffff9ea4ffffe4a4ffff04a5ffff4ca5ffff86a5ffffd0a5ffffe4a5ffff20a6ffffe2e3ffff98e5ffff02e6ffff2eefffff10f0ffffdcf0ffffa8f2ffff08f3ffff24f8ffff30f9ffff4cfaffff68660000946600008c670000086800002c680000146900001869000064690000fc7100000e760000227600009e77000020780000ac7a0000d87a0000b67c0000e27c0000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 

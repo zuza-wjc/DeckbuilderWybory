@@ -11,9 +11,6 @@ public class GameExitListener : MonoBehaviour
     DatabaseReference dbRefPlayers;
     string lobbyId;
 
-    public GameObject quitGamePanel;
-    public Button closeButton;
-
     void Start()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -33,15 +30,6 @@ public class GameExitListener : MonoBehaviour
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
         dbRefPlayers = dbRef.Child("players");
 
-        if (quitGamePanel == null || closeButton == null)
-        {
-            Debug.LogError("UI components are not assigned properly!");
-            return;
-        }
-
-        quitGamePanel.SetActive(false);
-        closeButton.onClick.AddListener(QuitGame);
-
         if (dbRefPlayers != null)
         {
             dbRefPlayers.ChildChanged += HandleInGameChanged;
@@ -53,11 +41,6 @@ public class GameExitListener : MonoBehaviour
         if (dbRefPlayers != null)
         {
             dbRefPlayers.ChildChanged -= HandleInGameChanged;
-        }
-
-        if (quitGamePanel != null && closeButton != null)
-        {
-            closeButton.onClick.RemoveListener(QuitGame);
         }
     }
 
@@ -73,47 +56,14 @@ public class GameExitListener : MonoBehaviour
         {
             bool inGameState = (bool)args.Snapshot.Child("stats").Child("inGame").Value;
             if (!inGameState)
-            {
-          
-                if (quitGamePanel != null)
-                {
-                    quitGamePanel.SetActive(true);
-                }
-             
+            {             
                 if (dbRefPlayers != null)
                 {
                     dbRefPlayers.ChildChanged -= HandleInGameChanged;
                 }
-                StartCoroutine(RemoveSessionAfterDelay());
+
+                SceneManager.LoadScene("End Game", LoadSceneMode.Single);
             }
         }
-    }
-
-    IEnumerator RemoveSessionAfterDelay()
-    {
-        yield return new WaitForSeconds(1.0f);
-
-        if (dbRef != null)
-        {
-            dbRef.RemoveValueAsync().ContinueWith(task => {
-                if (task.IsCompleted)
-                {
-                    Debug.Log("Session removed successfully.");
-                }
-                else
-                {
-                    Debug.LogError("Failed to remove session: " + task.Exception);
-                }
-            });
-        }
-    }
-
-    void QuitGame()
-    {
-        if (quitGamePanel != null)
-        {
-            quitGamePanel.SetActive(false);
-        }
-        SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
     }
 }
