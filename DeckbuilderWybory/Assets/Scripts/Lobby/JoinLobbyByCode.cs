@@ -163,7 +163,7 @@ public class JoinLobbyByCode : MonoBehaviour
                             { "money", 0 },
                             { "income", 10 },
                             { "support", new int[6] { 5, 5, 5, 5, 5, 5 } },
-                            { "playerTurn", false }
+                            { "playerTurn", 2 }
                         }
                     }
                 };
