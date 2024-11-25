@@ -11,6 +11,7 @@ using System;
 public class ExitToGameScene : MonoBehaviour
 {
     public Button backButton;
+    public string sceneName;
     string lobbyId;
 
     DatabaseReference dbRef;
@@ -43,8 +44,8 @@ public class ExitToGameScene : MonoBehaviour
 
                 if (snapshot.Exists)
                 {
-                    // jesli lobby istnieje, przejdz do sceny "Game"
-                    SceneManager.LoadScene("Game", LoadSceneMode.Single);
+                    // jesli lobby istnieje, wroc do sceny "Game"
+                    SceneManager.UnloadSceneAsync(sceneName);
                 }
                 else
                 {

@@ -9,4 +9,10 @@ public class ChangeScene : MonoBehaviour
     {
         SceneManager.LoadScene(sceneName);
     }
+
+    public void ChangeToSceneOnTop()
+    {
+        SceneManager.LoadScene(sceneName, LoadSceneMode.Additive);
+
+    }
 }
