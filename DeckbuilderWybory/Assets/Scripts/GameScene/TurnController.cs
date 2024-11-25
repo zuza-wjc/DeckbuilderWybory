@@ -203,7 +203,7 @@ public class TurnController : MonoBehaviour
 
             if (newRounds <= 0)
             {
-                //SceneManager.LoadScene("End Game", LoadSceneMode.Single);
+                SceneManager.LoadScene("End Game", LoadSceneMode.Single);
             }
             else
             {
