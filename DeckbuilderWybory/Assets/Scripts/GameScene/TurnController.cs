@@ -264,7 +264,42 @@ public class TurnController : MonoBehaviour
 
     void StartTurn()
     {
-        
+        var playerRef = dbRef.Child(playerId);
+        var blockTurnSnapshot = playerRef.Child("blockTurn");
+
+        blockTurnSnapshot.GetValueAsync().ContinueWith(task =>
+        {
+            if (task.IsCompleted)
+            {
+                var snapshot = task.Result;
+
+                if (snapshot.Exists && Convert.ToBoolean(snapshot.Value))
+                {
+                    PassTurn();
+
+                    playerRef.Child("blockTurn").RemoveValueAsync();
+
+                }
+                else
+                {
+                    timer = 10f;
+                    turnPlayerName.text = "Twoja tura!";
+                    passButton.interactable = true;
+                    dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
+                    dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
+                    isMyTurn = true;
+                    DataTransfer.IsFirstCardInTurn = true;
+
+                    turnsTaken++;
+                    dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
+                }
+            }
+            else
+            {
+                Debug.LogError($"Nie uda³o siê pobraæ danych dla gracza {playerId}.");
+            }
+        }); 
+/*
         timer = 10f;
         turnPlayerName.text = "Twoja tura!";
         passButton.interactable = true;
@@ -275,6 +310,7 @@ public class TurnController : MonoBehaviour
 
         turnsTaken++;
         dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
+*/
     }
 
     void EndTurn()
