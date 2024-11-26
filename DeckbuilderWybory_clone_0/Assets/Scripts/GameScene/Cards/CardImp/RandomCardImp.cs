@@ -54,7 +54,73 @@ public class RandomCardImp : MonoBehaviour
             }
 
             cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
-            cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+
+        if (DataTransfer.IsFirstCardInTurn)
+        {
+            if (await cardUtilities.CheckIncreaseCost(playerId))
+            {
+                double increasedCost = 1.5 * cost;
+
+                if (cost >= 0)
+                {
+                    if (cost % 2 != 0)
+                    {
+                        cost = (int)Math.Ceiling(increasedCost);
+                    }
+                    else
+                    {
+                        cost = (int)increasedCost;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Cost is negative, not increasing cost.");
+                }
+            }
+        }
+
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            double increasedCost = 1.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Ceiling(increasedCost);
+                }
+                else
+                {
+                    cost = (int)increasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not increasing cost.");
+            }
+        }
+
+        if (await cardUtilities.CheckDecreaseCost(playerId))
+        {
+            double decreasedCost = 0.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Floor(decreasedCost);
+                }
+                else
+                {
+                    cost = (int)decreasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not decreasing cost.");
+            }
+        }
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
 
             if (snapshot.Child("budget").Exists)
             {
@@ -66,6 +132,12 @@ public class RandomCardImp : MonoBehaviour
             if (snapshot.Child("support").Exists)
             {
                 supportChange = true;
+
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    return;
+                }
                 cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
                 cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
             }
@@ -136,22 +208,26 @@ public class RandomCardImp : MonoBehaviour
         {
             if (data.Target == "enemy")
             {
-                if (string.IsNullOrEmpty(enemyId))
+                if (!(await cardUtilities.CheckBudgetBlock(playerId)))
                 {
-                    enemyId = await playerListManager.SelectEnemyPlayer();
+
                     if (string.IsNullOrEmpty(enemyId))
                     {
-                        Debug.LogError("Failed to select an enemy player.");
-                        return (dbRefPlayerStats, -1);
+                        enemyId = await playerListManager.SelectEnemyPlayer();
+                        if (string.IsNullOrEmpty(enemyId))
+                        {
+                            Debug.LogError("Failed to select an enemy player.");
+                            return (dbRefPlayerStats, -1);
+                        }
                     }
+                    playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
+
+                    playerBudget += 10 + data.Number;
+
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
+
+                    await cardUtilities.CheckAndAddCopyBudget(playerId, 10 + data.Number);
                 }
-                await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
-
-                playerBudget += 10 + data.Number;
-
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
-
-                await cardUtilities.CheckAndAddCopyBudget(playerId, 10 + data.Number);
             }
         }
         return (dbRefPlayerStats, playerBudget);

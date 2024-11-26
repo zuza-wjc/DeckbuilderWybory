@@ -32,7 +32,7 @@ public class CardUtilities : MonoBehaviour
                 }
             }
         }
-}
+    }
 
     public void ProcessBonusOptions(DataSnapshot snapshot, Dictionary<int, OptionData> bonusOptionsDictionary)
     {
@@ -191,74 +191,103 @@ public class CardUtilities : MonoBehaviour
             }
         }
 
-        await CheckIfProtected(playerId, support, supportToAdd);
-        supportToAdd = await CheckIfRegionProtected(playerId, areaId, support, supportToAdd);
+        await CheckIfRegionsProtected(playerId, support, supportToAdd);
+
+        if (await CheckIfRegionProtected(playerId, areaId, supportToAdd))
+        {
+            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
+        if (await CheckIfProtected(playerId, supportToAdd))
+        {
+            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
+        await CheckIfBudgetPenalty(playerId, areaId);
 
         support += supportToAdd;
 
         await dbRefSupport.SetValueAsync(support);
 
-        await CheckAndAddCopySupport(playerId, areaId, supportToAdd,mapManager);
+        await CheckAndAddCopySupport(playerId, areaId, supportToAdd, mapManager);
+
     }
 
-    public async Task ChangeEnemyStat(string enemyId, int value, string statType, int playerBudget)
+    public async Task<int> ChangeEnemyStat(string enemyId, int value, string statType, int playerBudget)
+{
+    string lobbyId = DataTransfer.LobbyId;
+    string playerId = DataTransfer.PlayerId;
+
+    if (string.IsNullOrEmpty(enemyId))
     {
-        DatabaseReference dbRefEnemyStats;
-        string lobbyId = DataTransfer.LobbyId;
-        string playerId = DataTransfer.PlayerId;
-
-        if (string.IsNullOrEmpty(enemyId))
-        {
-            Debug.LogError($"Enemy ID is null or empty. ID: {enemyId}");
-            return;
-        }
-
-        dbRefEnemyStats = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(enemyId)
-            .Child("stats");
-
-        try
-        {
-            var snapshot = await dbRefEnemyStats.GetValueAsync();
-
-            if (!snapshot.Exists)
-            {
-                Debug.LogError($"No enemy data found in the database for enemy ID: {enemyId}");
-                return;
-            }
-
-            var enemyStatSnapshot = snapshot.Child(statType);
-            if (!enemyStatSnapshot.Exists)
-            {
-                Debug.LogError($"Branch '{statType}' does not exist for enemy ID: {enemyId}");
-                return;
-            }
-
-            if (!int.TryParse(enemyStatSnapshot.Value.ToString(), out int enemyStat))
-            {
-                Debug.LogError($"Failed to parse '{statType}' value for enemy ID: {enemyId}. Value: {enemyStatSnapshot.Value}");
-                return;
-            }
-
-            int updatedStat = Math.Max(0, enemyStat + value);
-
-            if (playerId == enemyId) { playerBudget = updatedStat; }
-
-            await dbRefEnemyStats.Child(statType).SetValueAsync(updatedStat);
-
-            if(statType == "money")
-            {
-                await CheckAndAddCopyBudget(enemyId, value);
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"An error occurred while changing the enemy {statType}: {ex.Message}");
-        }
+        Debug.LogError($"Enemy ID is null or empty. ID: {enemyId}");
+        return -1;
     }
+
+    DatabaseReference dbRefEnemyStats = FirebaseInitializer.DatabaseReference
+        .Child("sessions")
+        .Child(lobbyId)
+        .Child("players")
+        .Child(enemyId)
+        .Child("stats");
+
+    try
+    {
+        var statSnapshot = await dbRefEnemyStats.Child(statType).GetValueAsync();
+
+        if (!statSnapshot.Exists)
+        {
+            Debug.LogError($"Branch '{statType}' does not exist for enemy ID: {enemyId}");
+            return -1;
+        }
+
+        if (!int.TryParse(statSnapshot.Value.ToString(), out int enemyStat))
+        {
+            Debug.LogError($"Failed to parse '{statType}' value for enemy ID: {enemyId}. Value: {statSnapshot.Value}");
+            return -1;
+        }
+
+        int updatedStat = Math.Max(0, enemyStat + value);
+
+        if (statType == "money" && playerId == enemyId)
+        {
+            if(!(await CheckBudgetBlock(playerId)))
+            {
+               playerBudget = updatedStat;
+            }
+        }
+            if (statType == "income" && playerId == enemyId)
+            {
+                if (await CheckIncomeBlock(playerId))
+                {
+                    return -1;
+                }
+            }
+
+
+            if (await CheckIfProtected(enemyId, value))
+        {
+            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+            return -1;
+        }
+
+        await dbRefEnemyStats.Child(statType).SetValueAsync(updatedStat);
+
+        if (statType == "money")
+        {
+            await CheckAndAddCopyBudget(enemyId, value);
+        }
+
+            return playerBudget;
+    }
+    catch (Exception ex)
+    {
+        Debug.LogError($"An error occurred while changing the enemy {statType}: {ex.Message}");
+            return -1;
+        }
+}
 
     public async Task<int> RandomizeRegion(string playerId, int value, MapManager mapManager)
     {
@@ -341,7 +370,7 @@ public class CardUtilities : MonoBehaviour
         }
     }
 
-    public async Task CheckIfProtected(string playerId, int currentSupport, int value)
+    public async Task CheckIfRegionsProtected(string playerId, int currentSupport, int value)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -353,7 +382,7 @@ public class CardUtilities : MonoBehaviour
                 .Child("players")
                 .Child(playerId)
                 .Child("protected")
-                .Child("all");
+                .Child("allRegions");
 
             DataSnapshot protectedSnapshot = await dbRefProtected.GetValueAsync();
 
@@ -396,11 +425,11 @@ public class CardUtilities : MonoBehaviour
         }
     }
 
-    public async Task<int> CheckIfRegionProtected(string playerId, int regionId, int currentSupport, int value)
+    public async Task<bool> CheckIfRegionProtected(string playerId, int regionId, int value)
     {
         string lobbyId = DataTransfer.LobbyId;
 
-        if (currentSupport + value < currentSupport)
+        if (value < 0)
         {
             DatabaseReference dbRefProtected = FirebaseInitializer.DatabaseReference
                 .Child("sessions")
@@ -433,13 +462,13 @@ public class CardUtilities : MonoBehaviour
 
                     if (turnsTaken == protectedTurn)
                     {
-                        return 0;
+                        return true;
                     }
                 }
             }
         }
 
-        return value;
+        return false;
     }
 
     public async Task CheckAndAddCopySupport(string playerId, int areaId, int value, MapManager mapManager)
@@ -649,7 +678,6 @@ public class CardUtilities : MonoBehaviour
 
     public async Task<bool> CheckBlockedCard(string playerId)
     {
-
         string lobbyId = DataTransfer.LobbyId;
 
         DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
@@ -660,26 +688,53 @@ public class CardUtilities : MonoBehaviour
 
         DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
 
-        if (!playerSnapshot.Exists ||
-            !playerSnapshot.HasChild("cardBlocked") ||
-            !playerSnapshot.HasChild("stats") ||
-            !playerSnapshot.Child("stats").HasChild("turnsTaken"))
-            return false;
+        if (!playerSnapshot.Exists) return false;
 
-        DataSnapshot cardBlockedSnapshot = playerSnapshot.Child("cardBlocked");
-        DataSnapshot turnsTakenSnapshot = playerSnapshot.Child("stats").Child("turnsTaken");
-
-        if (!cardBlockedSnapshot.HasChild("turnsTaken") || !cardBlockedSnapshot.HasChild("isBlocked"))
+        var cardBlockedSnapshot = playerSnapshot.Child("cardBlocked");
+        if (!cardBlockedSnapshot.Exists ||
+            !cardBlockedSnapshot.HasChild("turnsTaken") ||
+            !cardBlockedSnapshot.HasChild("isBlocked"))
             return false;
 
         int cardBlockedTurn = Convert.ToInt32(cardBlockedSnapshot.Child("turnsTaken").Value);
-        int currentTurn = Convert.ToInt32(turnsTakenSnapshot.Value);
+        int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
         bool isBlocked = Convert.ToBoolean(cardBlockedSnapshot.Child("isBlocked").Value);
 
         if (cardBlockedTurn == currentTurn && isBlocked)
         {
             await dbRefPlayer.Child("cardBlocked").Child("isBlocked").SetValueAsync(false);
             Debug.Log("Card blocked");
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<bool> CheckIncreaseCost(string playerId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists) return false;
+
+        var increaseCostSnapshot = playerSnapshot.Child("increaseCost");
+        if (!increaseCostSnapshot.Exists ||
+            !increaseCostSnapshot.HasChild("turnsTaken"))
+            return false;
+
+        int increaseCostTurn = Convert.ToInt32(increaseCostSnapshot.Child("turnsTaken").Value);
+        int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
+
+        if (increaseCostTurn == currentTurn)
+        { 
+            Debug.Log("Increase cost");
             return true;
         }
 
@@ -720,6 +775,416 @@ public class CardUtilities : MonoBehaviour
         return cardsOnHand;
     }
 
+    public async Task<bool> CheckIfProtected(string playerId, int value)
+    {
+        if (value >= 0)
+        {
+            return false;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+
+        var dbRefProtectedAll = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        var protectedTask = dbRefProtectedAll
+            .Child("protected")
+            .Child("all")
+            .GetValueAsync();
+
+        var turnsTakenTask = dbRefProtectedAll
+            .Child("stats")
+            .Child("turnsTaken")
+            .GetValueAsync();
+
+        await Task.WhenAll(protectedTask, turnsTakenTask);
+
+        if (protectedTask.Result.Exists && turnsTakenTask.Result.Exists)
+        {
+            if (int.TryParse(protectedTask.Result.Value.ToString(), out int protectedTurn) &&
+                int.TryParse(turnsTakenTask.Result.Value.ToString(), out int turnsTaken))
+            {
+                return turnsTaken == protectedTurn;
+            }
+        }
+
+        return false;
+    }
+
+    public async Task CheckIfBudgetPenalty(string playerId, int areaId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych gracza o ID: {playerId} w bazie.");
+            return;
+        }
+
+        DataSnapshot budgetPenaltySnapshot = playerSnapshot.Child("budgetPenalty");
+
+        if (!budgetPenaltySnapshot.Exists)
+        {
+            return;
+        }
+
+        string budgetPenaltyPlayerId = Convert.ToString(budgetPenaltySnapshot.Child("playerId").Value);
+
+        if (string.IsNullOrEmpty(budgetPenaltyPlayerId))
+        {
+            Debug.LogError("Nie znaleziono 'playerId' w ga³êzi 'budgetPenalty'.");
+            return;
+        }
+
+        DatabaseReference dbRefBudgetPenaltyPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(budgetPenaltyPlayerId);
+
+        DataSnapshot budgetPenaltyPlayerSnapshot = await dbRefBudgetPenaltyPlayer.GetValueAsync();
+
+        if (!budgetPenaltyPlayerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych gracza {budgetPenaltyPlayerId} w bazie.");
+            return;
+        }
+
+        int budgetPenaltyTurnsTaken = Convert.ToInt32(budgetPenaltySnapshot.Child("turnsTaken").Value);
+        int budgetPenaltyPlayerTurnsTaken = Convert.ToInt32(budgetPenaltyPlayerSnapshot.Child("stats").Child("turnsTaken").Value);
+
+        if (budgetPenaltyTurnsTaken != budgetPenaltyPlayerTurnsTaken)
+        {
+            return;
+        }
+
+        DataSnapshot areaSupportSnapshot = budgetPenaltyPlayerSnapshot
+            .Child("stats")
+            .Child("support")
+            .Child(areaId.ToString());
+
+        if (areaSupportSnapshot.Exists)
+        {
+            int areaSupport = Convert.ToInt32(areaSupportSnapshot.Value);
+
+            if (areaSupport > 0)
+            {
+                int currentMoney = Convert.ToInt32(playerSnapshot.Child("stats").Child("money").Value);
+                int newMoney = Math.Max(currentMoney - 10, 0);
+
+                await dbRefPlayer.Child("stats").Child("money").SetValueAsync(newMoney);
+                await dbRefPlayer.Child("budgetPenalty").RemoveValueAsync();
+
+                Debug.Log($"Zmniejszono pieni¹dze gracza o ID: {playerId} do {newMoney}. Usuniêto ga³¹Ÿ 'budgetPenalty'.");
+            }
+
+        }
+        else
+        {
+            Debug.Log($"Brak poparcia dla regionu {areaId} w statystykach gracza {budgetPenaltyPlayerId}.");
+        }
+    }
+
+    public async Task<bool> CheckSupportBlock(string playerId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        DataSnapshot blockSupportSnapshot = playerSnapshot.Child("blockSupport");
+
+        if (!blockSupportSnapshot.Exists)
+        {
+            return false;
+        }
+
+        string blockSupportPlayerId = Convert.ToString(blockSupportSnapshot.Child("playerId").Value);
+
+        if (string.IsNullOrEmpty(blockSupportPlayerId))
+        {
+            Debug.LogError($"Nie znaleziono 'playerId' w ga³êzi 'blockSupport' dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        DatabaseReference dbRefBlockSupportPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(blockSupportPlayerId);
+
+        DataSnapshot blockSupportPlayerSnapshot = await dbRefBlockSupportPlayer.GetValueAsync();
+
+        if (!blockSupportPlayerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych dla gracza z 'playerId' w 'blockSupport': {blockSupportPlayerId}");
+            return false;
+        }
+
+        DataSnapshot blockSupportTurnsTakenSnapshot = blockSupportSnapshot.Child("turnsTaken");
+
+        if (!blockSupportTurnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' w ga³êzi 'blockSupport' dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        int blockSupportTurnsTaken = Convert.ToInt32(blockSupportTurnsTakenSnapshot.Value);
+
+        DataSnapshot blockSupportPlayerTurnsTakenSnapshot = blockSupportPlayerSnapshot.Child("stats").Child("turnsTaken");
+
+        if (!blockSupportPlayerTurnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' w statystykach dla gracza o ID: {blockSupportPlayerId}");
+            return false;
+        }
+
+        int blockSupportPlayerTurnsTaken = Convert.ToInt32(blockSupportPlayerTurnsTakenSnapshot.Value);
+
+        if (blockSupportTurnsTaken == blockSupportPlayerTurnsTaken)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<bool> CheckBudgetBlock(string playerId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        DataSnapshot blockBudgetSnapshot = playerSnapshot.Child("blockBudget");
+
+        if (!blockBudgetSnapshot.Exists)
+        {
+            return false;
+        }
+
+        string blockBudgetPlayerId = Convert.ToString(blockBudgetSnapshot.Child("playerId").Value);
+
+        if (string.IsNullOrEmpty(blockBudgetPlayerId))
+        {
+            Debug.LogError($"Nie znaleziono 'playerId' w ga³êzi 'blockBudget' dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        DatabaseReference dbRefBlockBudgetPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(blockBudgetPlayerId);
+
+        DataSnapshot blockBudgetPlayerSnapshot = await dbRefBlockBudgetPlayer.GetValueAsync();
+
+        if (!blockBudgetPlayerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych dla gracza z 'playerId' w 'blockBudget': {blockBudgetPlayerId}");
+            return false;
+        }
+
+        DataSnapshot blockBudgetTurnsTakenSnapshot = blockBudgetSnapshot.Child("turnsTaken");
+
+        if (!blockBudgetTurnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' w ga³êzi 'blockBudget' dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        int blockBudgetTurnsTaken = Convert.ToInt32(blockBudgetTurnsTakenSnapshot.Value);
+
+        DataSnapshot blockBudgetPlayerTurnsTakenSnapshot = blockBudgetPlayerSnapshot.Child("stats").Child("turnsTaken");
+
+        if (!blockBudgetPlayerTurnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' w statystykach dla gracza o ID: {blockBudgetPlayerId}");
+            return false;
+        }
+
+        int blockBudgetPlayerTurnsTaken = Convert.ToInt32(blockBudgetPlayerTurnsTakenSnapshot.Value);
+
+        if (blockBudgetTurnsTaken == blockBudgetPlayerTurnsTaken)
+        {
+            Debug.Log("budget blocked cant do this");
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<bool> CheckIncomeBlock(string playerId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        DataSnapshot blockIncomeSnapshot = playerSnapshot.Child("blockIncome");
+
+        if (!blockIncomeSnapshot.Exists)
+        {
+            return false;
+        }
+
+        string blockIncomePlayerId = Convert.ToString(blockIncomeSnapshot.Child("playerId").Value);
+
+        if (string.IsNullOrEmpty(blockIncomePlayerId))
+        {
+            Debug.LogError($"Nie znaleziono 'playerId' w ga³êzi 'blockIncome' dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        DatabaseReference dbRefBlockIncomePlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(blockIncomePlayerId);
+
+        DataSnapshot blockIncomePlayerSnapshot = await dbRefBlockIncomePlayer.GetValueAsync();
+
+        if (!blockIncomePlayerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych dla gracza z 'playerId' w 'blockIncome': {blockIncomePlayerId}");
+            return false;
+        }
+
+        DataSnapshot blockIncomeTurnsTakenSnapshot = blockIncomeSnapshot.Child("turnsTaken");
+
+        if (!blockIncomeTurnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' w ga³êzi 'blockIncome' dla gracza o ID: {playerId}");
+            return false;
+        }
+
+        int blockIncomeTurnsTaken = Convert.ToInt32(blockIncomeTurnsTakenSnapshot.Value);
+
+        DataSnapshot blockIncomePlayerTurnsTakenSnapshot = blockIncomePlayerSnapshot.Child("stats").Child("turnsTaken");
+
+        if (!blockIncomePlayerTurnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' w statystykach dla gracza o ID: {blockIncomePlayerId}");
+            return false;
+        }
+
+        int blockIncomePlayerTurnsTaken = Convert.ToInt32(blockIncomePlayerTurnsTakenSnapshot.Value);
+
+        if (blockIncomeTurnsTaken == blockIncomePlayerTurnsTaken)
+        {
+            Debug.Log("Income is blocked, action cannot proceed");
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public async Task<bool> CheckIncreaseCostAllTurn(string playerId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists) return false;
+
+        var increaseCostSnapshot = playerSnapshot.Child("increaseCostAllTurn");
+        if (!increaseCostSnapshot.Exists ||
+            !increaseCostSnapshot.HasChild("turnsTaken"))
+            return false;
+
+        int increaseCostTurn = Convert.ToInt32(increaseCostSnapshot.Child("turnsTaken").Value);
+        int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
+
+        if (increaseCostTurn == currentTurn)
+        {
+            Debug.Log("Increase cost");
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<bool> CheckDecreaseCost(string playerId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists) return false;
+
+        var decreaseCostSnapshot = playerSnapshot.Child("decreaseCost");
+        if (!decreaseCostSnapshot.Exists ||
+            !decreaseCostSnapshot.HasChild("turnsTaken"))
+            return false;
+
+        int decreaseCostTurn = Convert.ToInt32(decreaseCostSnapshot.Child("turnsTaken").Value);
+        int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
+
+        if (decreaseCostTurn == currentTurn)
+        {
+            Debug.Log("Decrease cost");
+            return true;
+        }
+
+        return false;
+    }
 }
 
 public class OptionData

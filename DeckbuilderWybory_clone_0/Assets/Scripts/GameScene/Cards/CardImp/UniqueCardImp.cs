@@ -17,13 +17,11 @@ public class UniqueCardImp : MonoBehaviour
     public CardSelectionUI cardSelectionUI;
     public CardTypeManager cardTypeManager;
     public DeckController deckController;
-
+    public TurnController turnController;
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
     }
-
-
     public async void CardLibrary(string instanceId,string cardIdDropped, bool ignoreCost)
     {
         
@@ -48,7 +46,74 @@ public class UniqueCardImp : MonoBehaviour
             }
 
             cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
-            cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+
+        if (DataTransfer.IsFirstCardInTurn)
+        {
+            if (await cardUtilities.CheckIncreaseCost(playerId))
+            {
+                double increasedCost = 1.5 * cost;
+
+                if (cost >= 0)
+                {
+                    if (cost % 2 != 0)
+                    {
+                        cost = (int)Math.Ceiling(increasedCost);
+                    }
+                    else
+                    {
+                        cost = (int)increasedCost;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Cost is negative, not increasing cost.");
+                }
+            }
+        }
+
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            double increasedCost = 1.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Ceiling(increasedCost);
+                }
+                else
+                {
+                    cost = (int)increasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not increasing cost.");
+            }
+        }
+
+        if (await cardUtilities.CheckDecreaseCost(playerId))
+        {
+            double decreasedCost = 0.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Floor(decreasedCost);
+                }
+                else
+                {
+                    cost = (int)decreasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not decreasing cost.");
+            }
+        }
+
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
 
             dbRefPlayerStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("stats");
             DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
@@ -67,12 +132,12 @@ public class UniqueCardImp : MonoBehaviour
                 Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
                 return;
             }
-        if (!(await cardUtilities.CheckBlockedCard(playerId)))
-        {
+            if (!(await cardUtilities.CheckBlockedCard(playerId)))
+            {
 
-            playerBudget = await SwitchCase(instanceId, dbRefPlayerStats, playerIncome, playerBudget, cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId);
+                playerBudget = await SwitchCase(instanceId, dbRefPlayerStats, playerIncome, playerBudget, cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId);
 
-        }
+            }
             if (!ignoreCost)
             {
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
@@ -83,6 +148,8 @@ public class UniqueCardImp : MonoBehaviour
             await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
+        Debug.Log("card played");
+
         DataTransfer.IsFirstCardInTurn = false;
     }
 
@@ -91,6 +158,13 @@ public class UniqueCardImp : MonoBehaviour
         switch (cardId)
         {
             case "UN018":
+
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    break;
+                }
+
                 chosenRegion = await mapManager.SelectArea();
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                 enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
@@ -108,10 +182,22 @@ public class UniqueCardImp : MonoBehaviour
                 }
                 break;
             case "UN089":
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    break;
+                }
+
                 chosenRegion = await mapManager.SelectArea();
-                await ExchangeSupportMaxMin(chosenRegion);
+                await ExchangeSupportMaxMin(playerId,chosenRegion);
                 break;
             case "UN025":
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    break;
+                }
+
                 chosenRegion = await mapManager.SelectArea();
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                 enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
@@ -141,11 +227,25 @@ public class UniqueCardImp : MonoBehaviour
 
                 break;
             case "UN055":
-                playerBudget += playerIncome;
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
-                await cardUtilities.CheckAndAddCopyBudget(playerId, playerIncome);
+                if (!(await cardUtilities.CheckBudgetBlock(playerId)))
+                {
+                    playerBudget += playerIncome;
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
+                    await cardUtilities.CheckAndAddCopyBudget(playerId, playerIncome);
+                }
                 break;
             case "UN086":
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    break;
+                }
+                if (await cardUtilities.CheckIncomeBlock(playerId))
+                {
+                    Debug.Log("income block");
+                    break;
+                }
+
                 chosenRegion = await mapManager.SelectArea();
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                 await ChangeIncomePerCard(chosenRegion, isBonusRegion, instanceId);
@@ -185,6 +285,114 @@ public class UniqueCardImp : MonoBehaviour
                     return -1;
                 }
                 await BlockCard(enemyId);
+                break;
+            case "UN032":
+                if (DataTransfer.IsFirstCardInTurn)
+                {
+                    await ProtectPlayer();
+                    turnController.PassTurn();
+                    
+                } else
+                {
+                    Debug.Log("Karta mo¿e byæ zagrana tylko jako pierwsza w turze");
+                }
+                break;
+            case "UN078":
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                if (string.IsNullOrEmpty(enemyId))
+                {
+                    Debug.LogError("No enemy player found in the area.");
+                    return -1;
+                }
+                if(await cardUtilities.CheckIfProtected(enemyId,-1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return -1;
+                } else
+                {
+                    await IncreaseCost(enemyId);
+                }
+                break;
+            case "UN080":
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                if (string.IsNullOrEmpty(enemyId))
+                {
+                    Debug.LogError("No enemy player found in the area.");
+                    return -1;
+                }
+                await BlockSupportAction(enemyId);
+                playerBudget = await cardUtilities.ChangeEnemyStat(enemyId,15,"money",playerBudget);
+                break;
+            case "UN079":
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                if (string.IsNullOrEmpty(enemyId))
+                {
+                    Debug.LogError("No enemy player found in the area.");
+                    return -1;
+                }
+                if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return -1;
+                }
+                else
+                {
+                    await IncreaseCostAllTurn(enemyId);
+                }
+                break;
+            case "UN048":
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                if (string.IsNullOrEmpty(enemyId))
+                {
+                    Debug.LogError("No enemy player found in the area.");
+                    return -1;
+                }
+                if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return -1;
+                }
+                await BlockTurn(enemyId);
+                break;
+            case "UN050":
+                await DecreaseCost();
+                break;
+            case "UN052":
+                await ProtectPlayer();
+                break;
+            case "UN082":
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                if (string.IsNullOrEmpty(enemyId))
+                {
+                    Debug.LogError("No enemy player found in the area.");
+                    return -1;
+                }
+                if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return -1;
+                }
+                else
+                {
+                    await BlockBudgetAction(enemyId);
+                }
+                break;
+            case "UN083":
+                enemyId = await playerListManager.SelectEnemyPlayer();
+                if (string.IsNullOrEmpty(enemyId))
+                {
+                    Debug.LogError("No enemy player found in the area.");
+                    return -1;
+                }
+                if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return -1;
+                }
+                else
+                {
+                    await BlockIncomeAction(enemyId);
+                }
                 break;
 
             default:
@@ -273,18 +481,32 @@ public class UniqueCardImp : MonoBehaviour
                 return;
             }
 
-            await cardUtilities.CheckIfProtected(playerId, support, value);
+            await cardUtilities.CheckIfRegionsProtected(playerId, support, value);
 
-            value = await cardUtilities.CheckIfRegionProtected(playerId, areaId, support, value);
+        if (await cardUtilities.CheckIfRegionProtected(playerId, areaId, value))
+        {
+            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
 
-            support += value;
+        if (await cardUtilities.CheckIfProtected(playerId, value))
+        {
+            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
+
+        support += value;
+
+            await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
+
             await dbRefSupport.SetValueAsync(support);
 
             await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
 
     }
 
-    private async Task ExchangeSupportMaxMin(int chosenRegion)
+    private async Task ExchangeSupportMaxMin(string cardHolderId,int chosenRegion)
     {
         DatabaseReference dbRefPlayersStats = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -333,6 +555,8 @@ public class UniqueCardImp : MonoBehaviour
         var maxPlayer = maxSupportPlayers[UnityEngine.Random.Range(0, maxSupportPlayers.Count)];
         var minPlayer = minSupportPlayers[UnityEngine.Random.Range(0, minSupportPlayers.Count)];
 
+        await cardUtilities.CheckIfBudgetPenalty(cardHolderId, chosenRegion);
+
         var maxSupportRef = dbRefPlayersStats
             .Child(maxPlayer.playerId)
             .Child("stats")
@@ -345,11 +569,20 @@ public class UniqueCardImp : MonoBehaviour
             .Child("support")
             .Child(chosenRegion.ToString());
 
-        await cardUtilities.CheckIfProtected(maxPlayer.playerId, maxPlayer.support, minPlayer.support- maxPlayer.support);
+        await cardUtilities.CheckIfRegionsProtected(maxPlayer.playerId, maxPlayer.support, minPlayer.support- maxPlayer.support);
 
-        int isProtected = await cardUtilities.CheckIfRegionProtected(maxPlayer.playerId, chosenRegion, maxPlayer.support, minPlayer.support - maxPlayer.support);
+        if (await cardUtilities.CheckIfRegionProtected(maxPlayer.playerId, chosenRegion, minPlayer.support - maxPlayer.support))
+        {
+            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
 
-        if(isProtected == 0) { return; }
+        if (await cardUtilities.CheckIfProtected(maxPlayer.playerId, minPlayer.support - maxPlayer.support))
+        {
+            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
 
         await maxSupportRef.SetValueAsync(minPlayer.support);
         await minSupportRef.SetValueAsync(maxPlayer.support);
@@ -399,9 +632,21 @@ public class UniqueCardImp : MonoBehaviour
             playerSupport++;
         }
 
-        await cardUtilities.CheckIfProtected(enemyId, enemySupport, playerSupport - enemySupport);
-        int isProtected = await cardUtilities.CheckIfRegionProtected(enemyId, chosenRegion, enemySupport, playerSupport - enemySupport);
-        if (isProtected == 0) { return; }
+        await cardUtilities.CheckIfRegionsProtected(enemyId, enemySupport, playerSupport - enemySupport);
+        if (await cardUtilities.CheckIfRegionProtected(enemyId, chosenRegion, playerSupport - enemySupport))
+        {
+            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
+        if (await cardUtilities.CheckIfProtected(enemyId, playerSupport - enemySupport))
+        {
+            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
+
+        await cardUtilities.CheckIfBudgetPenalty(playerId, chosenRegion);
 
         await playerSupportRef.SetValueAsync(enemySupport);
         await enemySupportRef.SetValueAsync(playerSupport);
@@ -463,7 +708,13 @@ public class UniqueCardImp : MonoBehaviour
 
                 if (incomeSnapshot.Exists && int.TryParse(incomeSnapshot.Value.ToString(), out int income))
                 {
-                    int newIncome = Mathf.Max(0, income - cardsOnHand);
+
+                    int newIncome = Mathf.Max(0, income + -cardsOnHand);
+                    if (await cardUtilities.CheckIfProtected(currentPlayerId, -cardsOnHand))
+                    {
+                        continue;
+                    }
+
                     await incomeRef.SetValueAsync(newIncome);
                 }
             }
@@ -496,6 +747,8 @@ public class UniqueCardImp : MonoBehaviour
                 .Child("protected")
                 .Child("region")
                 .Child(regionId.ToString());
+
+            await cardUtilities.CheckIfBudgetPenalty(playerId, regionId);
 
             await dbRefProtectedRegion.SetValueAsync(turnsTaken);
 
@@ -587,6 +840,12 @@ public class UniqueCardImp : MonoBehaviour
 
     private async Task BlockCard(string enemyId)
     {
+        if (await cardUtilities.CheckIfProtected(enemyId, -1))
+        {
+            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+            return;
+        }
+
         string lobbyId = DataTransfer.LobbyId;
 
         DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
@@ -618,8 +877,317 @@ public class UniqueCardImp : MonoBehaviour
             };
 
         await dbRefCardBlocked.SetValueAsync(cardBlockedData);
+    }
 
-        await dbRefCardBlocked.SetValueAsync(cardBlockedData);
+    private async Task ProtectPlayer()
+    {
+        DatabaseReference dbRefTurn = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats")
+            .Child("turnsTaken");
+
+        DataSnapshot turnSnapshot = await dbRefTurn.GetValueAsync();
+
+        if (turnSnapshot.Exists)
+        {
+            int turnsTaken = Convert.ToInt32(turnSnapshot.Value);
+
+            DatabaseReference dbRefProtected = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(lobbyId)
+                .Child("players")
+                .Child(playerId)
+                .Child("protected")
+                .Child("all");
+
+            await dbRefProtected.SetValueAsync(turnsTaken);
+
+        }
+        else
+        {
+            Debug.LogError("Nie uda³o siê pobraæ liczby tur dla gracza.");
+        }
+    }
+
+    private async Task IncreaseCost(string enemyId)
+    {
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
+        DatabaseReference dbRefIncreaseCost = dbRefPlayer.Child("increaseCost");
+
+        DatabaseReference dbRefTurnsTaken = dbRefPlayer
+            .Child("stats")
+            .Child("turnsTaken");
+
+        DataSnapshot turnsTakenSnapshot = await dbRefTurnsTaken.GetValueAsync();
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Field 'turnsTaken' does not exist for player {enemyId}. Cannot block card.");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        var increaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken+1 }
+            };
+
+        await dbRefIncreaseCost.SetValueAsync(increaseCostData);
+    }
+
+    private async Task BlockSupportAction(string enemyId)
+    {
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych gracza wykonuj¹cego akcjê o ID: {playerId}");
+            return;
+        }
+
+        DataSnapshot turnsTakenSnapshot = playerSnapshot.Child("stats").Child("turnsTaken");
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' dla gracza o ID: {playerId}");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
+        DataSnapshot enemySnapshot = await dbRefEnemy.GetValueAsync();
+
+        if (!enemySnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych przeciwnika o ID: {enemyId}");
+            return;
+        }
+
+
+        DatabaseReference dbRefBlockSupport = dbRefEnemy.Child("blockSupport");
+
+        await dbRefBlockSupport.SetValueAsync(new Dictionary<string, object>
+    {
+        { "turnsTaken", turnsTaken },
+        { "playerId", playerId }
+    });
+
+    }
+
+    private async Task IncreaseCostAllTurn(string enemyId)
+    {
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
+        DatabaseReference dbRefIncreaseCost = dbRefPlayer.Child("increaseCostAllTurn");
+
+        DatabaseReference dbRefTurnsTaken = dbRefPlayer
+            .Child("stats")
+            .Child("turnsTaken");
+
+        DataSnapshot turnsTakenSnapshot = await dbRefTurnsTaken.GetValueAsync();
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Field 'turnsTaken' does not exist for player {enemyId}. Cannot block card.");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        var increaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken+1 }
+            };
+
+        await dbRefIncreaseCost.SetValueAsync(increaseCostData);
+    }
+
+    private async Task BlockTurn(string enemyId)
+    {
+
+        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
+        DataSnapshot enemySnapshot = await dbRefEnemy.GetValueAsync();
+
+        if (!enemySnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych gracza o ID: {enemyId}.");
+            return;
+        }
+
+        var blockTurnData = new Dictionary<string, object>
+    {
+        { "blockTurn", true }
+    };
+
+        await dbRefEnemy.UpdateChildrenAsync(blockTurnData);
+
+    }
+
+    private async Task DecreaseCost()
+    {
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DatabaseReference dbRefDecreaseCost = dbRefPlayer.Child("decreaseCost");
+
+        DatabaseReference dbRefTurnsTaken = dbRefPlayer
+            .Child("stats")
+            .Child("turnsTaken");
+
+        DataSnapshot turnsTakenSnapshot = await dbRefTurnsTaken.GetValueAsync();
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Field 'turnsTaken' does not exist for player {playerId}. Cannot block card.");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        var decreaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken }
+            };
+
+        await dbRefDecreaseCost.SetValueAsync(decreaseCostData);
+    }
+
+    private async Task BlockBudgetAction(string enemyId)
+    {
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych gracza wykonuj¹cego akcjê o ID: {playerId}");
+            return;
+        }
+
+        DataSnapshot turnsTakenSnapshot = playerSnapshot.Child("stats").Child("turnsTaken");
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' dla gracza o ID: {playerId}");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
+        DataSnapshot enemySnapshot = await dbRefEnemy.GetValueAsync();
+
+        if (!enemySnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych przeciwnika o ID: {enemyId}");
+            return;
+        }
+
+
+        DatabaseReference dbRefBlockBudget = dbRefEnemy.Child("blockBudget");
+
+        await dbRefBlockBudget.SetValueAsync(new Dictionary<string, object>
+    {
+        { "turnsTaken", turnsTaken },
+        { "playerId", playerId }
+    });
+
+    }
+
+    private async Task BlockIncomeAction(string enemyId)
+    {
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
+
+        if (!playerSnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych gracza wykonuj¹cego akcjê o ID: {playerId}");
+            return;
+        }
+
+        DataSnapshot turnsTakenSnapshot = playerSnapshot.Child("stats").Child("turnsTaken");
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Brak wartoœci 'turnsTaken' dla gracza o ID: {playerId}");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
+        DataSnapshot enemySnapshot = await dbRefEnemy.GetValueAsync();
+
+        if (!enemySnapshot.Exists)
+        {
+            Debug.LogError($"Brak danych przeciwnika o ID: {enemyId}");
+            return;
+        }
+
+        DatabaseReference dbRefBlockIncome = dbRefEnemy.Child("blockIncome");
+
+        await dbRefBlockIncome.SetValueAsync(new Dictionary<string, object>
+    {
+        { "turnsTaken", turnsTaken },
+        { "playerId", playerId }
+    });
     }
 
 }

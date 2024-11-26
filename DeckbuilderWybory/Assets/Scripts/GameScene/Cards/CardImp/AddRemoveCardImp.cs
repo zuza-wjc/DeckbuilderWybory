@@ -22,8 +22,10 @@ public class AddRemoveCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string instanceId,string cardIdDropped, bool ignoreCost)
+    public async Task CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
+        try
+        {
             Dictionary<int, OptionData> budgetOptionsDictionary = new();
             Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
             Dictionary<int, OptionData> incomeOptionsDictionary = new();
@@ -62,6 +64,72 @@ public class AddRemoveCardImp : MonoBehaviour
                 DataSnapshot costSnapshot = snapshot.Child("cost");
                 cost = costSnapshot.Exists ? Convert.ToInt32(costSnapshot.Value) : 0;
 
+                if (DataTransfer.IsFirstCardInTurn)
+                {
+                    if (await cardUtilities.CheckIncreaseCost(playerId))
+                    {
+                        double increasedCost = 1.5 * cost;
+
+                        if (cost >= 0)
+                        {
+                            if (cost % 2 != 0)
+                            {
+                                cost = (int)Math.Ceiling(increasedCost);
+                            }
+                            else
+                            {
+                                cost = (int)increasedCost;
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Cost is negative, not increasing cost.");
+                        }
+                    }
+                }
+
+                if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+                {
+                    double increasedCost = 1.5 * cost;
+
+                    if (cost >= 0)
+                    {
+                        if (cost % 2 != 0)
+                        {
+                            cost = (int)Math.Ceiling(increasedCost);
+                        }
+                        else
+                        {
+                            cost = (int)increasedCost;
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Cost is negative, not increasing cost.");
+                    }
+                }
+
+                if (await cardUtilities.CheckDecreaseCost(playerId))
+                {
+                    double decreasedCost = 0.5 * cost;
+
+                    if (cost >= 0)
+                    {
+                        if (cost % 2 != 0)
+                        {
+                            cost = (int)Math.Floor(decreasedCost);
+                        }
+                        else
+                        {
+                            cost = (int)decreasedCost;
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Cost is negative, not decreasing cost.");
+                    }
+                }
+
                 DataSnapshot typeSnapshot = snapshot.Child("type");
                 cardType = typeSnapshot.Exists ? typeSnapshot.Value.ToString() : string.Empty;
 
@@ -83,6 +151,13 @@ public class AddRemoveCardImp : MonoBehaviour
                 if (snapshot.Child("support").Exists)
                 {
                     supportChange = true;
+
+                    if(await cardUtilities.CheckSupportBlock(playerId))
+                    {
+                        Debug.Log("support block");
+                        return;
+                    }
+
                     cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
                     cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
                 }
@@ -122,32 +197,28 @@ public class AddRemoveCardImp : MonoBehaviour
                 return;
             }
 
-        if (!(await cardUtilities.CheckBlockedCard(playerId)))
-        {
-            Debug.Log("here");
-
-            if (supportChange)
+            if (!(await cardUtilities.CheckBlockedCard(playerId)))
             {
-                (chosenRegion, isBonusRegion, enemyId) = await SupportAction(cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId, cardsChange, supportOptionsDictionary, supportBonusOptionsDictionary, cardsBonusOptionsDictionary);
-            }
+                if (supportChange)
+                {
+                    (chosenRegion, isBonusRegion, enemyId) = await SupportAction(cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId, cardsChange, supportOptionsDictionary, supportBonusOptionsDictionary, cardsBonusOptionsDictionary);
+                }
 
-            if (budgetChange)
-            {
-                (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats, cardIdDropped, chosenRegion, isBonusRegion, cardType, budgetOptionsDictionary, budgetBonusOptionsDictionary, playerBudget, enemyId);
-            }
+                if (budgetChange)
+                {
+                    (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats, cardIdDropped, chosenRegion, isBonusRegion, cardType, budgetOptionsDictionary, budgetBonusOptionsDictionary, playerBudget, enemyId);
+                }
 
-            if (incomeChange)
-            {
-                (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, enemyId, incomeBonusOptionsDictionary, playerIncome, dbRefPlayerStats, chosenRegion, playerBudget);
-            }
+                if (incomeChange)
+                {
+                    (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, enemyId, incomeBonusOptionsDictionary, playerIncome, dbRefPlayerStats, chosenRegion, playerBudget);
+                }
 
-            if (roundChange != 0)
-            {
-                await RoundAction(roundChange);
+                if (roundChange != 0)
+                {
+                    await RoundAction(roundChange);
+                }
             }
-        }
-
-        Debug.Log("here");
 
             if (!ignoreCost)
             {
@@ -158,9 +229,14 @@ public class AddRemoveCardImp : MonoBehaviour
             await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
-        DataTransfer.IsFirstCardInTurn = false;
-
+            DataTransfer.IsFirstCardInTurn = false;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("Error in CardLibrary: " + ex.Message);
+        }
     }
+
 
     private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion,
         bool isBonusRegion, string cardType,Dictionary<int, OptionData> budgetOptionsDictionary, Dictionary<int, OptionData> budgetBonusOptionsDictionary,int playerBudget, string enemyId)
@@ -201,17 +277,24 @@ public class AddRemoveCardImp : MonoBehaviour
 
                 } else if (cardId == "AD042")
                 {
+                   if (!(await cardUtilities.CheckBudgetBlock(playerId)))
+                    {
+
                     int areas = await CountMinSupport(playerId, data.Number);
                     int budgetMulti = data.Number * areas;
                     playerBudget += budgetMulti;
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     await cardUtilities.CheckAndAddCopyBudget(playerId, budgetMulti);
+                }
 
-                } else
+            } else
                 {
-                    playerBudget += data.Number;
-                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
-                    await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
+                    if (!(await cardUtilities.CheckBudgetBlock(playerId)))
+                    {
+                        playerBudget += data.Number;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
+                        await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
+                    }
                 }
 
             }
@@ -225,10 +308,14 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
                 else
                 {
-                    if(cardId == "AD090")
+                    if(cardId == "AD047")
+                    {
+                        await BudgetPenalty(data.Number);
+                        
+                    } else if(cardId == "AD090")
                     {
                         enemyId = await HighestSupportInArea(chosenRegion);
-                        await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money",playerBudget);
+                        playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money",playerBudget);
                         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     }
                     else {
@@ -241,7 +328,7 @@ public class AddRemoveCardImp : MonoBehaviour
                                 return (dbRefPlayerStats, -1, false, -1, null); ;
                             }
                         }
-                        await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
+                        playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
                         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     }
                 }
@@ -429,14 +516,18 @@ public class AddRemoveCardImp : MonoBehaviour
 
             if (data.Target == "player")
             {
-                playerIncome += data.Number;
-                if(playerIncome < 0)
+                if (!(await cardUtilities.CheckIncomeBlock(playerId)))
                 {
-                    Debug.Log("Nie wystaraczaj¹cy przychód aby zagraæ kartê");
-                } else
-                {
-                    await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
-                } 
+                    playerIncome += data.Number;
+                    if (playerIncome < 0)
+                    {
+                        Debug.Log("Nie wystaraczaj¹cy przychód aby zagraæ kartê");
+                    }
+                    else
+                    {
+                        await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
+                    }
+                }
             }
             else if (data.Target == "enemy")
             {
@@ -458,7 +549,7 @@ public class AddRemoveCardImp : MonoBehaviour
                         }
                     }
 
-                    await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "income", playerBudget);
+                    playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "income", playerBudget);
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
             }
@@ -550,8 +641,15 @@ public class AddRemoveCardImp : MonoBehaviour
                     continue;
                 }
 
+                if (await cardUtilities.CheckIfProtected(playerID, value))
+                {
+                    continue;
+                }
+
                 if (int.TryParse(playerIncomeSnapshot.Value.ToString(), out int currentIncome))
                 {
+                    await cardUtilities.CheckIfBudgetPenalty(playerID, areaId);
+
                     int updatedIncome = Math.Max(0, currentIncome + value);
 
                     await dbRefAllPlayersStats
@@ -605,7 +703,18 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if (int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
                     {
-                        value = await cardUtilities.CheckIfRegionProtected(playerId, areaId, currentSupportValue, value);
+                        if (await cardUtilities.CheckIfRegionProtected(playerId, areaId, value))
+                        {
+                            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+                            return;
+                        }
+
+                        if (await cardUtilities.CheckIfProtected(playerId, value))
+                        {
+                            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                            return;
+                        }
+
 
                         int updatedSupportValue = currentSupportValue + value;
 
@@ -615,7 +724,9 @@ public class AddRemoveCardImp : MonoBehaviour
                         var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
                         updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
 
-                        await cardUtilities.CheckIfProtected(playerId, currentSupportValue, value);
+                        await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
+
+                        await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
 
                         await dbRefAllPlayersStats
                             .Child(playerId)
@@ -668,7 +779,16 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if (int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
                     {
-                        value = await cardUtilities.CheckIfRegionProtected(playerId, areaId, currentSupportValue, value);
+                        if (await cardUtilities.CheckIfRegionProtected(playerId, areaId, value))
+                        {
+                            continue;
+                        }
+
+                        if (await cardUtilities.CheckIfProtected(playerId, value))
+                        {
+                            continue;
+                        }
+
 
                         int updatedSupportValue = currentSupportValue + value;
 
@@ -678,7 +798,9 @@ public class AddRemoveCardImp : MonoBehaviour
                         var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
 
                         updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
-                        await cardUtilities.CheckIfProtected(playerId, currentSupportValue, value);
+                        await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
+
+                        await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
 
                         await dbRefAllPlayersStats
                             .Child(playerId)
@@ -743,6 +865,11 @@ public class AddRemoveCardImp : MonoBehaviour
             int updatedStat = currentStat + value;
 
             updatedStat = Mathf.Max(updatedStat, 0);
+
+            if (await cardUtilities.CheckIfProtected(playerID, value))
+            {
+                continue;
+            }
 
             await dbRefAllPlayersStats
                 .Child(playerID)
@@ -1018,7 +1145,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 .Child("players")
                 .Child(playerId)
                 .Child("protected")
-                .Child("all");
+                .Child("allRegions");
 
             await dbRefProtected.SetValueAsync(turnsTaken);
 
@@ -1028,6 +1155,92 @@ public class AddRemoveCardImp : MonoBehaviour
             Debug.LogError("Nie uda³o siê pobraæ liczby tur dla gracza.");
         }
     }
+
+    private async Task BudgetPenalty(int value)
+    {
+        DatabaseReference dbRefPlayers = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        DataSnapshot playersSnapshot = await dbRefPlayers.GetValueAsync();
+
+        if (!playersSnapshot.Exists)
+        {
+            Debug.LogError("Brak danych graczy w bazie.");
+            return;
+        }
+
+        int currentTurnNumber = -1;
+        int currentPlayerTurnsTaken = -1;
+        string nextPlayerId = null;
+
+        foreach (var playerSnapshot in playersSnapshot.Children)
+        {
+            string id = playerSnapshot.Key;
+
+            DataSnapshot turnSnapshot = playerSnapshot.Child("myTurnNumber");
+            DataSnapshot turnsTakenSnapshot = playerSnapshot.Child("stats").Child("turnsTaken");
+
+            if (turnSnapshot.Exists && turnsTakenSnapshot.Exists)
+            {
+                int turnNumber = Convert.ToInt32(turnSnapshot.Value);
+                int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+                if (id == playerId)
+                {
+                    currentTurnNumber = turnNumber;
+                    currentPlayerTurnsTaken = turnsTaken;
+                }
+                else if (nextPlayerId == null && turnNumber == currentTurnNumber + 1)
+                {
+                    nextPlayerId = id;
+                }
+            }
+        }
+
+        if (currentTurnNumber == -1 || currentPlayerTurnsTaken == -1)
+        {
+            Debug.LogError("Bie¿¹cy gracz lub jego statystyki nie zosta³y znalezione.");
+            return;
+        }
+
+        if (nextPlayerId == null)
+        {
+            nextPlayerId = playersSnapshot.Children
+                .OrderBy(p => Convert.ToInt32(p.Child("myTurnNumber").Value))
+                .First().Key;
+        }
+
+        DatabaseReference dbRefNextPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(nextPlayerId)
+            .Child("budgetPenalty");
+
+        DataSnapshot budgetPenaltySnapshot = await dbRefNextPlayer.GetValueAsync();
+
+        var budgetPenaltyData = new Dictionary<string, object>
+    {
+        { "value", value },
+        { "currentPlayerTurnsTaken", currentPlayerTurnsTaken },
+        { "playerId", playerId }
+    };
+        Debug.Log($"{value} playerId: {playerId}, nextPlayerId: {nextPlayerId}");
+
+        if (budgetPenaltySnapshot.Exists)
+        {
+            await dbRefNextPlayer.Child("value").SetValueAsync(value);
+            await dbRefNextPlayer.Child("turnsTaken").SetValueAsync(currentPlayerTurnsTaken);
+            await dbRefNextPlayer.Child("playerId").SetValueAsync(playerId);
+        }
+        else
+        {
+            await dbRefNextPlayer.SetValueAsync(budgetPenaltyData);
+        }
+    }
+
 
 
 }

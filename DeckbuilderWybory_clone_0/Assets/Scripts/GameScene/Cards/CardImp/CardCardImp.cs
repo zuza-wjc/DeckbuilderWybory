@@ -17,6 +17,7 @@ public class CardCardImp : MonoBehaviour
     public DeckController deckController;
     public CardSelectionUI cardSelectionUI;
     public CardTypeManager cardTypeManager;
+    public TurnController turnController;
 
     void Start()
     {
@@ -61,7 +62,73 @@ public class CardCardImp : MonoBehaviour
             }
 
             cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
-            cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+
+        if (DataTransfer.IsFirstCardInTurn)
+        {
+            if (await cardUtilities.CheckIncreaseCost(playerId))
+            {
+                double increasedCost = 1.5 * cost;
+
+                if (cost >= 0)
+                {
+                    if (cost % 2 != 0)
+                    {
+                        cost = (int)Math.Ceiling(increasedCost);
+                    }
+                    else
+                    {
+                        cost = (int)increasedCost;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Cost is negative, not increasing cost.");
+                }
+            }
+        }
+
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            double increasedCost = 1.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Ceiling(increasedCost);
+                }
+                else
+                {
+                    cost = (int)increasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not increasing cost.");
+            }
+        }
+
+        if (await cardUtilities.CheckDecreaseCost(playerId))
+        {
+            double decreasedCost = 0.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Floor(decreasedCost);
+                }
+                else
+                {
+                    cost = (int)decreasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not decreasing cost.");
+            }
+        }
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
 
             cardsChange = snapshot.Child("cardsOnHand").Exists;
             if (cardsChange)
@@ -73,6 +140,12 @@ public class CardCardImp : MonoBehaviour
             supportChange = snapshot.Child("support").Exists;
             if (supportChange)
             {
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    return;
+                }
+
                 cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
                 cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
             }
@@ -181,7 +254,15 @@ public class CardCardImp : MonoBehaviour
             {
                 if(data.TargetNumber == 8)
                 {
-                    await deckController.ExchangeCards(playerId,instanceId);
+                    if (await CheckIfAnyEnemyProtected())
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else
+                    {
+                        await deckController.ExchangeCards(playerId, instanceId);
+                    }
                 } else
                 {
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
@@ -198,17 +279,25 @@ public class CardCardImp : MonoBehaviour
                         Debug.LogError("Failed to select an enemy player.");
                         return (dbRefPlayerStats, -1);
                     }
-                    string playerCard = await RandomCardFromDeck(playerId);
-                    string enemyCard = await RandomCardFromDeck(enemyId);
-                    string keepCard, destroyCard;
-                    (keepCard,destroyCard) = await cardSelectionUI.ShowCardSelectionForPlayerAndEnemy(playerId, playerCard,enemyId,enemyCard);
-                    Debug.Log($"Selected card: {keepCard}, Card to destroy: {destroyCard}");
-                    if (destroyCard == playerCard)
+                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
-                        await deckController.RejectCard(playerId, destroyCard);
-                        await AddCardToDeck(keepCard, enemyId);
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
                     }
-                    await deckController.RejectCard(enemyId, enemyCard);
+                    else
+                    {
+                        string playerCard = await RandomCardFromDeck(playerId);
+                        string enemyCard = await RandomCardFromDeck(enemyId);
+                        string keepCard, destroyCard;
+                        (keepCard, destroyCard) = await cardSelectionUI.ShowCardSelectionForPlayerAndEnemy(playerId, playerCard, enemyId, enemyCard);
+                        Debug.Log($"Selected card: {keepCard}, Card to destroy: {destroyCard}");
+                        if (destroyCard == playerCard)
+                        {
+                            await deckController.RejectCard(playerId, destroyCard);
+                            await AddCardToDeck(keepCard, enemyId);
+                        }
+                        await deckController.RejectCard(enemyId, enemyCard);
+                    }
 
                 } else if (cardId == "CA017")
                 {
@@ -219,7 +308,7 @@ public class CardCardImp : MonoBehaviour
                         Debug.LogError("Failed to select an enemy player.");
                         return (dbRefPlayerStats, -1);
                     }
-                    await cardUtilities.ChangeEnemyStat(enemyId, -budgetValue, "money", playerBudget);
+                    playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, -budgetValue, "money", playerBudget);
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 } else
                 {
@@ -274,15 +363,27 @@ public class CardCardImp : MonoBehaviour
                     } else if (cardId == "CA067")
                     {
                         enemyId = await RandomEnemy();
-                        await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
-                        Debug.Log("Now choosing from enemy hand");
-                        selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true, selectedCardIds);
-                        await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
+                        if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                        {
+                            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            return(dbRefPlayerStats,-1);
+                        } else
+                        {
+                            await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
+                            Debug.Log("Now choosing from enemy hand");
+                            selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true, selectedCardIds);
+                            await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
+                        }
                     } else
                     {
                         for (int i = 0; i < data.CardNumber; i++)
                         {
                             await deckController.GetCardFromDeck(source, target);
+                        }
+
+                        if(cardId == "CA030")
+                        {
+                            turnController.PassTurn();
                         }
 
                     }
@@ -353,9 +454,16 @@ public class CardCardImp : MonoBehaviour
                         Debug.LogError("Failed to select an enemy player.");
                         return (dbRefPlayerStats, -1);
                     }
-                    target = enemyId;
-                    if (data.Source == "player") { source = playerId; }
-                    await deckController.GetCardFromHand(source, target, selectedCardIds);
+                    if(await cardUtilities.CheckIfProtected(enemyId,-1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    } else
+                    {
+                        target = enemyId;
+                        if (data.Source == "player") { source = playerId; }
+                        await deckController.GetCardFromHand(source, target, selectedCardIds);
+                    }
                 }
 
             }
@@ -367,8 +475,16 @@ public class CardCardImp : MonoBehaviour
                     Debug.LogError("Failed to select an enemy player.");
                     return (dbRefPlayerStats, -1);
                 }
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
-                await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
+                if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return (dbRefPlayerStats, -1);
+                }
+                else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
+                    await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
+                }
             }
         }
         return (dbRefPlayerStats, playerBudget);
@@ -603,6 +719,49 @@ public class CardCardImp : MonoBehaviour
 
     }
 
+    public async Task<bool> CheckIfAnyEnemyProtected()
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        if (string.IsNullOrEmpty(lobbyId))
+        {
+            Debug.LogError("Lobby ID is null or empty.");
+            return false;
+        }
+
+        DatabaseReference playersRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        var snapshot = await playersRef.GetValueAsync();
+
+        if (!snapshot.Exists)
+        {
+            Debug.LogError($"No players found in lobby {lobbyId}.");
+            return false;
+        }
+
+        foreach (var playerSnapshot in snapshot.Children)
+        {
+            string enemyId = playerSnapshot.Key;
+
+            if (enemyId == playerId)
+            {
+                continue;
+            }
+
+            bool isProtected = await cardUtilities.CheckIfProtected(enemyId, -1);
+
+            if (isProtected)
+            {
+                Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 }
 

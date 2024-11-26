@@ -64,7 +64,73 @@ public class AsMuchAsCardImp : MonoBehaviour
 
             cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
 
-            cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+        if (DataTransfer.IsFirstCardInTurn)
+        {
+            if (await cardUtilities.CheckIncreaseCost(playerId))
+            {
+                double increasedCost = 1.5 * cost;
+
+                if (cost >= 0)
+                {
+                    if (cost % 2 != 0)
+                    {
+                        cost = (int)Math.Ceiling(increasedCost);
+                    }
+                    else
+                    {
+                        cost = (int)increasedCost;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Cost is negative, not increasing cost.");
+                }
+            }
+        }
+
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            double increasedCost = 1.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Ceiling(increasedCost);
+                }
+                else
+                {
+                    cost = (int)increasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not increasing cost.");
+            }
+        }
+
+        if (await cardUtilities.CheckDecreaseCost(playerId))
+        {
+            double decreasedCost = 0.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Floor(decreasedCost);
+                }
+                else
+                {
+                    cost = (int)decreasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not decreasing cost.");
+            }
+        }
+
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
 
             budgetChange = snapshot.Child("budget").Exists;
             if (budgetChange)
@@ -91,6 +157,12 @@ public class AsMuchAsCardImp : MonoBehaviour
             supportChange = snapshot.Child("support").Exists;
             if (supportChange)
             {
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    return;
+                }
+
                 ProcessBonusOptionsPerCard(snapshot.Child("support"), supportBonusOptionsDictionary, "Support");
                 ProcessOptionsPerCard(snapshot.Child("support"), supportOptionsDictionary, "Support");
             }
@@ -175,9 +247,12 @@ public class AsMuchAsCardImp : MonoBehaviour
 
             if (data.Target == "player")
             {
-                int howMany = await CalculateValueFromHand(playerId, cardType);
-                playerIncome += howMany * data.NumberPerCard;
-                await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
+                if (!(await cardUtilities.CheckIncomeBlock(playerId)))
+                {
+                    int howMany = await CalculateValueFromHand(playerId, cardType);
+                    playerIncome += howMany * data.NumberPerCard;
+                    await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
+                }
             }
         }
 
@@ -222,9 +297,12 @@ public class AsMuchAsCardImp : MonoBehaviour
 
                 if (data.Target == "player")
                 {
-                    playerBudget += data.Number;
-                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
-                    await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
+                    if (!(await cardUtilities.CheckBudgetBlock(playerId)))
+                    {
+                        playerBudget += data.Number;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
+                        await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
+                    }
                 }
             }
         }
@@ -264,7 +342,7 @@ public class AsMuchAsCardImp : MonoBehaviour
 
                     int howMany = await CalculateValueFromHand(playerId, cardType);
                     int changeBudget = howMany * data.NumberPerCard;
-                    await cardUtilities.ChangeEnemyStat(enemyId, changeBudget, "money", playerBudget);
+                    playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, changeBudget, "money", playerBudget);
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
             }

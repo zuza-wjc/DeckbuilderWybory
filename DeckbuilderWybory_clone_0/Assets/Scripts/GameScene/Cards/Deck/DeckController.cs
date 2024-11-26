@@ -25,13 +25,12 @@ public class DeckController : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
-        AddCardToDeck("CA030", true);
-        AddCardToDeck("AD044", true);
+        AddCardToDeck("UN083", true);
         AddCardToDeck("AD037", true);
-        AddCardToDeck("AD061", true);
+        AddCardToDeck("AD037", true);
         AddCardToDeck("AD007", false);
         AddCardToDeck("AD020", false);
-        AddCardToDeck("AD023", false);
+        AddCardToDeck("AD040", true);
         AddCardToDeck("AD026", false);
 
         Debug.Log("Deck loaded");
@@ -170,6 +169,7 @@ public class DeckController : MonoBehaviour
 
     public async Task RejectCard(string source, string instanceId)
     {
+
         string lobbyId = DataTransfer.LobbyId;
 
         if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(instanceId))
@@ -668,6 +668,5 @@ public class DeckController : MonoBehaviour
             await targetDeckRef.Child(instanceId).SetValueAsync(cardData);
         }
     }
-
 
 }
