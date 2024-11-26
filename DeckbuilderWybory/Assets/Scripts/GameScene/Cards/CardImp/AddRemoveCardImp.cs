@@ -22,10 +22,9 @@ public class AddRemoveCardImp : MonoBehaviour
     }
 
 
-    public async Task CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
-        try
-        {
+        
             Dictionary<int, OptionData> budgetOptionsDictionary = new();
             Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
             Dictionary<int, OptionData> incomeOptionsDictionary = new();
@@ -230,11 +229,7 @@ public class AddRemoveCardImp : MonoBehaviour
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
             DataTransfer.IsFirstCardInTurn = false;
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("Error in CardLibrary: " + ex.Message);
-        }
+       
     }
 
 
