@@ -6,15 +6,35 @@
   <component name="ChangeListManager">
     <list default="true" id="8c850f2d-f4a0-4c5d-9c82-7f137fcf5a7a" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/12.2.0.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/12.2.0.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/12.2.0/firebase-app-unity-12.2.0.aar.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/12.2.0/firebase-app-unity-12.2.0.aar.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/12.2.0/firebase-app-unity-12.2.0.pom.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-app-unity/12.2.0/firebase-app-unity-12.2.0.pom.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/12.2.0.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/12.2.0.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/12.2.0/firebase-auth-unity-12.2.0.aar.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/12.2.0/firebase-auth-unity-12.2.0.aar.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/12.2.0/firebase-auth-unity-12.2.0.pom.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-auth-unity/12.2.0/firebase-auth-unity-12.2.0.pom.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity/12.2.0.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity/12.2.0.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity/12.2.0/firebase-database-unity-12.2.0.aar.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity/12.2.0/firebase-database-unity-12.2.0.aar.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity/12.2.0/firebase-database-unity-12.2.0.pom.meta" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/GeneratedLocalRepo/Firebase/m2repository/com/google/firebase/firebase-database-unity/12.2.0/firebase-database-unity-12.2.0.pom.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Plugins/Android/settingsTemplate.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Plugins/Android/settingsTemplate.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameBoard.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameBoard.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Join Lobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Join Lobby.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Lobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Lobby.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapDisplay.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapDisplay.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker0.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker1.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-AssetImportWorker0.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/Lobby/LobbySceneController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/Lobby/LobbySceneController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe0.log" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-UnityShaderCompiler.exe0.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Packages/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Packages/packages-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/AndroidResolverDependencies.xml" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/AndroidResolverDependencies.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Layouts/default-2022.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Layouts/default-2022.dwlt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,7 +56,8 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/2002a/Documents/GitHub/DeckbuilderWybory/DeckbuilderWybory/Assets/Scripts/GameScene"
+    "last_opened_file_path": "C:/Users/2002a/Documents/GitHub/DeckbuilderWybory/DeckbuilderWybory/Assets/Scripts/GameScene",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
 }]]></component>
   <component name="RecentsManager">
