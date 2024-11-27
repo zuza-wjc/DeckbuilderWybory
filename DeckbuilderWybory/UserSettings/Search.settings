@@ -11,9 +11,9 @@ scopes = {
 	"last_search.FD7A1EDD" = "ref=\"Assets/Prefabs/StatsCard.prefab\""
 	"OpenInspectorPreview.FD7A1EDD" = "0"
 	"currentGroup.FD7A1EDD" = "all"
-	"last_search.310DEAF1" = "section"
+	"last_search.310DEAF1" = "sectio"
 	"OpenInspectorPreview.310DEAF1" = "0"
-	"currentGroup.310DEAF1" = "all"
+	"currentGroup.310DEAF1" = "menu"
 }
 providers = {
 	adb = {

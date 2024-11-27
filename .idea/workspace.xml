@@ -5,15 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c850f2d-f4a0-4c5d-9c82-7f137fcf5a7a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameBoard.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameBoard.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Join Lobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Join Lobby.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Lobby.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/Lobby.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapDisplay.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapDisplay.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker0.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/AssetImportWorker1.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Logs/shadercompiler-AssetImportWorker0.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/GvhProjectSettings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/Button example.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/Button example.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameScenes/GameBoard.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameScenes/GameBoard.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -36,7 +30,8 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "last_opened_file_path": "C:/Users/2002a/Documents/GitHub/DeckbuilderWybory/DeckbuilderWybory/Assets/Scripts/GameScene"
+    "last_opened_file_path": "C:/Users/2002a/Documents/GitHub/DeckbuilderWybory/DeckbuilderWybory/Assets/Scripts/GameScene",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
 }]]></component>
   <component name="RecentsManager">
