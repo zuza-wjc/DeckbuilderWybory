@@ -1266,6 +1266,7 @@ public class AddRemoveCardImp : MonoBehaviour
         }
 
         int currentTurnNumber = -1;
+        int currentPlayerTurnsTaken = -1; // Liczba tur wykonanych przez zagrywaj¹cego
         int maxTurnNumber = -1;
         string nextPlayerId = null;
 
@@ -1275,24 +1276,26 @@ public class AddRemoveCardImp : MonoBehaviour
             string id = playerSnapshot.Key;
 
             DataSnapshot turnSnapshot = playerSnapshot.Child("myTurnNumber");
+            DataSnapshot turnsTakenSnapshot = playerSnapshot.Child("stats").Child("turnsTaken");
 
-            if (turnSnapshot.Exists)
+            if (turnSnapshot.Exists && turnsTakenSnapshot.Exists)
             {
                 int turnNumber = Convert.ToInt32(turnSnapshot.Value);
+                int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
 
                 if (id == playerId)
                 {
                     currentTurnNumber = turnNumber;
+                    currentPlayerTurnsTaken = turnsTaken; // Zapamiêtaj liczbê tur wykonanych
                 }
 
-                // ŒledŸ najwiêkszy numer tury
                 maxTurnNumber = Math.Max(maxTurnNumber, turnNumber);
             }
         }
 
-        if (currentTurnNumber == -1)
+        if (currentTurnNumber == -1 || currentPlayerTurnsTaken == -1)
         {
-            Debug.LogError("Nie znaleziono bie¿¹cego gracza.");
+            Debug.LogError("Bie¿¹cy gracz lub jego statystyki nie zosta³y znalezione.");
             return;
         }
 
@@ -1307,7 +1310,6 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 int turnNumber = Convert.ToInt32(turnSnapshot.Value);
 
-                // ZnajdŸ nastêpnego gracza (cyklicznoœæ)
                 if (turnNumber == currentTurnNumber + 1 ||
                     (currentTurnNumber == maxTurnNumber && turnNumber == 1))
                 {
@@ -1336,14 +1338,14 @@ public class AddRemoveCardImp : MonoBehaviour
         var budgetPenaltyData = new Dictionary<string, object>
     {
         { "value", value },
-        { "currentPlayerTurnsTaken", currentTurnNumber }, // Obecny numer tury
+        { "currentPlayerTurnsTaken", currentPlayerTurnsTaken }, // Liczba tur wykonanych przez zagrywaj¹cego
         { "playerId", playerId }
     };
 
         if (budgetPenaltySnapshot.Exists)
         {
             await dbRefNextPlayer.Child("value").SetValueAsync(value);
-            await dbRefNextPlayer.Child("turnsTaken").SetValueAsync(currentTurnNumber);
+            await dbRefNextPlayer.Child("turnsTaken").SetValueAsync(currentPlayerTurnsTaken); // Poprawne dane
             await dbRefNextPlayer.Child("playerId").SetValueAsync(playerId);
         }
         else
@@ -1351,6 +1353,7 @@ public class AddRemoveCardImp : MonoBehaviour
             await dbRefNextPlayer.SetValueAsync(budgetPenaltyData);
         }
     }
+
 
 
     private async Task MoreThan2Cards(string enemyId)
