@@ -5,21 +5,16 @@ using UnityEngine.EventSystems;
 public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
 {
     public Image image;
-
     [HideInInspector] public Transform parentAfterDrag;
-
     private Vector2 startTouchPosition;
     private bool isDrag = false;
     public float tapThreshold = 10f;
-
     private bool isEnlarged = false;
-
     [HideInInspector] public string instanceId;
     [HideInInspector] public string cardId;
-
-    public GameObject cardPanel;    
-    public Image panelImage;             
-    public Button closeButton;         
+    public GameObject cardPanel;
+    public Image panelImage;
+    public Button closeButton;
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -29,7 +24,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnPointerUp(PointerEventData eventData)
     {
- 
         if (!isDrag)
         {
             OnTap();
@@ -50,14 +44,11 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             return;
         }
 
-        panelImage.sprite = image.sprite; 
-        cardPanel.SetActive(true);         
+        panelImage.sprite = image.sprite;
+        cardPanel.SetActive(true);
 
         closeButton.onClick.RemoveAllListeners();
-        closeButton.onClick.AddListener(() =>
-        {
-            ClosePanel();
-        });
+        closeButton.onClick.AddListener(ClosePanel);
     }
 
     private void ClosePanel()

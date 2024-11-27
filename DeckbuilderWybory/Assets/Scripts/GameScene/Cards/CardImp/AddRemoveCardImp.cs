@@ -25,219 +25,178 @@ public class AddRemoveCardImp : MonoBehaviour
     public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
         bool tmp = await cardUtilities.CheckCardLimit(playerId);
-
         if (tmp)
         {
             Debug.Log("Limit kart w turze to 1");
             return;
         }
-        
-            Dictionary<int, OptionData> budgetOptionsDictionary = new();
-            Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
-            Dictionary<int, OptionData> incomeOptionsDictionary = new();
-            Dictionary<int, OptionData> incomeBonusOptionsDictionary = new();
-            Dictionary<int, OptionData> supportOptionsDictionary = new();
-            Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
-            Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
-            Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
 
-            budgetOptionsDictionary.Clear();
-            incomeOptionsDictionary.Clear();
-            supportOptionsDictionary.Clear();
-            budgetBonusOptionsDictionary.Clear();
-            supportBonusOptionsDictionary.Clear();
-            incomeBonusOptionsDictionary.Clear();
-            cardsOptionsDictionary.Clear();
-            cardsBonusOptionsDictionary.Clear();
+        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
+        {
+            Debug.LogError("Firebase is not initialized properly!");
+            return;
+        }
 
-            if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
+        Dictionary<int, OptionData> budgetOptionsDictionary = new();
+        Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
+        Dictionary<int, OptionData> incomeOptionsDictionary = new();
+        Dictionary<int, OptionData> incomeBonusOptionsDictionary = new();
+        Dictionary<int, OptionData> supportOptionsDictionary = new();
+        Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
+        Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
+        Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
+
+        string lobbyId = DataTransfer.LobbyId;
+        int cost = -1, playerBudget = -1, playerIncome = -1;
+        int roundChange = -1, chosenRegion = -1;
+        bool budgetChange = false, incomeChange = false, supportChange = false, cardsChange = false, isBonusRegion = false;
+        string enemyId = string.Empty, cardType = string.Empty;
+
+        DatabaseReference dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child("addRemove").Child(cardIdDropped);
+        DataSnapshot snapshot = await dbRefCard.GetValueAsync();
+
+        if (!snapshot.Exists)
+        {
+            Debug.LogError($"No data for: {cardIdDropped}.");
+            return;
+        }
+
+        DataSnapshot costSnapshot = snapshot.Child("cost");
+        cost = costSnapshot.Exists ? Convert.ToInt32(costSnapshot.Value) : 0;
+
+        if (DataTransfer.IsFirstCardInTurn)
+        {
+            if (await cardUtilities.CheckIncreaseCost(playerId))
             {
-                Debug.LogError("Firebase is not initialized properly!");
-                return;
-            }
-
-            string lobbyId = DataTransfer.LobbyId;
-            int cost = -1, playerBudget = -1, playerIncome = -1;
-            int roundChange = -1, chosenRegion = -1;
-            bool budgetChange = false, incomeChange = false, supportChange = false, cardsChange = false, isBonusRegion = false;
-            string enemyId = string.Empty, cardType = string.Empty;
-
-            DatabaseReference dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child("addRemove").Child(cardIdDropped);
-            DataSnapshot snapshot = await dbRefCard.GetValueAsync();
-
-            if (snapshot.Exists)
-            {
-                DataSnapshot costSnapshot = snapshot.Child("cost");
-                cost = costSnapshot.Exists ? Convert.ToInt32(costSnapshot.Value) : 0;
-
-                if (DataTransfer.IsFirstCardInTurn)
-                {
-                    if (await cardUtilities.CheckIncreaseCost(playerId))
-                    {
-                        double increasedCost = 1.5 * cost;
-
-                        if (cost >= 0)
-                        {
-                            if (cost % 2 != 0)
-                            {
-                                cost = (int)Math.Ceiling(increasedCost);
-                            }
-                            else
-                            {
-                                cost = (int)increasedCost;
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogWarning("Cost is negative, not increasing cost.");
-                        }
-                    }
-                }
-
-                if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+                if (cost >= 0)
                 {
                     double increasedCost = 1.5 * cost;
-
-                    if (cost >= 0)
-                    {
-                        if (cost % 2 != 0)
-                        {
-                            cost = (int)Math.Ceiling(increasedCost);
-                        }
-                        else
-                        {
-                            cost = (int)increasedCost;
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Cost is negative, not increasing cost.");
-                    }
+                    cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
                 }
-
-                if (await cardUtilities.CheckDecreaseCost(playerId))
+                else
                 {
-                    double decreasedCost = 0.5 * cost;
-
-                    if (cost >= 0)
-                    {
-                        if (cost % 2 != 0)
-                        {
-                            cost = (int)Math.Floor(decreasedCost);
-                        }
-                        else
-                        {
-                            cost = (int)decreasedCost;
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Cost is negative, not decreasing cost.");
-                    }
+                    Debug.LogWarning("Cost is negative, not increasing cost.");
                 }
+            }
+        }
 
-                DataSnapshot typeSnapshot = snapshot.Child("type");
-                cardType = typeSnapshot.Exists ? typeSnapshot.Value.ToString() : string.Empty;
-
-                DataSnapshot roundsSnapshot = snapshot.Child("rounds");
-                roundChange = roundsSnapshot.Exists ? Convert.ToInt32(roundsSnapshot.Value) : -1;
-
-                if (snapshot.Child("budget").Exists)
-                {
-                    budgetChange = true;
-                    cardUtilities.ProcessBonusOptions(snapshot.Child("budget"), budgetBonusOptionsDictionary);
-                    cardUtilities.ProcessOptions(snapshot.Child("budget"), budgetOptionsDictionary);
-                }
-                if (snapshot.Child("income").Exists)
-                {
-                    incomeChange = true;
-                    cardUtilities.ProcessBonusOptions(snapshot.Child("income"), incomeBonusOptionsDictionary);
-                    cardUtilities.ProcessOptions(snapshot.Child("income"), incomeOptionsDictionary);
-                }
-                if (snapshot.Child("support").Exists)
-                {
-                    supportChange = true;
-
-                    if(await cardUtilities.CheckSupportBlock(playerId))
-                    {
-                        Debug.Log("support block");
-                        return;
-                    }
-
-                    cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
-                    cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
-                }
-                if (snapshot.Child("cardsOnHand").Exists)
-                {
-                    cardsChange = true;
-                    cardUtilities.ProcessBonusOptionsCard(snapshot.Child("cardsOnHand"), cardsBonusOptionsDictionary);
-                    cardUtilities.ProcessOptionsCard(snapshot.Child("cardsOnHand"), cardsOptionsDictionary);
-                }
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            if (cost >= 0)
+            {
+                double increasedCost = 1.5 * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
             }
             else
             {
-                Debug.LogError("No data for: " + cardIdDropped + ".");
-                return;
+                Debug.LogWarning("Cost is negative, not increasing cost.");
             }
+        }
 
-            DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("stats");
-            DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
-
-            if (playerStatsSnapshot.Exists)
+        if (await cardUtilities.CheckDecreaseCost(playerId))
+        {
+            if (cost >= 0)
             {
-                DataSnapshot moneySnapshot = playerStatsSnapshot.Child("money");
-                playerBudget = moneySnapshot.Exists ? Convert.ToInt32(moneySnapshot.Value) : 0;
-
-                if (!ignoreCost && playerBudget < cost)
-                {
-                    Debug.LogError("Not enough budget to play the card.");
-                    return;
-                }
-
-                DataSnapshot incomeSnapshot = playerStatsSnapshot.Child("income");
-                playerIncome = incomeSnapshot.Exists ? Convert.ToInt32(incomeSnapshot.Value) : 0;
+                double decreasedCost = 0.5 * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Floor(decreasedCost) : (int)decreasedCost;
             }
             else
             {
-                Debug.LogError("No data for player: " + playerId + ".");
+                Debug.LogWarning("Cost is negative, not decreasing cost.");
+            }
+        }
+
+        DataSnapshot typeSnapshot = snapshot.Child("type");
+        cardType = typeSnapshot.Exists ? typeSnapshot.Value.ToString() : string.Empty;
+
+        DataSnapshot roundsSnapshot = snapshot.Child("rounds");
+        roundChange = roundsSnapshot.Exists ? Convert.ToInt32(roundsSnapshot.Value) : -1;
+
+        if (snapshot.Child("budget").Exists)
+        {
+            budgetChange = true;
+            cardUtilities.ProcessBonusOptions(snapshot.Child("budget"), budgetBonusOptionsDictionary);
+            cardUtilities.ProcessOptions(snapshot.Child("budget"), budgetOptionsDictionary);
+        }
+        if (snapshot.Child("income").Exists)
+        {
+            incomeChange = true;
+            cardUtilities.ProcessBonusOptions(snapshot.Child("income"), incomeBonusOptionsDictionary);
+            cardUtilities.ProcessOptions(snapshot.Child("income"), incomeOptionsDictionary);
+        }
+        if (snapshot.Child("support").Exists)
+        {
+            supportChange = true;
+            if (await cardUtilities.CheckSupportBlock(playerId))
+            {
+                Debug.Log("support block");
                 return;
             }
+
+            cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
+            cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
+        }
+        if (snapshot.Child("cardsOnHand").Exists)
+        {
+            cardsChange = true;
+            cardUtilities.ProcessBonusOptionsCard(snapshot.Child("cardsOnHand"), cardsBonusOptionsDictionary);
+            cardUtilities.ProcessOptionsCard(snapshot.Child("cardsOnHand"), cardsOptionsDictionary);
+        }
+
+        DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("stats");
+        DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+
+        if (!playerStatsSnapshot.Exists)
+        {
+            Debug.LogError($"No data for player: {playerId}.");
+            return;
+        }
+
+        DataSnapshot moneySnapshot = playerStatsSnapshot.Child("money");
+        playerBudget = moneySnapshot.Exists ? Convert.ToInt32(moneySnapshot.Value) : 0;
+
+        if (!ignoreCost && playerBudget < cost)
+        {
+            Debug.LogError("Not enough budget to play the card.");
+            return;
+        }
+
+        DataSnapshot incomeSnapshot = playerStatsSnapshot.Child("income");
+        playerIncome = incomeSnapshot.Exists ? Convert.ToInt32(incomeSnapshot.Value) : 0;
 
         ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
 
-            if (!(await cardUtilities.CheckBlockedCard(playerId)))
-            {
+        if (await cardUtilities.CheckBlockedCard(playerId)) return;
 
-            if(!ignoreCost)
-            {
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
-                playerBudget -= cost;
-            } else
-            {
-                ignoreCost = false;
-            }
+        if (!ignoreCost)
+        {
+            await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+            playerBudget -= cost;
+        }
+        else
+        {
+            ignoreCost = false;
+        }
 
+        if (supportChange)
+        {
+            (chosenRegion, isBonusRegion, enemyId) = await SupportAction(cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId, cardsChange, supportOptionsDictionary, supportBonusOptionsDictionary, cardsBonusOptionsDictionary);
+        }
 
-            if (supportChange)
-                {
-                    (chosenRegion, isBonusRegion, enemyId) = await SupportAction(cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId, cardsChange, supportOptionsDictionary, supportBonusOptionsDictionary, cardsBonusOptionsDictionary);
-                }
+        if (budgetChange)
+        {
+            (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats, cardIdDropped, chosenRegion, isBonusRegion, cardType, budgetOptionsDictionary, budgetBonusOptionsDictionary, playerBudget, enemyId);
+        }
 
-                if (budgetChange)
-                {
-                    (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats, cardIdDropped, chosenRegion, isBonusRegion, cardType, budgetOptionsDictionary, budgetBonusOptionsDictionary, playerBudget, enemyId);
-                }
+        if (incomeChange)
+        {
+            (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, enemyId, incomeBonusOptionsDictionary, playerIncome, dbRefPlayerStats, chosenRegion, playerBudget);
+        }
 
-                if (incomeChange)
-                {
-                    (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, enemyId, incomeBonusOptionsDictionary, playerIncome, dbRefPlayerStats, chosenRegion, playerBudget);
-                }
-
-                if (roundChange != 0)
-                {
-                    await RoundAction(roundChange);
-                }
-            }
+        if (roundChange != 0)
+        {
+            await RoundAction(roundChange);
+        }
 
         if (ignoreCost)
         {
@@ -255,17 +214,17 @@ public class AddRemoveCardImp : MonoBehaviour
             }
         }
 
-
         DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
-            await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
-            await dbRefPlayerDeck.Child("played").SetValueAsync(true);
+        await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
+        await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
-            DataTransfer.IsFirstCardInTurn = false;
+        DataTransfer.IsFirstCardInTurn = false;
 
         await cardUtilities.CheckIfPlayed2Cards(playerId);
 
         tmp = await cardUtilities.CheckCardLimit(playerId);
     }
+
 
 
     private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion,
@@ -644,26 +603,13 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             DataSnapshot snapshot = await dbRefRounds.GetValueAsync();
 
-            if (!snapshot.Exists)
+            if (!snapshot.Exists || snapshot.Value == null || !int.TryParse(snapshot.Value.ToString(), out int currentRound))
             {
-                Debug.LogError("Round data does not exist.");
-                return;
-            }
-
-            if (snapshot.Value == null)
-            {
-                Debug.LogError("Round data is null.");
-                return;
-            }
-
-            if (!int.TryParse(snapshot.Value.ToString(), out int currentRound))
-            {
-                Debug.LogError("Failed to parse round data as integer.");
+                Debug.LogError("Failed to retrieve or parse round data.");
                 return;
             }
 
             int updatedRound = currentRound + roundChange;
-
             await dbRefRounds.SetValueAsync(updatedRound);
         }
         catch (Exception ex)
@@ -702,7 +648,8 @@ public class AddRemoveCardImp : MonoBehaviour
                     continue;
                 }
 
-                var supportChildSnapshot = playerSupportSnapshot.Children
+                var supportChildSnapshot = playerSupportSnapshot
+                    .Children
                     .FirstOrDefault(s => Convert.ToInt32(s.Key) == areaId);
 
                 if (supportChildSnapshot == null || !int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue) || currentSupportValue <= 0)
@@ -710,22 +657,19 @@ public class AddRemoveCardImp : MonoBehaviour
                     continue;
                 }
 
-                if (await cardUtilities.CheckIfProtected(playerID, value))
+                bool isProtected = await cardUtilities.CheckIfProtected(playerID, value);
+
+                bool isProtectedOneCard = await cardUtilities.CheckIfProtectedOneCard(playerID, value);
+
+                if (isProtected || isProtectedOneCard)
                 {
                     continue;
                 }
 
-                if (await cardUtilities.CheckIfProtectedOneCard(playerID, value))
-                {
-                    continue;
-                }
 
                 if (int.TryParse(playerIncomeSnapshot.Value.ToString(), out int currentIncome))
                 {
-                    //await cardUtilities.CheckIfBudgetPenalty(playerID, areaId);
-
                     int updatedIncome = Math.Max(0, currentIncome + value);
-
                     await dbRefAllPlayersStats
                         .Child(playerID)
                         .Child("stats")
@@ -737,7 +681,6 @@ public class AddRemoveCardImp : MonoBehaviour
                     Debug.LogError($"Invalid income data for player {playerID}.");
                 }
             }
-
         }
         catch (Exception ex)
         {
@@ -747,7 +690,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
     private async Task ChangeAreaSupport(int areaId, int value, string cardholderId)
     {
-        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+        var dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         var snapshot = await dbRefAllPlayersStats.GetValueAsync();
 
@@ -771,61 +714,57 @@ public class AddRemoveCardImp : MonoBehaviour
                 continue;
             }
 
-            foreach (var supportChildSnapshot in playerSupportSnapshot.Children)
+            var supportChildSnapshot = playerSupportSnapshot.Children
+                .FirstOrDefault(s => Convert.ToInt32(s.Key) == areaId);
+
+            if (supportChildSnapshot == null)
+                continue;
+
+            if (!int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
             {
-                if (Convert.ToInt32(supportChildSnapshot.Key) == areaId)
-                {
-                    if (int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
-                    {
-                        if (await cardUtilities.CheckIfRegionProtected(playerId, areaId, value))
-                        {
-                            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
-                            return;
-                        }
-
-                        if (await cardUtilities.CheckIfProtected(playerId, value))
-                        {
-                            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
-                            return;
-                        }
-
-                        if (await cardUtilities.CheckIfProtectedOneCard(playerId, value))
-                        {
-                            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
-                            return;
-                        }
-
-                        await cardUtilities.CheckBonusBudget(playerId, value);
-
-                        value = await cardUtilities.CheckBonusSupport(playerId, value);
-
-                        int updatedSupportValue = currentSupportValue + value;
-
-                        updatedSupportValue = Math.Max(updatedSupportValue, 0);
-
-                        var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
-                        var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
-                        updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
-
-                        await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
-
-                        //await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
-
-                        await dbRefAllPlayersStats
-                            .Child(playerId)
-                            .Child("stats")
-                            .Child("support")
-                            .Child(supportChildSnapshot.Key)
-                            .SetValueAsync(updatedSupportValue);
-
-                        await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
-                    }
-                    else
-                    {
-                        Debug.LogError($"Invalid support value for player {playerId} in area {areaId}. Value: {supportChildSnapshot.Value}");
-                    }
-                }
+                Debug.LogError($"Invalid support value for player {playerId} in area {areaId}. Value: {supportChildSnapshot.Value}");
+                continue;
             }
+
+            bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(playerId, areaId, value);
+            bool isPlayerProtected = await cardUtilities.CheckIfProtected(playerId, value);
+            bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerId, value);
+
+            if (isRegionProtected)
+            {
+                Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+                continue;
+            }
+
+            if (isPlayerProtected)
+            {
+                Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                continue;
+            }
+
+            if (isOneCardProtected)
+            {
+                Debug.Log("Gracz jest chroniony przez jedn¹ kartê, nie mo¿na zagraæ karty");
+                continue;
+            }
+
+            await cardUtilities.CheckBonusBudget(playerId, value);
+            value = await cardUtilities.CheckBonusSupport(playerId, value);
+
+            int updatedSupportValue = Math.Max(currentSupportValue + value, 0);
+
+            var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
+            var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
+            updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
+
+            await dbRefAllPlayersStats
+                .Child(playerId)
+                .Child("stats")
+                .Child("support")
+                .Child(supportChildSnapshot.Key)
+                .SetValueAsync(updatedSupportValue);
+
+            await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
         }
     }
 
@@ -847,7 +786,6 @@ public class AddRemoveCardImp : MonoBehaviour
         foreach (var playerSnapshot in snapshot.Children)
         {
             string playerId = playerSnapshot.Key;
-
             DataSnapshot playerSupportSnapshot = playerSnapshot.Child("stats").Child("support");
 
             if (!playerSupportSnapshot.Exists)
@@ -858,61 +796,43 @@ public class AddRemoveCardImp : MonoBehaviour
 
             foreach (var supportChildSnapshot in playerSupportSnapshot.Children)
             {
-                if (int.TryParse(supportChildSnapshot.Key, out int areaId))
+                if (int.TryParse(supportChildSnapshot.Key, out int areaId) && int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
                 {
-                    if (int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
+                    bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(playerId, areaId, value);
+                    bool isPlayerProtected = await cardUtilities.CheckIfProtected(playerId, value);
+                    bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerId, value);
+
+                    if (isRegionProtected || isPlayerProtected || isOneCardProtected)
                     {
-                        if (await cardUtilities.CheckIfRegionProtected(playerId, areaId, value))
-                        {
-                            continue;
-                        }
-
-                        if (await cardUtilities.CheckIfProtected(playerId, value))
-                        {
-                            continue;
-                        }
-
-                        if (await cardUtilities.CheckIfProtectedOneCard(playerId, value))
-                        {
-                            continue;
-                        }
-
-                        await cardUtilities.CheckBonusBudget(playerId, value);
-
-                        value = await cardUtilities.CheckBonusSupport(playerId, value);
-
-                        int updatedSupportValue = currentSupportValue + value;
-
-                        updatedSupportValue = Math.Max(updatedSupportValue, 0);
-
-                        var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
-                        var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
-
-                        updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
-                        await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
-
-                       // await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
-
-                        await dbRefAllPlayersStats
-                            .Child(playerId)
-                            .Child("stats")
-                            .Child("support")
-                            .Child(areaId.ToString())
-                            .SetValueAsync(updatedSupportValue);
-
-                        await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
+                        continue;
                     }
-                    else
-                    {
-                        Debug.LogError($"Invalid support value for player {playerId} in area {areaId}. Value: {supportChildSnapshot.Value}");
-                    }
+
+                    await cardUtilities.CheckBonusBudget(playerId, value);
+                    value = await cardUtilities.CheckBonusSupport(playerId, value);
+
+                    int updatedSupportValue = currentSupportValue + value;
+                    updatedSupportValue = Math.Max(updatedSupportValue, 0);
+
+                    var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
+                    var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
+
+                    updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
+
+                    await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
+                    await dbRefAllPlayersStats
+                        .Child(playerId)
+                        .Child("stats")
+                        .Child("support")
+                        .Child(areaId.ToString())
+                        .SetValueAsync(updatedSupportValue);
+
+                    await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
                 }
                 else
                 {
-                    Debug.LogError($"Invalid area ID: {supportChildSnapshot.Key}. It must be an integer.");
+                    Debug.LogError($"Invalid data for player {playerId} in area {supportChildSnapshot.Key}. Ensure area ID and support value are valid integers.");
                 }
             }
-
         }
     }
 
@@ -935,35 +855,27 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             string playerID = playerSnapshot.Key;
 
-            if (playerID == cardholderId) continue;
+            if (playerID == cardholderId)
+                continue;
 
             DataSnapshot playerStatSnapshot = playerSnapshot.Child("stats").Child(statType);
 
             if (!playerStatSnapshot.Exists)
             {
                 Debug.LogError($"{statType} not found for player {playerID}.");
-                return;
+                continue;
             }
 
             if (!int.TryParse(playerStatSnapshot.Value.ToString(), out int currentStat))
             {
                 Debug.LogError($"Invalid {statType} value for player {playerID}. Value: {playerStatSnapshot.Value}");
-                return;
-            }
-
-            int updatedStat = currentStat + value;
-
-            updatedStat = Mathf.Max(updatedStat, 0);
-
-            if (await cardUtilities.CheckIfProtected(playerID, value))
-            {
                 continue;
             }
 
-            if (await cardUtilities.CheckIfProtectedOneCard(playerID, value))
-            {
+            if (await IsPlayerProtected(playerID, value))
                 continue;
-            }
+
+            int updatedStat = Mathf.Max(currentStat + value, 0);
 
             await dbRefAllPlayersStats
                 .Child(playerID)
@@ -978,11 +890,19 @@ public class AddRemoveCardImp : MonoBehaviour
         }
     }
 
+    private async Task<bool> IsPlayerProtected(string playerID, int value)
+    {
+        bool isProtected = await cardUtilities.CheckIfProtected(playerID, value);
+        bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerID, value);
+
+        return isProtected || isOneCardProtected;
+    }
+
     private async Task<int> CountMinSupport(string playerId, int value)
     {
         if (string.IsNullOrEmpty(playerId))
         {
-            Debug.LogError($"Player ID is null or empty. ID: {playerId}");
+            Debug.LogError("Player ID is null or empty.");
             return -1;
         }
 
@@ -998,23 +918,22 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             var snapshot = await dbRefSupport.GetValueAsync();
 
-            if (!snapshot.Exists)
+            if (!snapshot.Exists || snapshot.Value == null)
             {
-                Debug.LogError($"No player data found in the database for player ID: {playerId}");
-                return -1;
+                Debug.LogError($"No support data found for player ID: {playerId}");
+                return 0;
             }
 
             int validRegions = snapshot.Children
-                .Where(supportChildSnapshot =>
-                    int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue) &&
-                    currentSupportValue >= value)
-                .Count();
+                .Count(supportChildSnapshot =>
+                    int.TryParse(supportChildSnapshot.Value?.ToString(), out int currentSupportValue) &&
+                    currentSupportValue >= value);
 
             return validRegions;
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Error occurred while retrieving data for player {playerId}: {ex.Message}");
+            Debug.LogError($"An error occurred while counting support for player {playerId}: {ex.Message}");
             return -1;
         }
     }
@@ -1023,7 +942,7 @@ public class AddRemoveCardImp : MonoBehaviour
     {
         if (string.IsNullOrEmpty(playerId))
         {
-            Debug.LogError($"Player ID is null or empty. ID: {playerId}");
+            Debug.LogError("Player ID is null or empty.");
             return null;
         }
 
@@ -1036,202 +955,229 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             var snapshot = await dbRefSupport.GetValueAsync();
 
-            if (!snapshot.Exists)
+            if (!snapshot.Exists || snapshot.Value == null)
             {
-                Debug.LogError($"No player data found in the database for player ID: {playerId}");
+                Debug.LogError($"No player data found for lobby: {lobbyId}");
                 return null;
             }
 
-            List<int> regionsWithHighestSupport = new();
-
-            Dictionary<int, int> highestSupportInRegion = new();
-
-            Dictionary<int, string> regionWithMaxSupport = new();
+            var highestSupportInRegion = new Dictionary<int, int>();
+            var regionWithMaxSupport = new Dictionary<int, string>();
 
             foreach (var playerSnapshot in snapshot.Children)
             {
-                string currentPlayerId = playerSnapshot.Key;
-
                 var supportSnapshot = playerSnapshot.Child("stats").Child("support");
 
                 if (!supportSnapshot.Exists)
                 {
-                    Debug.LogError($"No support data found for player {currentPlayerId}");
-                    return null;
+                    Debug.LogError($"No support data found for player {playerSnapshot.Key}");
+                    continue;
                 }
 
                 foreach (var supportChildSnapshot in supportSnapshot.Children)
                 {
-                    int areaId = Convert.ToInt32(supportChildSnapshot.Key);
-                    if (int.TryParse(supportChildSnapshot.Value.ToString(), out int supportValue))
+                    if (int.TryParse(supportChildSnapshot.Key, out int areaId) &&
+                        int.TryParse(supportChildSnapshot.Value?.ToString(), out int supportValue))
                     {
                         if (!highestSupportInRegion.ContainsKey(areaId) || supportValue > highestSupportInRegion[areaId])
                         {
                             highestSupportInRegion[areaId] = supportValue;
-                            regionWithMaxSupport[areaId] = currentPlayerId;
+                            regionWithMaxSupport[areaId] = playerSnapshot.Key;
                         }
                     }
                     else
                     {
-                        Debug.LogError($"Invalid support value for player {currentPlayerId} in region {areaId}. Value: {supportChildSnapshot.Value}");
-                        return null;
+                        Debug.LogError($"Invalid data for player {playerSnapshot.Key} in region {supportChildSnapshot.Key}.");
                     }
                 }
             }
 
-            foreach (var region in regionWithMaxSupport)
-            {
-                if (region.Value == playerId)
-                {
-                    regionsWithHighestSupport.Add(region.Key);
-                }
-            }
+            var regionsWithHighestSupport = regionWithMaxSupport
+                .Where(region => region.Value == playerId)
+                .Select(region => region.Key)
+                .ToList();
 
             return regionsWithHighestSupport;
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Error occurred while retrieving data for player {playerId}: {ex.Message}");
+            Debug.LogError($"Error occurred while processing data for player {playerId}: {ex.Message}");
             return null;
         }
     }
 
     private async Task<string> HighestSupportInArea(int chosenRegion)
     {
+        if (chosenRegion < 0)
+        {
+            Debug.LogError("Chosen region ID must be a positive integer.");
+            return null;
+        }
+
         DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
 
-        var snapshot = await dbRefSupport.GetValueAsync();
-
-        if (!snapshot.Exists)
+        try
         {
-            Debug.LogError("No data found for players in the session.");
-            return null;
-        }
+            var snapshot = await dbRefSupport.GetValueAsync();
 
-        Dictionary<string, int> playerSupport = new();
-        int maxSupportValue = int.MinValue;
-
-        foreach (var playerSnapshot in snapshot.Children)
-        {
-            string playerId = playerSnapshot.Key;
-            var playerSupportSnapshot = playerSnapshot.Child("stats").Child("support").Child(chosenRegion.ToString());
-
-            if (playerSupportSnapshot.Exists)
+            if (!snapshot.Exists || snapshot.Value == null)
             {
-                if (int.TryParse(playerSupportSnapshot.Value.ToString(), out int supportValue))
+                Debug.LogError("No data found for players in the session.");
+                return null;
+            }
+
+            var playersWithMaxSupport = new List<string>();
+            int maxSupportValue = int.MinValue;
+
+            foreach (var playerSnapshot in snapshot.Children)
+            {
+                string playerId = playerSnapshot.Key;
+                var supportSnapshot = playerSnapshot.Child("stats").Child("support").Child(chosenRegion.ToString());
+
+                if (supportSnapshot.Exists && int.TryParse(supportSnapshot.Value?.ToString(), out int supportValue))
                 {
                     if (supportValue > maxSupportValue)
                     {
                         maxSupportValue = supportValue;
-                        playerSupport.Clear();
-                        playerSupport.Add(playerId, supportValue);
+                        playersWithMaxSupport.Clear();
+                        playersWithMaxSupport.Add(playerId);
                     }
                     else if (supportValue == maxSupportValue)
                     {
-                        playerSupport.Add(playerId, supportValue);
+                        playersWithMaxSupport.Add(playerId);
                     }
                 }
-                else
+                else if (supportSnapshot.Exists)
                 {
-                    Debug.LogError($"Invalid support value for player {playerId} in region {chosenRegion}. Value: {playerSupportSnapshot.Value}");
-                    return null;
+                    Debug.LogError($"Invalid support value for player {playerId} in region {chosenRegion}. Value: {supportSnapshot.Value}");
                 }
             }
-        }
 
-        if (playerSupport.Count > 1)
+            if (playersWithMaxSupport.Count == 0)
+            {
+                Debug.Log($"No players have support in region {chosenRegion}.");
+                return null;
+            }
+
+            if (playersWithMaxSupport.Count == 1)
+            {
+                return playersWithMaxSupport.First();
+            }
+
+            var random = new System.Random();
+            int randomIndex = random.Next(playersWithMaxSupport.Count);
+            return playersWithMaxSupport[randomIndex];
+        }
+        catch (Exception ex)
         {
-            System.Random rand = new();
-            int randomIndex = rand.Next(playerSupport.Count);
-            return playerSupport.Keys.ToArray()[randomIndex];
+            Debug.LogError($"An error occurred while retrieving the highest support in region {chosenRegion}: {ex.Message}");
+            return null;
         }
-
-        return playerSupport.Keys.FirstOrDefault();
     }
 
     private async Task<string> LowestSupportInArea(int chosenRegion)
     {
+        if (chosenRegion < 0)
+        {
+            Debug.LogError("Chosen region ID must be a positive integer.");
+            return null;
+        }
+
         DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
 
-        var snapshot = await dbRefSupport.GetValueAsync();
-
-        if (!snapshot.Exists)
+        try
         {
-            Debug.LogError("No data found for players in the session.");
-            return null;
-        }
+            var snapshot = await dbRefSupport.GetValueAsync();
 
-        Dictionary<string, int> playerSupport = new();
-        int minSupportValue = int.MaxValue;
-
-        foreach (var playerSnapshot in snapshot.Children)
-        {
-            string playerId = playerSnapshot.Key;
-            var playerSupportSnapshot = playerSnapshot.Child("stats").Child("support").Child(chosenRegion.ToString());
-
-            if (playerSupportSnapshot.Exists)
+            if (!snapshot.Exists || snapshot.Value == null)
             {
-                if (int.TryParse(playerSupportSnapshot.Value.ToString(), out int supportValue))
+                Debug.LogError("No data found for players in the session.");
+                return null;
+            }
+
+            var playersWithMinSupport = new List<string>();
+            int minSupportValue = int.MaxValue;
+
+            foreach (var playerSnapshot in snapshot.Children)
+            {
+                string playerId = playerSnapshot.Key;
+                var supportSnapshot = playerSnapshot.Child("stats").Child("support").Child(chosenRegion.ToString());
+
+                if (supportSnapshot.Exists && int.TryParse(supportSnapshot.Value?.ToString(), out int supportValue))
                 {
                     if (supportValue > 0)
                     {
                         if (supportValue < minSupportValue)
                         {
                             minSupportValue = supportValue;
-                            playerSupport.Clear();
-                            playerSupport.Add(playerId, supportValue);
+                            playersWithMinSupport.Clear();
+                            playersWithMinSupport.Add(playerId);
                         }
                         else if (supportValue == minSupportValue)
                         {
-                            playerSupport.Add(playerId, supportValue);
+                            playersWithMinSupport.Add(playerId);
                         }
                     }
                 }
-                else
+                else if (supportSnapshot.Exists)
                 {
-                    Debug.LogError($"Invalid support value for player {playerId} in region {chosenRegion}. Value: {playerSupportSnapshot.Value}");
-                    return null;
+                    Debug.LogError($"Invalid support value for player {playerId} in region {chosenRegion}. Value: {supportSnapshot.Value}");
                 }
             }
-        }
 
-        if (playerSupport.Count == 0)
+            if (playersWithMinSupport.Count == 0)
+            {
+                Debug.LogWarning($"No players with non-zero support found in region {chosenRegion}.");
+                return null;
+            }
+
+            if (playersWithMinSupport.Count == 1)
+            {
+                return playersWithMinSupport.First();
+            }
+
+            var random = new System.Random();
+            int randomIndex = random.Next(playersWithMinSupport.Count);
+            return playersWithMinSupport[randomIndex];
+        }
+        catch (Exception ex)
         {
-            Debug.LogWarning($"No players with non-zero support found in region {chosenRegion}.");
+            Debug.LogError($"An error occurred while retrieving the lowest support in region {chosenRegion}: {ex.Message}");
             return null;
         }
-
-        if (playerSupport.Count > 1)
-        {
-            System.Random rand = new();
-            int randomIndex = rand.Next(playerSupport.Count);
-            return playerSupport.Keys.ToArray()[randomIndex];
-        }
-
-        return playerSupport.Keys.FirstOrDefault();
     }
 
     private async Task ProtectRegions()
     {
-        DatabaseReference dbRefTurn = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
-
-        DataSnapshot turnSnapshot = await dbRefTurn.GetValueAsync();
-
-        if (turnSnapshot.Exists)
+        try
         {
-            int turnsTaken = Convert.ToInt32(turnSnapshot.Value);
+            DatabaseReference dbRefTurn = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(lobbyId)
+                .Child("players")
+                .Child(playerId)
+                .Child("stats")
+                .Child("turnsTaken");
+
+            var turnSnapshot = await dbRefTurn.GetValueAsync();
+
+            if (!turnSnapshot.Exists || turnSnapshot.Value == null)
+            {
+                Debug.LogError("Failed to retrieve the number of turns taken for the player.");
+                return;
+            }
+
+            if (!int.TryParse(turnSnapshot.Value.ToString(), out int turnsTaken))
+            {
+                Debug.LogError($"Invalid turn value for player {playerId}. Value: {turnSnapshot.Value}");
+                return;
+            }
 
             DatabaseReference dbRefProtected = FirebaseInitializer.DatabaseReference
                 .Child("sessions")
@@ -1242,11 +1188,10 @@ public class AddRemoveCardImp : MonoBehaviour
                 .Child("allRegions");
 
             await dbRefProtected.SetValueAsync(turnsTaken);
-
         }
-        else
+        catch (Exception ex)
         {
-            Debug.LogError("Nie uda³o siê pobraæ liczby tur dla gracza.");
+            Debug.LogError($"An error occurred in ProtectRegions: {ex.Message}");
         }
     }
 
@@ -1360,79 +1305,98 @@ public class AddRemoveCardImp : MonoBehaviour
             return;
         }
 
-        DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats");
-
-        DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
-        if (!playerStatsSnapshot.Exists)
+        try
         {
-            Debug.LogError($"Player stats for {playerId} not found.");
-            return;
-        }
+            DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(lobbyId)
+                .Child("players")
+                .Child(playerId)
+                .Child("stats");
 
-        DataSnapshot turnsTakenSnapshot = playerStatsSnapshot.Child("turnsTaken");
-        if (!turnsTakenSnapshot.Exists)
+            var playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+
+            if (!playerStatsSnapshot.Exists || playerStatsSnapshot.Value == null)
+            {
+                Debug.LogError($"Player stats for {playerId} not found or empty.");
+                return;
+            }
+
+            var turnsTakenSnapshot = playerStatsSnapshot.Child("turnsTaken");
+
+            if (!turnsTakenSnapshot.Exists || turnsTakenSnapshot.Value == null)
+            {
+                Debug.LogError("TurnsTaken stat not found for the player.");
+                return;
+            }
+
+            if (!int.TryParse(turnsTakenSnapshot.Value.ToString(), out int turnsTaken))
+            {
+                Debug.LogError($"Invalid TurnsTaken value for player {playerId}. Value: {turnsTakenSnapshot.Value}");
+                return;
+            }
+
+            DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(lobbyId)
+                .Child("players")
+                .Child(enemyId)
+                .Child("twoCards");
+
+            var twoCardsData = new Dictionary<string, object>
         {
-            Debug.LogError("TurnsTaken stat not found for playerId.");
-            return;
+            { "turnsTaken", turnsTaken },
+            { "played", 0 },
+            { "playerId", playerId }
+        };
+
+            await dbRefEnemy.SetValueAsync(twoCardsData);
         }
-
-        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
-
-        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(enemyId)
-            .Child("twoCards");
-
-        var twoCardsData = new Dictionary<string, object>
-    {
-        { "turnsTaken", turnsTaken },
-        { "played", 0 },
-        { "playerId", playerId }
-
-    };
-
-        await dbRefEnemy.SetValueAsync(twoCardsData);
-
+        catch (Exception ex)
+        {
+            Debug.LogError($"An error occurred in MoreThan2Cards: {ex.Message}");
+        }
     }
 
     private async Task BonusBudget()
     {
-
-        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId);
-
-        DatabaseReference dbRefBudgetBonus = dbRefPlayer.Child("bonusBudget");
-
-        DatabaseReference dbRefTurnsTaken = dbRefPlayer
-            .Child("stats")
-            .Child("turnsTaken");
-
-        DataSnapshot turnsTakenSnapshot = await dbRefTurnsTaken.GetValueAsync();
-
-        if (!turnsTakenSnapshot.Exists)
+        try
         {
-            Debug.LogError($"Field 'turnsTaken' does not exist for player {playerId}. Cannot block card.");
-            return;
-        }
+            DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(lobbyId)
+                .Child("players")
+                .Child(playerId);
 
-        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+            DatabaseReference dbRefTurnsTaken = dbRefPlayer
+                .Child("stats")
+                .Child("turnsTaken");
 
-        var bonusBudgetData = new Dictionary<string, object>
+            var turnsTakenSnapshot = await dbRefTurnsTaken.GetValueAsync();
+
+            if (!turnsTakenSnapshot.Exists || turnsTakenSnapshot.Value == null)
             {
-                { "turnsTaken", turnsTaken }
-            };
+                Debug.LogError($"Field 'turnsTaken' does not exist or is null for player {playerId}. Cannot set bonus budget.");
+                return;
+            }
 
-        await dbRefBudgetBonus.SetValueAsync(bonusBudgetData);
+            if (!int.TryParse(turnsTakenSnapshot.Value.ToString(), out int turnsTaken))
+            {
+                Debug.LogError($"Invalid 'turnsTaken' value for player {playerId}: {turnsTakenSnapshot.Value}");
+                return;
+            }
+
+            var bonusBudgetData = new Dictionary<string, object>
+        {
+            { "turnsTaken", turnsTaken }
+        };
+
+            await dbRefPlayer.Child("bonusBudget").SetValueAsync(bonusBudgetData);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"An error occurred in BonusBudget: {ex.Message}");
+        }
     }
 
     private async Task IgnoreCost()
@@ -1443,25 +1407,37 @@ public class AddRemoveCardImp : MonoBehaviour
             return;
         }
 
-        string lobbyId = DataTransfer.LobbyId;
-
-        var dbRefPlayer = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId);
-
-        var statsSnapshot = await dbRefPlayer.Child("stats").GetValueAsync();
-        if (!statsSnapshot.Exists || !statsSnapshot.Child("turnsTaken").Exists)
+        try
         {
-            Debug.LogError($"Stats or turnsTaken for player {playerId} not found.");
-            return;
+            DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(DataTransfer.LobbyId)
+                .Child("players")
+                .Child(playerId);
+
+            var turnsTakenSnapshot = await dbRefPlayer
+                .Child("stats")
+                .Child("turnsTaken")
+                .GetValueAsync();
+
+            if (!turnsTakenSnapshot.Exists || turnsTakenSnapshot.Value == null)
+            {
+                Debug.LogError($"Field 'turnsTaken' for player {playerId} not found or is null.");
+                return;
+            }
+
+            if (!int.TryParse(turnsTakenSnapshot.Value.ToString(), out int turnsTaken))
+            {
+                Debug.LogError($"Invalid 'turnsTaken' value for player {playerId}: {turnsTakenSnapshot.Value}");
+                return;
+            }
+
+            await dbRefPlayer.Child("ignoreCost").SetValueAsync(turnsTaken);
         }
-
-        int turnsTaken = Convert.ToInt32(statsSnapshot.Child("turnsTaken").Value);
-
-        await dbRefPlayer.Child("ignoreCost").SetValueAsync(turnsTaken);
-
+        catch (Exception ex)
+        {
+            Debug.LogError($"An error occurred in IgnoreCost: {ex.Message}");
+        }
     }
 
 

@@ -251,20 +251,23 @@ public class AsMuchAsCardImp : MonoBehaviour
          tmp = await cardUtilities.CheckCardLimit(playerId);
     }
 
-    private async Task<DatabaseReference> IncomeAction(bool isBonusRegion, Dictionary<int, OptionDataPerCard> incomeOptionsDictionary,
-        Dictionary<int, OptionDataPerCard> incomeBonusOptionsDictionary, int playerIncome, string cardType,
-        DatabaseReference dbRefPlayerStats)
+    private async Task<DatabaseReference> IncomeAction(
+    bool isBonusRegion,
+    Dictionary<int, OptionDataPerCard> incomeOptionsDictionary,
+    Dictionary<int, OptionDataPerCard> incomeBonusOptionsDictionary,
+    int playerIncome,
+    string cardType,
+    DatabaseReference dbRefPlayerStats)
     {
-        var isBonus = isBonusRegion;
-        var optionsToApply = isBonus ? incomeBonusOptionsDictionary : incomeOptionsDictionary;
+        var optionsToApply = isBonusRegion ? incomeBonusOptionsDictionary : incomeOptionsDictionary;
 
-        if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
+        if (optionsToApply == null || !optionsToApply.Any())
         {
             Debug.LogError("No options to apply.");
             return dbRefPlayerStats;
         }
 
-        if (isBonus)
+        if (isBonusRegion)
         {
             Debug.Log("Bonus region detected.");
         }
@@ -277,19 +280,17 @@ public class AsMuchAsCardImp : MonoBehaviour
                 continue;
             }
 
-            if (data.Target == "player")
+            if (data.Target == "player" && !(await cardUtilities.CheckIncomeBlock(playerId)))
             {
-                if (!(await cardUtilities.CheckIncomeBlock(playerId)))
-                {
-                    int howMany = await CalculateValueFromHand(playerId, cardType);
-                    playerIncome += howMany * data.NumberPerCard;
-                    await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
-                }
+                int howMany = await CalculateValueFromHand(playerId, cardType);
+                playerIncome += howMany * data.NumberPerCard;
+                await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
             }
         }
 
         return dbRefPlayerStats;
     }
+
     private async Task<(DatabaseReference dbRefPlayerStats,bool isBonusRegion,int playerBudget)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
         Dictionary<int, OptionData> budgetOptionsDictionary,Dictionary<int, OptionData> budgetBonusOptionsDictionary,Dictionary<int, OptionDataPerCard> budgetOptionsPerCardDictionary,
         Dictionary<int, OptionDataPerCard> budgetBonusOptionsPerCardDictionary,int playerBudget, string enemyId, string cardType)
@@ -386,11 +387,15 @@ public class AsMuchAsCardImp : MonoBehaviour
         }
         return (dbRefPlayerStats, isBonusRegion, playerBudget);
     }
-    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, Dictionary<int, OptionDataPerCard> supportOptionsDictionary,Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary,
-        int chosenRegion, string cardType)
+    private async Task<bool> SupportAction(
+    string cardId,
+    bool isBonusRegion,
+    Dictionary<int, OptionDataPerCard> supportOptionsDictionary,
+    Dictionary<int, OptionDataPerCard> supportBonusOptionsDictionary,
+    int chosenRegion,
+    string cardType)
     {
-        var isBonus = isBonusRegion;
-        var optionsToApply = isBonus ? supportBonusOptionsDictionary : supportOptionsDictionary;
+        var optionsToApply = isBonusRegion ? supportBonusOptionsDictionary : supportOptionsDictionary;
 
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
@@ -398,12 +403,12 @@ public class AsMuchAsCardImp : MonoBehaviour
             return false;
         }
 
-        if (isBonus)
+        if (isBonusRegion)
         {
             Debug.Log("Bonus region detected.");
         }
 
-        foreach(var data in optionsToApply.Values )
+        foreach (var data in optionsToApply.Values)
         {
             if (data == null)
             {
@@ -411,18 +416,21 @@ public class AsMuchAsCardImp : MonoBehaviour
                 continue;
             }
 
-            if(data.Target == "player-region")
+            if (data.Target == "player-region")
             {
                 if (chosenRegion < 0)
                 {
                     chosenRegion = await mapManager.SelectArea();
                 }
+
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+
                 int supportValue = await CalculateValueFromHand(playerId, cardType);
-                Debug.Log($"Poparcie zwiêksza siê o {supportValue}");
+
                 await cardUtilities.ChangeSupport(playerId, supportValue, chosenRegion, cardId, mapManager);
             }
         }
+
         return isBonusRegion;
     }
 
@@ -437,21 +445,38 @@ public class AsMuchAsCardImp : MonoBehaviour
 
                 if (numberPerCardSnapshot.Exists && targetSnapshot.Exists)
                 {
-                    int numberPerCard = Convert.ToInt32(numberPerCardSnapshot.Value);
-                    string target = targetSnapshot.Value.ToString();
-
-                    int optionKey = Convert.ToInt32(optionSnapshot.Key.Replace("option", ""));
-
-                    // Dodajemy dane do s³ownika opcji
-                    optionsDictionary.Add(optionKey, new OptionDataPerCard(numberPerCard, target));
+                    if (int.TryParse(numberPerCardSnapshot.Value.ToString(), out int numberPerCard) &&
+                        targetSnapshot.Value is string target)
+                    {
+                        if (int.TryParse(optionSnapshot.Key.Replace("option", ""), out int optionKey))
+                        {
+                            if (!optionsDictionary.ContainsKey(optionKey))
+                            {
+                                optionsDictionary.Add(optionKey, new OptionDataPerCard(numberPerCard, target));
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"{optionType} option with key {optionKey} already exists in the dictionary.");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError($"Invalid option key format for {optionType}: {optionSnapshot.Key}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError($"Failed to parse 'numberPerCard' or 'target' for {optionType} option: {optionSnapshot.Key}");
+                    }
                 }
                 else
                 {
-                    Debug.LogError($"{optionType} option is missing 'numberPerCard' or 'target'.");
+                    Debug.LogError($"{optionType} option is missing 'numberPerCard' or 'target' for {optionSnapshot.Key}.");
                 }
             }
         }
     }
+
 
     private void ProcessBonusOptionsPerCard(DataSnapshot snapshot, Dictionary<int, OptionDataPerCard> bonusOptionsDictionary, string optionType)
     {
@@ -467,11 +492,22 @@ public class AsMuchAsCardImp : MonoBehaviour
 
                 if (numberPerCardSnapshot.Exists && targetSnapshot.Exists)
                 {
-                    int numberPerCard = Convert.ToInt32(numberPerCardSnapshot.Value);
-                    string target = targetSnapshot.Value.ToString();
-
-                    // Dodajemy dane do s³ownika bonusów
-                    bonusOptionsDictionary.Add(optionIndex, new OptionDataPerCard(numberPerCard, target));
+                    if (int.TryParse(numberPerCardSnapshot.Value.ToString(), out int numberPerCard) &&
+                        targetSnapshot.Value is string target)
+                    {
+                        if (!bonusOptionsDictionary.ContainsKey(optionIndex))
+                        {
+                            bonusOptionsDictionary.Add(optionIndex, new OptionDataPerCard(numberPerCard, target));
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"{optionType} bonus option {optionIndex} already exists in the dictionary.");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError($"Failed to parse 'numberPerCard' or 'target' for {optionType} bonus option {optionIndex}.");
+                    }
                 }
                 else
                 {
@@ -482,6 +518,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             }
         }
     }
+
 
     private async Task<int> CalculateValueFromHand(string playerId, string cardType)
     {
@@ -508,16 +545,23 @@ public class AsMuchAsCardImp : MonoBehaviour
             var playedSnapshot = cardSnapshot.Child("played");
             var cardIdSnapshot = cardSnapshot.Child("cardId");
 
-            if (bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && onHand &&
-                bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
+            if (onHandSnapshot.Exists && playedSnapshot.Exists && cardIdSnapshot.Exists)
             {
-                string cardId = cardIdSnapshot.Value.ToString();
-                string type = await GetCardType(cardId);
-
-                if (type == cardType)
+                if (bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && onHand &&
+                    bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
                 {
-                    cardCount++;
+                    string cardId = cardIdSnapshot.Value.ToString();
+                    string type = await GetCardType(cardId);
+
+                    if (type == cardType)
+                    {
+                        cardCount++;
+                    }
                 }
+            }
+            else
+            {
+                Debug.LogWarning($"Missing data in card snapshot for player {playerId}, card: {cardSnapshot.Key}");
             }
         }
 
@@ -536,13 +580,22 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         if (!snapshot.Exists)
         {
-            Debug.LogError($"Nie znaleziono karty o cardId: {cardId}");
+            Debug.LogError($"Card with cardId: {cardId} not found.");
             return null;
         }
 
-        string cardType = snapshot.Child("type").Value.ToString();
-        return cardType;
+        var typeSnapshot = snapshot.Child("type");
+        if (typeSnapshot.Exists)
+        {
+            return typeSnapshot.Value.ToString();
+        }
+        else
+        {
+            Debug.LogWarning($"Type not found for cardId: {cardId}");
+            return null;
+        }
     }
+
 
 }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class CardCardImp : MonoBehaviour
@@ -18,6 +19,8 @@ public class CardCardImp : MonoBehaviour
     public CardSelectionUI cardSelectionUI;
     public CardTypeManager cardTypeManager;
     public TurnController turnController;
+
+    private System.Random random = new System.Random();
 
     void Start()
     {
@@ -206,8 +209,9 @@ public class CardCardImp : MonoBehaviour
         await cardUtilities.CheckIfPlayed2Cards(playerId);
         tmp = await cardUtilities.CheckCardLimit(playerId);
     }
-   
-    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion,string cardType,Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
+
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType,
+    Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
         if (cardId == "CA085")
         {
@@ -215,10 +219,9 @@ public class CardCardImp : MonoBehaviour
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
 
-        var isBonus = isBonusRegion;
-        var optionsToApply = isBonus ? supportBonusOptionsDictionary : supportOptionsDictionary;
+        var optionsToApply = isBonusRegion ? supportBonusOptionsDictionary : supportOptionsDictionary;
 
-        if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
+        if (optionsToApply?.Values?.Any() != true)
         {
             Debug.LogError("No support options available.");
             return false;
@@ -237,7 +240,8 @@ public class CardCardImp : MonoBehaviour
             }
         }
         return isBonusRegion;
-     }
+    }
+
 
     private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> CardsAction(string instanceId,DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
         Dictionary<int, OptionDataCard> cardsOptionsDictionary,Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary,string enemyId, int playerBudget,string source,string target,
@@ -541,36 +545,24 @@ public class CardCardImp : MonoBehaviour
             return -1;
         }
 
-        List<KeyValuePair<string, string>> availableCards = new();
+        List<KeyValuePair<string, string>> availableCards = snapshot.Children
+            .Where(cardSnapshot =>
+                bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool onHand) && !onHand &&
+                bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool played) && !played &&
+                !string.IsNullOrEmpty(cardSnapshot.Child("cardId").Value?.ToString()))
+            .Select(cardSnapshot => new KeyValuePair<string, string>(cardSnapshot.Key, cardSnapshot.Child("cardId").Value.ToString()))
+            .ToList();
 
-        foreach (var cardSnapshot in snapshot.Children)
-        {
-            if (cardSnapshot.Child("onHand").Exists &&
-                bool.TryParse(cardSnapshot.Child("onHand").Value.ToString(), out bool onHand) && !onHand &&
-                cardSnapshot.Child("played").Exists &&
-                bool.TryParse(cardSnapshot.Child("played").Value.ToString(), out bool played) && !played)
-            {
-                string instanceId = cardSnapshot.Key;
-                string cardId = cardSnapshot.Child("cardId").Value?.ToString();
-                if (!string.IsNullOrEmpty(cardId))
-                {
-                    availableCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
-                }
-            }
-        }
-
-        if (availableCards.Count == 0)
+        if (!availableCards.Any())
         {
             Debug.LogWarning("No available cards to draw.");
             return -1;
         }
 
-        System.Random random = new();
         int randomIndex = random.Next(availableCards.Count);
         var selectedCard = availableCards[randomIndex];
-        string selectedCardId = selectedCard.Value;
 
-        string cardLetters = selectedCardId.Substring(0, 2);
+        string cardLetters = selectedCard.Value.Substring(0, 2);
         string type = cardLetters switch
         {
             "AD" => "addRemove",
@@ -584,7 +576,7 @@ public class CardCardImp : MonoBehaviour
 
         if (type == "unknown")
         {
-            Debug.LogError($"Unknown card type for card ID: {selectedCardId}");
+            Debug.LogError($"Unknown card type for card ID: {selectedCard.Value}");
             return -1;
         }
 
@@ -592,30 +584,21 @@ public class CardCardImp : MonoBehaviour
             .Child("cards")
             .Child("id")
             .Child(type)
-            .Child(selectedCardId)
+            .Child(selectedCard.Value)
             .Child("cost");
 
         var costSnapshot = await dbRefCard.GetValueAsync();
-        if (!costSnapshot.Exists)
+        if (!costSnapshot.Exists || !int.TryParse(costSnapshot.Value.ToString(), out int cardCost))
         {
-            Debug.LogError($"Cost for card {selectedCardId} not found.");
+            Debug.LogError($"Failed to retrieve or parse cost for card {selectedCard.Value}.");
             return -1;
         }
 
-        if (int.TryParse(costSnapshot.Value.ToString(), out int cardCost))
-        {
-            return cardCost;
-        }
-        else
-        {
-            Debug.LogError($"Failed to parse cost for card {selectedCardId}.");
-            return -1;
-        }
+        return cardCost;
     }
 
     private async Task<string> RandomEnemy()
     {
-
         if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(playerId))
         {
             Debug.LogError("Lobby ID or Player ID is null or empty.");
@@ -634,42 +617,28 @@ public class CardCardImp : MonoBehaviour
             return null;
         }
 
-        List<string> enemyIds = new();
-        foreach (var playerSnapshot in playersSnapshot.Children)
-        {
-            string id = playerSnapshot.Key;
-            if (id != playerId)
-            {
-                enemyIds.Add(id);
-            }
-        }
+        var enemyIds = playersSnapshot.Children
+            .Where(playerSnapshot => playerSnapshot.Key != playerId)
+            .Select(playerSnapshot => playerSnapshot.Key)
+            .ToList();
 
-        if (enemyIds.Count == 0)
+        if (!enemyIds.Any())
         {
             Debug.LogWarning("No enemies available in the session.");
             return null;
         }
 
-        System.Random random = new();
         int randomIndex = random.Next(enemyIds.Count);
         string randomEnemyId = enemyIds[randomIndex];
-
         Debug.Log($"Random enemy selected: {randomEnemyId}");
         return randomEnemyId;
     }
 
     private async Task<string> RandomCardFromDeck(string playerId)
     {
-        if (string.IsNullOrEmpty(playerId))
+        if (string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(lobbyId))
         {
-            Debug.LogError("Invalid player ID.");
-            return null;
-        }
-
-        string lobbyId = DataTransfer.LobbyId;
-        if (string.IsNullOrEmpty(lobbyId))
-        {
-            Debug.LogError("Lobby ID is null or empty.");
+            Debug.LogError("Invalid player ID or Lobby ID.");
             return null;
         }
 
@@ -687,38 +656,28 @@ public class CardCardImp : MonoBehaviour
             return null;
         }
 
-        List<string> eligibleCards = new();
+        var eligibleCards = playerDeckSnapshot.Children
+            .Where(cardSnapshot =>
+                bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && !isOnHand &&
+                bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && !isPlayed)
+            .Select(cardSnapshot => cardSnapshot.Key)
+            .ToList();
 
-        foreach (var cardSnapshot in playerDeckSnapshot.Children)
-        {
-            string instanceId = cardSnapshot.Key;
-            bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && !isOnHand;
-            bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && !isPlayed;
-
-            if (onHand && played)
-            {
-                eligibleCards.Add(instanceId);
-            }
-        }
-
-        if (eligibleCards.Count == 0)
+        if (!eligibleCards.Any())
         {
             Debug.LogWarning("No eligible cards found in deck.");
             return null;
         }
 
-        System.Random random = new();
         int randomIndex = random.Next(eligibleCards.Count);
-
-        string selectedCardId = eligibleCards[randomIndex];
-
-        return selectedCardId;
+        return eligibleCards[randomIndex];
     }
 
     private async Task AddCardToDeck(string instanceId, string enemyId)
     {
-        string lobbyId = DataTransfer.LobbyId;
+        if (string.IsNullOrEmpty(instanceId) || string.IsNullOrEmpty(enemyId)) return;
 
+        string lobbyId = DataTransfer.LobbyId;
         DatabaseReference enemyCardRef = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
@@ -743,15 +702,11 @@ public class CardCardImp : MonoBehaviour
             .Child(instanceId);
 
         await playerDeckRef.SetValueAsync(enemyCardSnapshot.Value);
-
         await playerDeckRef.Child("played").SetValueAsync(false);
-
     }
 
     public async Task<bool> CheckIfAnyEnemyProtected()
     {
-        string lobbyId = DataTransfer.LobbyId;
-
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
@@ -764,7 +719,6 @@ public class CardCardImp : MonoBehaviour
             .Child("players");
 
         var snapshot = await playersRef.GetValueAsync();
-
         if (!snapshot.Exists)
         {
             Debug.LogError($"No players found in lobby {lobbyId}.");
@@ -774,21 +728,19 @@ public class CardCardImp : MonoBehaviour
         foreach (var playerSnapshot in snapshot.Children)
         {
             string enemyId = playerSnapshot.Key;
+            if (enemyId == playerId) continue;
 
-            if (enemyId == playerId)
-            {
-                continue;
-            }
-
-            if (await cardUtilities.CheckIfProtected(enemyId, -1))
+            bool isProtected = await cardUtilities.CheckIfProtected(enemyId, -1);
+            if (isProtected)
             {
                 Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
                 return true;
             }
 
-            if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+            bool isProtectedOneCard = await cardUtilities.CheckIfProtectedOneCard(enemyId, -1);
+            if (isProtectedOneCard)
             {
-                Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
+                Debug.Log($"Enemy {enemyId} is protected by one card. Action cannot proceed.");
                 return true;
             }
         }

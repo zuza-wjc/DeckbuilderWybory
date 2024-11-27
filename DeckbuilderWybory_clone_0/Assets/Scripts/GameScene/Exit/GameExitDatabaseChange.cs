@@ -36,26 +36,8 @@ public class GameExitDatabaseChange : MonoBehaviour
     {
         // Aktualizacja wartoœci "inGame" w bazie danych
         dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
-        SetAllPlayersInGameToFalse();
-        // wyjscie do main menu dla gracza ktory kliknal guzik
-        //SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
-    }
 
-    void SetAllPlayersInGameToFalse()
-    {
-        //zmiana statusu inGame WSZYSTKIM graczom w sesji na false
-        dbRef.GetValueAsync().ContinueWith(task =>
-        {
-            if (task.IsCompleted && !task.IsFaulted)
-            {
-                DataSnapshot snapshot = task.Result;
-                foreach (DataSnapshot playerSnapshot in snapshot.Children)
-                {
-                    string playerKey = playerSnapshot.Key;
-                    dbRef.Child(playerKey).Child("stats").Child("inGame").SetValueAsync(false);
-                }
-            }
-        });
+        SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
     }
 
     void OnDestroy()
