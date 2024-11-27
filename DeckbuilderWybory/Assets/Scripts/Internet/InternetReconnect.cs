@@ -59,4 +59,12 @@ public class InternetReconnect : MonoBehaviour
             }
         }
     }
+
+    void OnDestroy()
+    {
+        if (reconnectButton != null)
+        {
+            reconnectButton.onClick.RemoveListener(RetryConnection);
+        }
+    }
 }

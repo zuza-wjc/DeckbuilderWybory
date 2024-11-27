@@ -14,6 +14,7 @@ public class TextController : MonoBehaviour
 
     public Text moneyText;
     public Text supportText;
+    public Text incomeText;
 
     void Start()
     {
@@ -28,16 +29,36 @@ public class TextController : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId);
 
-        // Ustawienie nasluchiwania zmian w stats
+        // Ustawienie nas³uchiwania zmian w stats
         dbRef.Child("stats").Child("money").ValueChanged += FetchFromDbMoney;
         dbRef.Child("stats").Child("support").ValueChanged += FetchFromDbSupport;
+        dbRef.Child("stats").Child("income").ValueChanged += FetchFromDbIncome;
     }
 
     void OnDestroy()
     {
-        // Usun nasluchiwanie
-        dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
-        dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
+        if (dbRef != null)
+        {
+            dbRef.Child("stats").Child("money").ValueChanged -= FetchFromDbMoney;
+            dbRef.Child("stats").Child("support").ValueChanged -= FetchFromDbSupport;
+            dbRef.Child("stats").Child("income").ValueChanged -= FetchFromDbIncome;
+        }
+
+    }
+
+
+    void FetchFromDbIncome(object sender, ValueChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        if (args.Snapshot.Exists)
+        {
+            incomeText.text = "+" + args.Snapshot.Value.ToString() + "k";
+        }
     }
 
     void FetchFromDbMoney(object sender, ValueChangedEventArgs args)
@@ -64,7 +85,23 @@ public class TextController : MonoBehaviour
 
         if (args.Snapshot.Exists)
         {
-            supportText.text = args.Snapshot.Value.ToString() + "%";
+            int sum = 0;
+
+            // Iteruj przez wszystkie dzieci wêz³a "support" i sumuj wartoœci
+            foreach (var child in args.Snapshot.Children)
+            {
+                if (int.TryParse(child.Value.ToString(), out int value))
+                {
+                    sum += value;
+                }
+            }
+
+            // Aktualizuj tekst sumy wsparcia
+            supportText.text = sum + "%";
+        }
+        else
+        {
+            supportText.text = "0%";
         }
     }
 }

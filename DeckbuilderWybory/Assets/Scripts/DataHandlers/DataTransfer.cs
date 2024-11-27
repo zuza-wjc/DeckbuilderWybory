@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
 public static class DataTransfer
 {
@@ -10,4 +7,5 @@ public static class DataTransfer
     public static int IsStarted { get; set; }
     public static string PlayerId { get; set; }
     public static string PlayerName { get; set; }
+    public static bool IsFirstCardInTurn { get; set; }
 }

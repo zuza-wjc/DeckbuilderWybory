@@ -3,24 +3,27 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Firebase.Database;
 using System.Threading.Tasks;
+using System.Linq;
 
 public class CardSelectionUI : MonoBehaviour
 {
-    public GameObject cardCheckboxPrefab;
+    public GameObject cardPrefab;
     public Transform cardListContainer;
     public Button submitButton;
     public GameObject cardSelectionPanel;
-    public Sprite unselectedSprite;
-    public Sprite selectedSprite;
     public ScrollRect cardScrollView;
+    public Text infoText;
 
-    private List<string> selectedCards = new List<string>();
-    private Dictionary<string, bool> cardSelectionStates = new Dictionary<string, bool>();
+    public CardSpriteManager cardSpriteManager;
+
+    private List<KeyValuePair<string, string>> selectedCards = new();
+    private Dictionary<string, bool> cardSelectionStates = new();
     private int numberOfCardsToSelect = 0;
     private string playerId;
     private bool selectionConfirmed = false;
 
-    public async Task<List<string>> ShowCardSelection(string playerId, int numberOfCardsToSelect, string playedCardId, bool fromHand)
+    public async Task<List<KeyValuePair<string, string>>> ShowCardSelection(string playerId, int numberOfCardsToSelect, string playedCardId,bool fromHand,
+        List<KeyValuePair<string, string>> excludedCards = null)
     {
         this.playerId = playerId;
         this.numberOfCardsToSelect = numberOfCardsToSelect;
@@ -32,6 +35,8 @@ public class CardSelectionUI : MonoBehaviour
         cardSelectionPanel.SetActive(true);
         submitButton.gameObject.SetActive(false);
 
+        infoText.text = "WYBIERZ KARTY";
+
         string lobbyId = DataTransfer.LobbyId;
         DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -41,34 +46,38 @@ public class CardSelectionUI : MonoBehaviour
             .Child("deck");
 
         var snapshot = await playerDeckRef.GetValueAsync();
-        if (!snapshot.Exists) return null;
+        if (!snapshot.Exists)
+        {
+            Debug.LogWarning("No deck data found for the player.");
+            return null;
+        }
+
+        bool anyCardAdded = false;
 
         foreach (var cardSnapshot in snapshot.Children)
         {
-            if (playedCardId == cardSnapshot.Key) continue;
+            string instanceId = cardSnapshot.Key;
+
+            if (excludedCards != null && excludedCards.Any(excluded => excluded.Key == instanceId)) continue;
+
+            if (instanceId == playedCardId) continue;
 
             bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
             bool played = cardSnapshot.Child("played").Value as bool? ?? false;
 
             if ((fromHand && onHand && !played) || (!fromHand && !onHand && !played))
             {
-                string cardId = cardSnapshot.Key;
-                string cardType = GetCardType(cardId);
-
-                DatabaseReference cardRef = FirebaseInitializer.DatabaseReference
-                    .Child("cards")
-                    .Child("id")
-                    .Child(cardType)
-                    .Child(cardId)
-                    .Child("name");
-
-                var cardNameSnapshot = await cardRef.GetValueAsync();
-                if (cardNameSnapshot.Exists)
-                {
-                    string cardName = cardNameSnapshot.Value.ToString();
-                    AddCardToUI(cardId, cardName);
-                }
+                string cardId = (string)cardSnapshot.Child("cardId").Value;
+                AddCardToUI(instanceId, cardId);
+                anyCardAdded = true;
             }
+        }
+
+        if (!anyCardAdded)
+        {
+            Debug.LogWarning("No cards available to select.");
+            HideCardSelectionPanel();
+            return null;
         }
 
         submitButton.onClick.RemoveAllListeners();
@@ -80,63 +89,271 @@ public class CardSelectionUI : MonoBehaviour
         }
 
         HideCardSelectionPanel();
-        return new List<string>(selectedCards);
+        return new List<KeyValuePair<string, string>>(selectedCards);
     }
 
-    private string GetCardType(string cardId)
+    public async Task ShowCardsForViewing(string playerId)
     {
-        string cardLetters = cardId.Substring(0, 2);
-        switch (cardLetters)
+        this.playerId = playerId;
+        selectedCards.Clear();
+        cardSelectionStates.Clear();
+        selectionConfirmed = false;
+        ClearUI();
+
+        cardSelectionPanel.SetActive(true);
+        submitButton.gameObject.SetActive(true);
+
+        infoText.text = "KARTY GRACZA";
+
+        submitButton.onClick.RemoveAllListeners();
+        submitButton.onClick.AddListener(ClosePanel);
+
+        string lobbyId = DataTransfer.LobbyId;
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var snapshot = await playerDeckRef.GetValueAsync();
+        if (!snapshot.Exists)
         {
-            case "AD": return "addRemove";
-            case "AS": return "asMuchAs";
-            case "CA": return "cards";
-            case "OP": return "options";
-            case "RA": return "random";
-            case "UN": return "unique";
-            default: return "unknown";
+            Debug.LogWarning("No deck data found for the player.");
+            return;
+        }
+
+        bool anyCardAdded = false;
+
+        foreach (var cardSnapshot in snapshot.Children)
+        {
+            string instanceId = cardSnapshot.Key;
+
+            bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+            bool played = cardSnapshot.Child("played").Value as bool? ?? false;
+
+            if (onHand && !played)
+            {
+                string cardId = (string)cardSnapshot.Child("cardId").Value;
+                AddCardToUIForViewing(instanceId, cardId);
+                anyCardAdded = true;
+            }
+        }
+
+        if (!anyCardAdded)
+        {
+            Debug.LogWarning("No cards available to view.");
+            HideCardSelectionPanel();
+            return;
         }
     }
 
-    private void AddCardToUI(string cardId, string cardName)
+    public async Task ShowDeckCardsForViewing(string playerId)
     {
-        GameObject newButton = Instantiate(cardCheckboxPrefab, cardListContainer);
+        this.playerId = playerId;
+        selectedCards.Clear();
+        cardSelectionStates.Clear();
+        selectionConfirmed = false;
+        ClearUI();
 
-        Button button = newButton.GetComponent<Button>();
-        Image cardImage = newButton.GetComponent<Image>();
-        Text nameText = newButton.GetComponentInChildren<Text>();
+        cardSelectionPanel.SetActive(true);
+        submitButton.gameObject.SetActive(true);
 
-        nameText.text = cardName;
-        cardImage.sprite = unselectedSprite;
-        cardSelectionStates[cardId] = false;
+        infoText.text = "KARTY GRACZA";
 
-        button.onClick.AddListener(() => ToggleCardState(cardId, cardImage));
+        submitButton.onClick.RemoveAllListeners();
+        submitButton.onClick.AddListener(ClosePanel);
+
+        string lobbyId = DataTransfer.LobbyId;
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var snapshot = await playerDeckRef.GetValueAsync();
+        if (!snapshot.Exists)
+        {
+            Debug.LogWarning("No deck data found for the player.");
+            return;
+        }
+
+        bool anyCardAdded = false;
+
+        foreach (var cardSnapshot in snapshot.Children)
+        {
+            string instanceId = cardSnapshot.Key;
+
+            bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+            bool played = cardSnapshot.Child("played").Value as bool? ?? false;
+
+            if (!onHand && !played)
+            {
+                string cardId = (string)cardSnapshot.Child("cardId").Value;
+                AddCardToUIForViewing(instanceId, cardId);
+                anyCardAdded = true;
+            }
+        }
+
+        if (!anyCardAdded)
+        {
+            Debug.LogWarning("No cards available to view.");
+            HideCardSelectionPanel();
+            return;
+        }
     }
 
-    private void ToggleCardState(string cardId, Image cardImage)
+    public async Task<(string keepCard, string destroyCard)> ShowCardSelectionForPlayerAndEnemy(string playerId, string playerCard, string enemyId, string enemyCard)
     {
-        bool isSelected = cardSelectionStates[cardId];
-        cardSelectionStates[cardId] = !isSelected;
+        this.numberOfCardsToSelect = 1;
 
-        if (cardSelectionStates[cardId])
+        selectedCards.Clear();
+        cardSelectionStates.Clear();
+        selectionConfirmed = false;
+        ClearUI();
+
+        cardSelectionPanel.SetActive(true);
+        submitButton.gameObject.SetActive(false);
+
+        infoText.text = "WYBIERZ KARTÊ DO ZACHOWANIA";
+
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference playerCardRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck")
+            .Child(playerCard);
+
+        var playerCardSnapshot = await playerCardRef.GetValueAsync();
+        if (!playerCardSnapshot.Exists)
+        {
+            Debug.LogWarning("Player card not found.");
+            return (null, null);
+        }
+        string playerCardId = playerCardSnapshot.Child("cardId").Value?.ToString();
+
+        DatabaseReference enemyCardRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId)
+            .Child("deck")
+            .Child(enemyCard);
+
+        var enemyCardSnapshot = await enemyCardRef.GetValueAsync();
+        if (!enemyCardSnapshot.Exists)
+        {
+            Debug.LogWarning("Enemy card not found.");
+            return (null, null);
+        }
+        string enemyCardId = enemyCardSnapshot.Child("cardId").Value?.ToString();
+
+        AddCardToUI(playerCard, playerCardId);
+        AddCardToUI(enemyCard, enemyCardId);
+
+        submitButton.onClick.RemoveAllListeners();
+        submitButton.onClick.AddListener(() => ConfirmSelection());
+
+        while (!selectionConfirmed)
+        {
+            await Task.Yield();
+        }
+
+        HideCardSelectionPanel();
+
+        string keepCard = selectedCards.Count > 0 ? selectedCards[0].Key : null;
+        string destroyCard = keepCard == null ? null : keepCard == playerCard ? enemyCard : playerCard;
+
+        return (keepCard, destroyCard);
+    }
+
+    private void AddCardToUI(string instanceId, string cardId)
+    {
+        GameObject newCardUI = Instantiate(cardPrefab, cardListContainer);
+
+        Image cardImage = newCardUI.transform.Find("cardImage").GetComponent<Image>();
+        Transform borderTransform = newCardUI.transform.Find("Border");
+
+        if (borderTransform == null)
+        {
+            Debug.LogError("Border object not found in card prefab.");
+            return;
+        }
+
+        GameObject border = borderTransform.gameObject;
+        border.SetActive(false);
+
+        Sprite cardSprite = cardSpriteManager?.GetCardSprite(cardId);
+        if (cardSprite == null)
+        {
+            Debug.LogError($"No sprite found for cardId: {cardId}");
+            return;
+        }
+
+        cardImage.sprite = cardSprite;
+        cardSelectionStates[instanceId] = false;
+
+        Button button = newCardUI.GetComponent<Button>();
+        button.onClick.AddListener(() => ToggleCardState(instanceId, cardId, border));
+    }
+
+    private void AddCardToUIForViewing(string instanceId, string cardId)
+    {
+        GameObject newCardUI = Instantiate(cardPrefab, cardListContainer);
+
+        Image cardImage = newCardUI.transform.Find("cardImage").GetComponent<Image>();
+        Transform borderTransform = newCardUI.transform.Find("Border");
+
+        if (borderTransform == null)
+        {
+            Debug.LogError("Border object not found in card prefab.");
+            return;
+        }
+
+        GameObject border = borderTransform.gameObject;
+        border.SetActive(false);
+
+        Sprite cardSprite = cardSpriteManager?.GetCardSprite(cardId);
+        if (cardSprite == null)
+        {
+            Debug.LogError($"No sprite found for cardId: {cardId}");
+            return;
+        }
+
+        cardImage.sprite = cardSprite;
+        cardSelectionStates[instanceId] = false;
+
+        Button button = newCardUI.GetComponent<Button>();
+        button.interactable = false;
+    }
+
+    private void ToggleCardState(string instanceId, string cardId, GameObject border)
+    {
+        bool isSelected = cardSelectionStates[instanceId];
+        cardSelectionStates[instanceId] = !isSelected;
+
+        if (cardSelectionStates[instanceId])
         {
             if (selectedCards.Count < numberOfCardsToSelect)
             {
-                selectedCards.Add(cardId);
-                cardImage.sprite = selectedSprite;
+                selectedCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
+                border.SetActive(true);
             }
             else
             {
-                cardSelectionStates[cardId] = false;
+                cardSelectionStates[instanceId] = false;
             }
         }
         else
         {
-            selectedCards.Remove(cardId);
-            cardImage.sprite = unselectedSprite;
+            selectedCards.Remove(new KeyValuePair<string, string>(instanceId, cardId));
+            border.SetActive(false);
         }
 
-        // Poka¿ przycisk Submit tylko, gdy wybrano wystarczaj¹c¹ liczbê kart
         submitButton.gameObject.SetActive(selectedCards.Count == numberOfCardsToSelect);
     }
 
@@ -146,6 +363,11 @@ public class CardSelectionUI : MonoBehaviour
         {
             selectionConfirmed = true;
         }
+    }
+
+    private void ClosePanel()
+    {
+        HideCardSelectionPanel();
     }
 
     private void HideCardSelectionPanel()
@@ -160,6 +382,14 @@ public class CardSelectionUI : MonoBehaviour
         foreach (Transform child in cardListContainer)
         {
             Destroy(child.gameObject);
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (submitButton != null)
+        {
+            submitButton.onClick.RemoveAllListeners();
         }
     }
 }

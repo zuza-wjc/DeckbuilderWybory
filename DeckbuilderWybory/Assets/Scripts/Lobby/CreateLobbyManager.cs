@@ -25,7 +25,7 @@ public class CreateLobbyManager : MonoBehaviour
     public Sprite addButtonInactiveSprite;
 
     DatabaseReference dbRef;
-    bool isPublic = true; // Poczatkowo ustaw na publiczne
+    bool isPublic = true; 
     int lobbySize = 2;
 
     private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
@@ -59,7 +59,7 @@ public class CreateLobbyManager : MonoBehaviour
 
     public void IncreaseLobbySize()
     {
-        if (lobbySize < 8)  // Upewnij si�, �e rozmiar lobby nie jest wi�kszy ni� 8
+        if (lobbySize < 8) 
         {
             lobbySize++;
             UpdateLobbySizeText();
@@ -68,7 +68,7 @@ public class CreateLobbyManager : MonoBehaviour
 
     public void DecreaseLobbySize()
     {
-        if (lobbySize > 2)  // Upewnij si�, �e rozmiar lobby nie jest mniejszy ni� 2
+        if (lobbySize > 2)
         {
             lobbySize--;
             UpdateLobbySizeText();
@@ -79,7 +79,6 @@ public class CreateLobbyManager : MonoBehaviour
     {
         lobbySizeText.text = lobbySize.ToString();
 
-        // Dezaktywuj przyciski, gdy rozmiar lobby osi�gnie granice
         plusButton.interactable = lobbySize < 8;
         minusButton.interactable = lobbySize > 2;
 
@@ -161,7 +160,6 @@ public class CreateLobbyManager : MonoBehaviour
         int money = 0;
         int readyPlayers = 0;
 
-        // Tworzenie danych lobby
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
         {
             { "lobbyName", lobbyName },
@@ -169,15 +167,13 @@ public class CreateLobbyManager : MonoBehaviour
             { "isPublic", isPublic },
             { "lobbySize", lobbySize },
             { "readyPlayers", readyPlayers },
-            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "support", new int[6] { 5, 5, 5, 5, 5, 5 } }, { "playerTurn", false } }  } } } } }
+            { "playerTurnId", "None" },
+            { "rounds", 10 },
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", 10 }, { "support", new int[6] { 4,4,4,4,4,4 } }, { "playerTurn", 2 }, { "turnsTaken",0 } }  } } } } }
         };
 
-        // Dodawanie danych do bazy Firebase
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
 
-        Debug.Log("Lobby created with ID: " + lobbyId);
-
-        //wsadzanie danych do data transfer
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
@@ -194,10 +190,8 @@ public class CreateLobbyManager : MonoBehaviour
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         System.Random random = new System.Random();
 
-        // Sprawdzanie czy wygenerowane ID ju� istnieje w bazie danych
         DataSnapshot snapshot = await dbRef.GetValueAsync();
 
-        // Lista istniej�cych lobby ID
         List<string> existingIds = new List<string>();
 
         foreach (DataSnapshot childSnapshot in snapshot.Children)
@@ -205,7 +199,6 @@ public class CreateLobbyManager : MonoBehaviour
             existingIds.Add(childSnapshot.Key);
         }
 
-        // Generowanie unikalnego ID
         do
         {
             char[] idChars = new char[8];
@@ -217,5 +210,28 @@ public class CreateLobbyManager : MonoBehaviour
         } while (existingIds.Contains(lobbyId));
 
         return lobbyId;
+    }
+
+    void OnDestroy()
+    {
+        if (publicButton != null)
+        {
+            publicButton.onClick.RemoveListener(() => TogglePublic(true));
+        }
+
+        if (privateButton != null)
+        {
+            privateButton.onClick.AddListener(() => TogglePublic(false));
+        }
+
+        if (plusButton != null)
+        {
+            plusButton.onClick.AddListener(IncreaseLobbySize);
+        }
+
+        if (minusButton != null)
+        {
+            minusButton.onClick.AddListener(DecreaseLobbySize);
+        }
     }
 }

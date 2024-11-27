@@ -5,7 +5,6 @@ using UnityEngine.EventSystems;
 public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
 {
     public Image image;
-    public Image backgroundOverlay;
 
     [HideInInspector] public Transform parentAfterDrag;
 
@@ -14,27 +13,13 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public float tapThreshold = 10f;
 
     private bool isEnlarged = false;
-    private Vector3 originalScale;
-    private Vector3 originalPosition;
 
-    private Vector3 centerScreenPosition;
+    [HideInInspector] public string instanceId;
+    [HideInInspector] public string cardId;
 
-    private Canvas canvas;
-
-    private void Start()
-    {
-        originalScale = transform.localScale;
-        originalPosition = transform.position;
-
-        centerScreenPosition = new Vector3(Screen.width / 2, Screen.height / 2, originalPosition.z);
-
-        if (backgroundOverlay != null)
-        {
-            backgroundOverlay.gameObject.SetActive(false);
-        }
-
-        canvas = GetComponentInParent<Canvas>();
-    }
+    public GameObject cardPanel;    
+    public Image panelImage;             
+    public Button closeButton;         
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -44,6 +29,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnPointerUp(PointerEventData eventData)
     {
+ 
         if (!isDrag)
         {
             OnTap();
@@ -52,36 +38,33 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     private void OnTap()
     {
-        if (isEnlarged)
+        if (cardPanel == null || panelImage == null || closeButton == null)
         {
-            transform.localScale = originalScale;
-            transform.position = originalPosition;
-            isEnlarged = false;
-
-            transform.SetParent(parentAfterDrag);
-
-            if (backgroundOverlay != null)
-            {
-                backgroundOverlay.gameObject.SetActive(false);
-            }
+            Debug.LogError("Panel UI or its components are not assigned in DraggableItem!");
+            return;
         }
-        else
+
+        if (image == null)
         {
-            originalScale = transform.localScale;
-            originalPosition = transform.position;
+            Debug.LogError("Image reference is missing in DraggableItem!");
+            return;
+        }
 
-            transform.localScale = originalScale * 2f;
-            transform.position = centerScreenPosition;
+        panelImage.sprite = image.sprite; 
+        cardPanel.SetActive(true);         
 
-            parentAfterDrag = transform.parent;
-            transform.SetParent(canvas.transform);
+        closeButton.onClick.RemoveAllListeners();
+        closeButton.onClick.AddListener(() =>
+        {
+            ClosePanel();
+        });
+    }
 
-            isEnlarged = true;
-
-            if (backgroundOverlay != null)
-            {
-                backgroundOverlay.gameObject.SetActive(true);
-            }
+    private void ClosePanel()
+    {
+        if (cardPanel != null)
+        {
+            cardPanel.SetActive(false);
         }
     }
 

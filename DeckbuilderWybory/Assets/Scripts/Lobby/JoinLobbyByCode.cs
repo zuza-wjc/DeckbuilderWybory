@@ -163,7 +163,7 @@ public class JoinLobbyByCode : MonoBehaviour
                             { "money", 0 },
                             { "income", 10 },
                             { "support", new int[6] { 5, 5, 5, 5, 5, 5 } },
-                            { "playerTurn", false }
+                            { "playerTurn", 2 }, { "turnsTaken",0 }
                         }
                     }
                 };
@@ -205,5 +205,18 @@ public class JoinLobbyByCode : MonoBehaviour
         feedbackText.gameObject.SetActive(true);
         await Task.Delay(3000); // Odczekaj 3 sekundy
         feedbackText.gameObject.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        if (joinButton != null)
+        {
+            joinButton.onClick.RemoveListener(JoinLobby);
+        }
+
+        if (pasteButton != null)
+        {
+            pasteButton.onClick.RemoveListener(PasteFromClipboard);
+        }
     }
 }

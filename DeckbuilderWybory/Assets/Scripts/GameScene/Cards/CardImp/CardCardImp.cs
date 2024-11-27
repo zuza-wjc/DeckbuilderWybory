@@ -17,30 +17,7 @@ public class CardCardImp : MonoBehaviour
     public DeckController deckController;
     public CardSelectionUI cardSelectionUI;
     public CardTypeManager cardTypeManager;
-
-    private DatabaseReference dbRefCard;
-    private DatabaseReference dbRefPlayerStats;
-    private DatabaseReference dbRefPlayerDeck;
-
-    private int cost;
-    private string cardType;
-    private int playerBudget;
-    private int chosenRegion;
-    private string enemyId;
-    private string source;
-    private string target;
-
-    List<string> selectedCardIds = new();
-
-    private bool supportChange;
-    private bool isBonusRegion;
-    private bool cardsChange;
-    private bool onHandChanged;
-
-    private Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
-    private Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
-    private Dictionary<int, OptionData> supportOptionsDictionary = new();
-    private Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
+    public TurnController turnController;
 
     void Start()
     {
@@ -48,140 +25,189 @@ public class CardCardImp : MonoBehaviour
     }
 
 
-    public async void CardLibrary(string cardIdDropped, bool ignoreCost)
+    public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
-        cost = -1;
-        cardType = string.Empty;
-        playerBudget = -1;
-        chosenRegion = -1;
-        enemyId = string.Empty;
-        source = string.Empty;
-        target = string.Empty ;
+        bool tmp = await cardUtilities.CheckCardLimit(playerId);
 
-        supportChange = false;
-        isBonusRegion = false;
-        cardsChange = false;
-        onHandChanged = false;
-
-        cardsOptionsDictionary.Clear();
-        cardsBonusOptionsDictionary.Clear();
-
-        selectedCardIds.Clear();
-
-        if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
+        if (tmp)
         {
-            Debug.LogError("Firebase is not initialized properly!");
+            Debug.Log("Limit kart w turze to 1");
             return;
         }
+        DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
+            int cost, playerBudget, chosenRegion = -1;
+            string cardType, enemyId = string.Empty, source = string.Empty, target = string.Empty;
+            bool supportChange = false, isBonusRegion = false, cardsChange = false, onHandChanged = false;
 
-        dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child("cards").Child(cardIdDropped);
+            Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
+            Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
+            Dictionary<int, OptionData> supportOptionsDictionary = new();
+            Dictionary<int, OptionData> supportBonusOptionsDictionary = new();
 
-        DataSnapshot snapshot = await dbRefCard.GetValueAsync();
+            cardsOptionsDictionary.Clear();
+            cardsBonusOptionsDictionary.Clear();
+            supportBonusOptionsDictionary.Clear();
+            supportOptionsDictionary.Clear();
 
-        if (snapshot.Exists)
-        {
+            List<KeyValuePair<string, string>> selectedCardIds = new();
+            selectedCardIds.Clear();
 
-            DataSnapshot costSnapshot = snapshot.Child("cost");
-            if (costSnapshot.Exists)
+            if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
             {
-                cost = Convert.ToInt32(costSnapshot.Value);
-            }
-            else
-            {
-                Debug.LogError("Branch cost does not exist.");
+                Debug.LogError("Firebase is not initialized properly!");
                 return;
             }
 
-            DataSnapshot typeSnapshot = snapshot.Child("type");
-            if (typeSnapshot.Exists)
-            {
-                cardType = typeSnapshot.Value.ToString();
-            }
-            else
-            {
-                Debug.LogError("Branch type does not exist.");
-                return;
-            }
+            dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child("cards").Child(cardIdDropped);
+            DataSnapshot snapshot = await dbRefCard.GetValueAsync();
 
-            DataSnapshot cardsSnapshot = snapshot.Child("cardsOnHand");
-            if (cardsSnapshot.Exists)
-            {
-
-                cardsChange = true;
-
-                cardUtilities.ProcessBonusOptionsCard(cardsSnapshot, cardsBonusOptionsDictionary);
-                cardUtilities.ProcessOptionsCard(cardsSnapshot, cardsOptionsDictionary);
-
-            }
-
-            DataSnapshot supportSnapshot = snapshot.Child("support");
-            if (supportSnapshot.Exists)
-            {
-
-                supportChange = true;
-
-                cardUtilities.ProcessBonusOptions(supportSnapshot, supportBonusOptionsDictionary);
-                cardUtilities.ProcessOptions(supportSnapshot, supportOptionsDictionary);
-
-            }
-
-            dbRefPlayerStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("stats");
-
-            DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
-
-            if (playerStatsSnapshot.Exists)
-            {
-                DataSnapshot moneySnapshot = playerStatsSnapshot.Child("money");
-                if (moneySnapshot.Exists)
-                {
-                    playerBudget = Convert.ToInt32(moneySnapshot.Value);
-                    if (playerBudget < cost)
-                    {
-                        Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
-                        return;
-                    }
-                }
-                else
-                {
-                    Debug.LogError("Branch money does not exist.");
-                    return;
-                }
-            }
-            else
+            if (!snapshot.Exists)
             {
                 Debug.LogError("No data for: " + cardIdDropped + ".");
                 return;
             }
 
+            cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
+
+        if (DataTransfer.IsFirstCardInTurn)
+        {
+            if (await cardUtilities.CheckIncreaseCost(playerId))
+            {
+                double increasedCost = 1.5 * cost;
+
+                if (cost >= 0)
+                {
+                    if (cost % 2 != 0)
+                    {
+                        cost = (int)Math.Ceiling(increasedCost);
+                    }
+                    else
+                    {
+                        cost = (int)increasedCost;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Cost is negative, not increasing cost.");
+                }
+            }
+        }
+
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            double increasedCost = 1.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Ceiling(increasedCost);
+                }
+                else
+                {
+                    cost = (int)increasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not increasing cost.");
+            }
+        }
+
+        if (await cardUtilities.CheckDecreaseCost(playerId))
+        {
+            double decreasedCost = 0.5 * cost;
+
+            if (cost >= 0)
+            {
+                if (cost % 2 != 0)
+                {
+                    cost = (int)Math.Floor(decreasedCost);
+                }
+                else
+                {
+                    cost = (int)decreasedCost;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Cost is negative, not decreasing cost.");
+            }
+        }
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+
+            cardsChange = snapshot.Child("cardsOnHand").Exists;
+            if (cardsChange)
+            {
+                cardUtilities.ProcessBonusOptionsCard(snapshot.Child("cardsOnHand"), cardsBonusOptionsDictionary);
+                cardUtilities.ProcessOptionsCard(snapshot.Child("cardsOnHand"), cardsOptionsDictionary);
+            }
+
+            supportChange = snapshot.Child("support").Exists;
             if (supportChange)
             {
-                await SupportAction(cardIdDropped);
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    return;
+                }
+
+                cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
+                cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
+            }
+
+            dbRefPlayerStats = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("stats");
+            DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+
+            if (!playerStatsSnapshot.Exists)
+            {
+                Debug.LogError("No data for: " + cardIdDropped + ".");
+                return;
+            }
+
+            playerBudget = playerStatsSnapshot.Child("money").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : throw new Exception("Branch money does not exist.");
+
+            if (!ignoreCost && playerBudget < cost)
+            {
+                Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+                return;
+            }
+
+        ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
+
+        if (!(await cardUtilities.CheckBlockedCard(playerId)))
+        {
+
+            if (supportChange)
+            {
+                isBonusRegion = await SupportAction(cardIdDropped, isBonusRegion, chosenRegion, cardType, supportOptionsDictionary, supportBonusOptionsDictionary);
             }
 
             if (cardsChange)
             {
-    
-                await CardsAction(cardIdDropped);
+                (dbRefPlayerStats, playerBudget) = await CardsAction(instanceId, dbRefPlayerStats, cardIdDropped, isBonusRegion, cardsOptionsDictionary, cardsBonusOptionsDictionary, enemyId, playerBudget, source, target, selectedCardIds);
             }
+        }
 
-            if(!ignoreCost)
+            if (!ignoreCost)
             {
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
             }
 
-            dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(cardIdDropped);
+            dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
-            if(!onHandChanged)
+            if (!onHandChanged)
             {
                 await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
             }
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
-        }
 
-
+        DataTransfer.IsFirstCardInTurn = false;
+        await cardUtilities.CheckIfPlayed2Cards(playerId);
+        tmp = await cardUtilities.CheckCardLimit(playerId);
     }
    
-    private async Task SupportAction(string cardId)
+    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion,string cardType,Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
         if (cardId == "CA085")
         {
@@ -195,7 +221,7 @@ public class CardCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No support options available.");
-            return;
+            return false;
         }
 
         foreach (var data in optionsToApply.Values)
@@ -210,9 +236,12 @@ public class CardCardImp : MonoBehaviour
                 isBonusRegion = false;
             }
         }
-        }
+        return isBonusRegion;
+     }
 
-    private async Task CardsAction(string cardId)
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget)> CardsAction(string instanceId,DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
+        Dictionary<int, OptionDataCard> cardsOptionsDictionary,Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary,string enemyId, int playerBudget,string source,string target,
+        List<KeyValuePair<string, string>> selectedCardIds)
     {
         var isBonus = isBonusRegion;
         var optionsToApply = isBonus ? cardsBonusOptionsDictionary : cardsOptionsDictionary;
@@ -220,7 +249,7 @@ public class CardCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
-            return;
+            return (dbRefPlayerStats,-1);
         }
 
         if (isBonus)
@@ -235,83 +264,260 @@ public class CardCardImp : MonoBehaviour
             {
                 if(data.TargetNumber == 8)
                 {
-                    await deckController.ExchangeCards(playerId,cardId);
+                    if (await CheckIfAnyEnemyProtected())
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else
+                    {
+                        await deckController.ExchangeCards(playerId, instanceId);
+                    }
+                } else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
+                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
                 }
+
             } else if (data.Target == "player")
             {
-                if (cardId == "CA017")
+                 if (cardId == "CA073")
+                {
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else
+                    {
+                        string playerCard = await RandomCardFromDeck(playerId);
+                        string enemyCard = await RandomCardFromDeck(enemyId);
+                        string keepCard, destroyCard;
+                        (keepCard, destroyCard) = await cardSelectionUI.ShowCardSelectionForPlayerAndEnemy(playerId, playerCard, enemyId, enemyCard);
+                        Debug.Log($"Selected card: {keepCard}, Card to destroy: {destroyCard}");
+                        if (destroyCard == playerCard)
+                        {
+                            await deckController.RejectCard(playerId, destroyCard);
+                            await AddCardToDeck(keepCard, enemyId);
+                        }
+                        await deckController.RejectCard(enemyId, enemyCard);
+                    }
+
+                } else if (cardId == "CA017")
                 {
                     int budgetValue = await ValueAsCost();
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
-                        return;
+                        return (dbRefPlayerStats, -1);
                     }
-                    await cardUtilities.ChangeEnemyStat(enemyId, -budgetValue, "money", playerBudget);
+                    playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, -budgetValue, "money", playerBudget);
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 } else
                 {
                     if (data.Source == "player-deck") { source = playerId; }
                     if (data.Target == "player") { target = playerId; }
 
-                   if(cardId == "CA070")
+                    if(cardId == "CA070")
                     {
-                        string cardFromHand = selectedCardIds[0];
+                        string cardFromHandInstanceId = selectedCardIds[0].Key;
+
                         selectedCardIds.Clear();
-                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, false);
-                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
-                        string cardFromDeck = selectedCardIds[0];
-                        await deckController.ExchangeFromHandToDeck(source,cardFromHand,cardFromDeck);
 
-                    } else if (cardId == "CA077")
-                    {
-                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, false);
-                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardFromHandInstanceId, false);
 
-                        cardTypeManager.OnCardDropped(selectedCardIds[0],true);
+                        Debug.Log($"Wybrane karty z decku: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+
+                        if (selectedCardIds.Count > 0)
+                        {
+                            string cardFromDeckInstanceId = selectedCardIds[0].Key;
+                            await deckController.ExchangeFromHandToDeck(source, cardFromHandInstanceId, cardFromDeckInstanceId);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Nie wybrano ¿adnej karty z decku.");
+                        }
+
+
                     }
-                    else
+                    else if (cardId == "CA077")
+                    {
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, false);
+
+                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+
+                        if (selectedCardIds.Count > 0)
+                        {
+                            string cardFromDeckInstanceId = selectedCardIds[0].Key;
+                            string cardFromDeckCardId = selectedCardIds[0].Value;
+
+                            cardTypeManager.OnCardDropped(cardFromDeckInstanceId, cardFromDeckCardId, true);
+                        }
+                        else
+                        {
+                            Debug.LogWarning("Nie wybrano ¿adnej karty.");
+                        }
+
+                    }
+                    else if (cardId == "CA033")
+                    {
+                        await deckController.GetRandomCardsFromHand(playerId, enemyId, data.CardNumber,selectedCardIds);
+
+                    } else if (cardId == "CA067")
+                    {
+                        enemyId = await RandomEnemy();
+                        if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                        {
+                            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            return(dbRefPlayerStats,-1);
+                        } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                        {
+                            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            return (dbRefPlayerStats, -1);
+                        }
+                        else
+                        {
+                            await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
+                            Debug.Log("Now choosing from enemy hand");
+                            selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true, selectedCardIds);
+                            await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
+                        }
+                    } else
                     {
                         for (int i = 0; i < data.CardNumber; i++)
                         {
                             await deckController.GetCardFromDeck(source, target);
                         }
 
-                        // obs³uga karty ca033
+                        if(cardId == "CA030")
+                        {
+                            turnController.PassTurn();
+                        }
+
                     }
                 }
             } else if (data.Target == "player-deck") {
 
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, true);
-                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
-                if (data.Source == "player") { source = playerId; }
-
-                if(cardId == "CA031")
+                if (cardId == "CA030")
                 {
-                    foreach (string selectedCardId in selectedCardIds)
+                    if(DataTransfer.IsFirstCardInTurn)
                     {
-                        await deckController.RejectCard(source, selectedCardId);
+                        int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                        for (int i = 0; i < cardsOnHand-1; i++)
+                        {
+                            await deckController.RejectRandomCard(playerId,instanceId);
+                        }
+
+                    } else
+                    {
+                        Debug.Log("Karta ta mo¿e byæ zagrana tylko jako pierwsza w turze");
+                        return(dbRefPlayerStats, -1);
                     }
                 }
-            } else if (data.Target == "enemy-chosen")
+                else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
+
+                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+
+                    if (data.Source == "player")
+                    {
+                        source = playerId;
+                    }
+
+                    if (cardId == "CA031")
+                    {
+                        foreach (var selectedCard in selectedCardIds)
+                        {
+                            string selectedInstanceId = selectedCard.Key;
+
+                            await deckController.RejectCard(source, selectedInstanceId);
+                        }
+                    }
+                }
+
+            }
+            else if (data.Target == "enemy-chosen")
             {
-                selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardId, true);
-                Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds)}");
+                if(cardId == "CA066")
+                {
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    await cardSelectionUI.ShowCardsForViewing(enemyId);
+                }
+                else if (cardId == "CA068")
+                {
+                    await deckController.GetRandomCardsFromDeck(enemyId, data.CardNumber, selectedCardIds);
+                } else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
+                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    if(await cardUtilities.CheckIfProtected(enemyId,-1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else
+                    {
+                        target = enemyId;
+                        if (data.Source == "player") { source = playerId; }
+                        await deckController.GetCardFromHand(source, target, selectedCardIds);
+                    }
+                }
+
+            }
+            else if (data.Target == "enemy-deck")
+            {
                 enemyId = await playerListManager.SelectEnemyPlayer();
                 if (string.IsNullOrEmpty(enemyId))
                 {
                     Debug.LogError("Failed to select an enemy player.");
-                    return;
+                    return (dbRefPlayerStats, -1);
                 }
-                target = enemyId;
-                if(data.Source == "player") { source = playerId; }
-                for (int i = 0; i < data.CardNumber; i++)
+                if (await cardUtilities.CheckIfProtected(enemyId, -1))
                 {
-                    await deckController.GetCardFromHand(source, target, selectedCardIds);
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return (dbRefPlayerStats, -1);
+                }
+                else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return (dbRefPlayerStats, -1);
+                }
+                else
+                {
+                    selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
+                    await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
                 }
             }
         }
-        }
+        return (dbRefPlayerStats, playerBudget);
+     }
 
     private async Task<int> ValueAsCost()
     {
@@ -321,7 +527,7 @@ public class CardCardImp : MonoBehaviour
             return -1;
         }
 
-        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
+        DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
             .Child("players")
@@ -335,17 +541,20 @@ public class CardCardImp : MonoBehaviour
             return -1;
         }
 
-        List<string> availableCards = new();
+        List<KeyValuePair<string, string>> availableCards = new();
+
         foreach (var cardSnapshot in snapshot.Children)
         {
-            var onHandSnapshot = cardSnapshot.Child("onHand");
-            var playedSnapshot = cardSnapshot.Child("played");
-
-            if (onHandSnapshot.Exists && bool.TryParse(onHandSnapshot.Value.ToString(), out bool onHand) && !onHand)
+            if (cardSnapshot.Child("onHand").Exists &&
+                bool.TryParse(cardSnapshot.Child("onHand").Value.ToString(), out bool onHand) && !onHand &&
+                cardSnapshot.Child("played").Exists &&
+                bool.TryParse(cardSnapshot.Child("played").Value.ToString(), out bool played) && !played)
             {
-                if (playedSnapshot.Exists && bool.TryParse(playedSnapshot.Value.ToString(), out bool played) && !played)
+                string instanceId = cardSnapshot.Key;
+                string cardId = cardSnapshot.Child("cardId").Value?.ToString();
+                if (!string.IsNullOrEmpty(cardId))
                 {
-                    availableCards.Add(cardSnapshot.Key);
+                    availableCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
                 }
             }
         }
@@ -358,98 +567,233 @@ public class CardCardImp : MonoBehaviour
 
         System.Random random = new();
         int randomIndex = random.Next(availableCards.Count);
-        string selectedCardId = availableCards[randomIndex];
+        var selectedCard = availableCards[randomIndex];
+        string selectedCardId = selectedCard.Value;
 
         string cardLetters = selectedCardId.Substring(0, 2);
-        string type = "";
-
-        switch (cardLetters)
+        string type = cardLetters switch
         {
-            case "AD":
-                type = "addRemove";
-                break;
-            case "AS":
-                type = "asMuchAs";
-                break;
-            case "CA":
-                type = "cards";
-                break;
-            case "OP":
-                type = "options";
-                break;
-            case "RA":
-                type = "random";
-                break;
-            case "UN":
-                type = "unique";
-                break;
-        }
+            "AD" => "addRemove",
+            "AS" => "asMuchAs",
+            "CA" => "cards",
+            "OP" => "options",
+            "RA" => "random",
+            "UN" => "unique",
+            _ => "unknown"
+        };
 
-        dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child(type).Child(selectedCardId).Child("cost");
-
-        var costSnapshot = await dbRefCard.GetValueAsync();
-
-        if (!costSnapshot.Exists)
+        if (type == "unknown")
         {
-            Debug.LogError($"Cost for card {selectedCardId} not found.");
+            Debug.LogError($"Unknown card type for card ID: {selectedCardId}");
             return -1;
         }
 
-        int cardCost = Convert.ToInt32(costSnapshot.Value);
-
-        return cardCost;
-    }
-
-    public async Task PlayCardFromDeck(List<string> selectedCardIds, string playerId)
-    {
-        if (selectedCardIds == null || selectedCardIds.Count == 0)
-        {
-            Debug.LogError("Brak wybranych kart.");
-            return;
-        }
-
-        string selectedCardId = selectedCardIds[0];
-        string cardLetters = selectedCardId.Substring(0, 2);
-        string type = "";
-
-        switch (cardLetters)
-        {
-            case "AD":
-                type = "addRemove";
-                break;
-            case "AS":
-                type = "asMuchAs";
-                break;
-            case "CA":
-                type = "cards";
-                break;
-            case "OP":
-                type = "options";
-                break;
-            case "RA":
-                type = "random";
-                break;
-            case "UN":
-                type = "unique";
-                break;
-        } 
-
-        DatabaseReference cardCostRef = FirebaseInitializer.DatabaseReference
+        DatabaseReference dbRefCard = FirebaseInitializer.DatabaseReference
             .Child("cards")
             .Child("id")
             .Child(type)
             .Child(selectedCardId)
             .Child("cost");
 
-        try
+        var costSnapshot = await dbRefCard.GetValueAsync();
+        if (!costSnapshot.Exists)
         {
-            await cardCostRef.SetValueAsync(0);
-            cardTypeManager.OnCardDropped(selectedCardId, true);
+            Debug.LogError($"Cost for card {selectedCardId} not found.");
+            return -1;
         }
-        catch (Exception ex)
+
+        if (int.TryParse(costSnapshot.Value.ToString(), out int cardCost))
         {
-            Debug.LogError($"Wyst¹pi³ b³¹d podczas zmiany kosztu karty: {ex.Message}");
+            return cardCost;
         }
+        else
+        {
+            Debug.LogError($"Failed to parse cost for card {selectedCardId}.");
+            return -1;
+        }
+    }
+
+    private async Task<string> RandomEnemy()
+    {
+
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Lobby ID or Player ID is null or empty.");
+            return null;
+        }
+
+        DatabaseReference playersRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        var playersSnapshot = await playersRef.GetValueAsync();
+        if (!playersSnapshot.Exists)
+        {
+            Debug.LogError($"No players found in lobby {lobbyId}.");
+            return null;
+        }
+
+        List<string> enemyIds = new();
+        foreach (var playerSnapshot in playersSnapshot.Children)
+        {
+            string id = playerSnapshot.Key;
+            if (id != playerId)
+            {
+                enemyIds.Add(id);
+            }
+        }
+
+        if (enemyIds.Count == 0)
+        {
+            Debug.LogWarning("No enemies available in the session.");
+            return null;
+        }
+
+        System.Random random = new();
+        int randomIndex = random.Next(enemyIds.Count);
+        string randomEnemyId = enemyIds[randomIndex];
+
+        Debug.Log($"Random enemy selected: {randomEnemyId}");
+        return randomEnemyId;
+    }
+
+    private async Task<string> RandomCardFromDeck(string playerId)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Invalid player ID.");
+            return null;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+        if (string.IsNullOrEmpty(lobbyId))
+        {
+            Debug.LogError("Lobby ID is null or empty.");
+            return null;
+        }
+
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var playerDeckSnapshot = await playerDeckRef.GetValueAsync();
+        if (!playerDeckSnapshot.Exists)
+        {
+            Debug.LogError($"Deck not found for player {playerId} in lobby {lobbyId}.");
+            return null;
+        }
+
+        List<string> eligibleCards = new();
+
+        foreach (var cardSnapshot in playerDeckSnapshot.Children)
+        {
+            string instanceId = cardSnapshot.Key;
+            bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && !isOnHand;
+            bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && !isPlayed;
+
+            if (onHand && played)
+            {
+                eligibleCards.Add(instanceId);
+            }
+        }
+
+        if (eligibleCards.Count == 0)
+        {
+            Debug.LogWarning("No eligible cards found in deck.");
+            return null;
+        }
+
+        System.Random random = new();
+        int randomIndex = random.Next(eligibleCards.Count);
+
+        string selectedCardId = eligibleCards[randomIndex];
+
+        return selectedCardId;
+    }
+
+    private async Task AddCardToDeck(string instanceId, string enemyId)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        DatabaseReference enemyCardRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId)
+            .Child("deck")
+            .Child(instanceId);
+
+        var enemyCardSnapshot = await enemyCardRef.GetValueAsync();
+        if (!enemyCardSnapshot.Exists)
+        {
+            Debug.LogWarning($"Card with instanceId {instanceId} not found in enemy's deck.");
+            return;
+        }
+
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck")
+            .Child(instanceId);
+
+        await playerDeckRef.SetValueAsync(enemyCardSnapshot.Value);
+
+        await playerDeckRef.Child("played").SetValueAsync(false);
+
+    }
+
+    public async Task<bool> CheckIfAnyEnemyProtected()
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        if (string.IsNullOrEmpty(lobbyId))
+        {
+            Debug.LogError("Lobby ID is null or empty.");
+            return false;
+        }
+
+        DatabaseReference playersRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        var snapshot = await playersRef.GetValueAsync();
+
+        if (!snapshot.Exists)
+        {
+            Debug.LogError($"No players found in lobby {lobbyId}.");
+            return false;
+        }
+
+        foreach (var playerSnapshot in snapshot.Children)
+        {
+            string enemyId = playerSnapshot.Key;
+
+            if (enemyId == playerId)
+            {
+                continue;
+            }
+
+            if (await cardUtilities.CheckIfProtected(enemyId, -1))
+            {
+                Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
+                return true;
+            }
+
+            if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+            {
+                Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

@@ -222,7 +222,7 @@ public class LobbyListManager : MonoBehaviour
                             { "money", 0 },
                             { "income", 10 },
                             { "support", new int[6] { 5, 5, 5, 5, 5, 5 } }, 
-                            { "playerTurn", false }
+                            { "playerTurn", 2 }, { "turnsTaken",0 }
                         }
                     }
                 };

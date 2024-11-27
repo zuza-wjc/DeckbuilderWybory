@@ -39,4 +39,17 @@ public class ButtonSelected : MonoBehaviour
         imageA.sprite = spriteA;
         imageB.sprite = spriteB;
     }
+
+    void OnDestroy()
+    {
+        if(buttonA != null)
+        {
+            buttonA.onClick.RemoveListener(OnButtonAClicked);
+        }
+
+        if (buttonB != null)
+        {
+            buttonB.onClick.RemoveListener(OnButtonBClicked);
+        }
+    }
 }

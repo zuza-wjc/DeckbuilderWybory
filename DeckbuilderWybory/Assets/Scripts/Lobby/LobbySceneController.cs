@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Firebase.Extensions;
 using System;
+using System.Linq;
 
 public class LobbySceneController : MonoBehaviour
 {
@@ -272,35 +273,32 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                       // dbRefLobby.RemoveValueAsync();
+                       dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
-                        // Sprawdź, czy miałeś ustawione "ready: true"
-                       // dbRef.Child(playerId).Child("ready").GetValueAsync().ContinueWith(readyTask =>
-                       // {
-                        //    if (readyTask.IsCompleted && !readyTask.IsFaulted)
-                         //   {
-                         //       bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
+                        dbRef.Child(playerId).Child("ready").GetValueAsync().ContinueWith(readyTask =>
+                        {
+                            if (readyTask.IsCompleted && !readyTask.IsFaulted)
+                            {
+                               bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
 
-                         //       if (wasReady)
-                         //       {
-                                    // Jeśli gracz był gotowy, zmniejsz licznik "readyPlayers"
-                        //            getReadyPlayersFromDatabase(() =>
-                        //            {
-                        //                readyPlayers -= 1;
-                        //                dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
-                         //           });
-                        //        }
+                               if (wasReady)
+                               {
+                                    getReadyPlayersFromDatabase(() =>
+                                    {
+                                        readyPlayers -= 1;
+                                        dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
+                                    });
+                                }
 
-                                // Usuń gracza z lobby niezależnie od stanu "ready"
-                       //         dbRef.Child(playerId).RemoveValueAsync();
-                      //      }
-                       //     else
-                        //    {
-                       //         Debug.Log("Failed to get player 'ready' status: " + readyTask.Exception);
-                       //     }
-                    //    });
+                                dbRef.Child(playerId).RemoveValueAsync();
+                            }
+                           else
+                           {
+                                Debug.Log("Failed to get player 'ready' status: " + readyTask.Exception);
+                            }
+                        });
                     }
                 }
                 else
@@ -335,45 +333,91 @@ public class LobbySceneController : MonoBehaviour
             {
                 dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
 
-                int budget = 50; // NA CZAS IMPLEMENTACJI KART USTAWIONE NA SZTYWNO
-
-                // getReadyPlayersFromDatabase();
-                // if (readyPlayers >= 2 && readyPlayers <= 3)
-                // {
-                //     budget = 50;
-                // } else if (readyPlayers >= 4 && readyPlayers <= 6 )
-                // {
-                //     budget = 70;
-                //  } else if (readyPlayers >= 7 && readyPlayers <= 8 )
-                //  {
-                //     budget = 90;
-                //  }
-
-                dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
-
-                dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
+                getReadyPlayersFromDatabase(() =>
                 {
-                    if (mapTask.IsCompleted && !mapTask.IsFaulted)
+                    int budget = 50;
+
+                    if (readyPlayers >= 2 && readyPlayers <= 3)
                     {
-                        DataSnapshot mapSnapshot = mapTask.Result;
-                        if (mapSnapshot.Exists)
+                        budget = 50;
+                    }
+                    else if (readyPlayers >= 4 && readyPlayers <= 6)
+                    {
+                        budget = 70;
+                    }
+                    else if (readyPlayers >= 7 && readyPlayers <= 8)
+                    {
+                        budget = 90;
+                    }
+
+                    dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
+
+                    dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
+                    {
+                        if (mapTask.IsCompleted && !mapTask.IsFaulted)
                         {
-                            Debug.Log("Map data already exists in the database.");
+                            DataSnapshot mapSnapshot = mapTask.Result;
+                            if (mapSnapshot.Exists)
+                            {
+                                Debug.Log("Map data already exists in the database.");
+                            }
+                            else
+                            {
+                                CheckAndSetMapData();
+                            }
                         }
                         else
                         {
-                            CheckAndSetMapData();
+                            Debug.Log("Failed to fetch map data: " + mapTask.Exception);
                         }
-                    }
-                    else
-                    {
-                        Debug.Log("Failed to fetch map data: " + mapTask.Exception);
-                    }
-                });         
+                    });
 
-                SceneManager.LoadScene("Game", LoadSceneMode.Single);
+                    getTurnOrder(() =>
+                    {
+                        SceneManager.LoadScene("Game", LoadSceneMode.Single);
+                    });
+                });
             }
         }
+    }
+
+
+    void getTurnOrder(Action onComplete)
+    {
+        dbRef.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+                if (snapshot.Exists)
+                {
+                    List<DataSnapshot> playersList = snapshot.Children.ToList();
+                    playersList.Sort((a, b) => string.Compare(
+                        a.Child("playerName").Value.ToString(),
+                        b.Child("playerName").Value.ToString(),
+                        StringComparison.Ordinal));
+
+                    for (int i = 0; i < playersList.Count; i++)
+                    {
+                        string playerKey = playersList[i].Key;
+                        dbRef.Child(playerKey).Child("myTurnNumber").SetValueAsync(i + 1);
+                    }
+
+                    Debug.Log("Turn order assigned successfully.");
+                }
+                else
+                {
+                    Debug.LogWarning("No players found in the lobby.");
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to fetch players for turn order: " + task.Exception);
+            }
+
+            // Wywołanie callbacka po zakończeniu
+            onComplete?.Invoke();
+        });
     }
 
     // Funkcja do �adowania kart gracza z Firebase przed rozpocz�ciem gry
@@ -437,5 +481,30 @@ public class LobbySceneController : MonoBehaviour
                 dbRefLobby.Child("isStarted").SetValueAsync(isStarted);
             }
         });
+    }
+
+    void OnDestroy()
+    {
+        if (dbRef != null)
+        {
+            dbRef.ChildAdded -= HandleChildAdded;
+            dbRef.ChildRemoved -= HandleChildRemoved;
+            dbRef.ChildChanged -= HandleChildChanged;
+        }
+
+        if (dbRefLobby != null)
+        {
+            dbRefLobby.Child("isStarted").ValueChanged -= HandleIsStartedChanged;
+        }
+
+        if (readyButton != null)
+        {
+            readyButton.onClick.RemoveListener(ToggleReady);
+        }
+
+        if (copyButton != null)
+        {
+            copyButton.onClick.RemoveListener(CopyFromClipboard);
+        }
     }
 }
