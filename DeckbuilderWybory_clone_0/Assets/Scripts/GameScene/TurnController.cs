@@ -24,7 +24,7 @@ public class TurnController : MonoBehaviour
 
     private List<string> turnOrderList;
     private bool isMyTurn = false;
-    private float timer = 10f;
+    private float timer = 60f;
     private string currentPlayerName;
     private string previousPlayerId;
     private int turnsTaken = 0;
@@ -264,7 +264,7 @@ public class TurnController : MonoBehaviour
 
     void StartTurn()
     {
-        var playerRef = dbRef.Child(playerId);
+      /*  var playerRef = dbRef.Child(playerId);
         var blockTurnSnapshot = playerRef.Child("blockTurn");
 
         blockTurnSnapshot.GetValueAsync().ContinueWith(task =>
@@ -275,9 +275,8 @@ public class TurnController : MonoBehaviour
 
                 if (snapshot.Exists && Convert.ToBoolean(snapshot.Value))
                 {
-                    PassTurn();
-
                     playerRef.Child("blockTurn").RemoveValueAsync();
+                    PassTurn();
 
                 }
                 else
@@ -299,8 +298,8 @@ public class TurnController : MonoBehaviour
                 Debug.LogError($"Nie uda³o siê pobraæ danych dla gracza {playerId}.");
             }
         }); 
-/*
-        timer = 10f;
+*/
+        timer = 60f;
         turnPlayerName.text = "Twoja tura!";
         passButton.interactable = true;
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
@@ -310,12 +309,12 @@ public class TurnController : MonoBehaviour
 
         turnsTaken++;
         dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
-*/
+
     }
 
     void EndTurn()
     {
-        timer = 10f; // Zresetuj timer
+        timer = 60f; // Zresetuj timer
         passButton.interactable = false;
         isMyTurn = false; // Nie wyswietlaj timera
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);

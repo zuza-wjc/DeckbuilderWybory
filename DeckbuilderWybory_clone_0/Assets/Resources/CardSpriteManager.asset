@@ -137,8 +137,6 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: 5250b81b3a3c27541b0c5a04c4a19a79, type: 3}
   - cardId: UN086
     cardSprite: {fileID: 21300000, guid: a6c01dc5e693fb1409b43e2d7045c9aa, type: 3}
-  - cardId: CA033
-    cardSprite: {fileID: 21300000, guid: 835df151ac92de5488aa320583feaeec, type: 3}
   - cardId: CA067
     cardSprite: {fileID: 21300000, guid: c45f508e313bd0141b9a8eb7e0c57eb2, type: 3}
   - cardId: CA038
@@ -177,3 +175,17 @@ MonoBehaviour:
     cardSprite: {fileID: 21300000, guid: ee8a3e79e261d6e46b357b48136f3bfc, type: 3}
   - cardId: UN082
     cardSprite: {fileID: 21300000, guid: 151ffaadc22c31b4fa6b71abbdeecc3a, type: 3}
+  - cardId: UN083
+    cardSprite: {fileID: 21300000, guid: 2dfe4d7ad2b122b409a27dae1b49ebc2, type: 3}
+  - cardId: AD057
+    cardSprite: {fileID: 21300000, guid: f1fd5f6cc31e9c643b13bae6ce4d234b, type: 3}
+  - cardId: AD059
+    cardSprite: {fileID: 21300000, guid: 6a307205cc2d51842890772691f5b047, type: 3}
+  - cardId: UN074
+    cardSprite: {fileID: 21300000, guid: aff10621ebc5bff40bb54f7c5e8fb1e5, type: 3}
+  - cardId: AD075
+    cardSprite: {fileID: 21300000, guid: 7a80811a97c5db34a80392eb6c05ea30, type: 3}
+  - cardId: UN076
+    cardSprite: {fileID: 21300000, guid: e2f512f51ee1c1a4eafbecaf97497b93, type: 3}
+  - cardId: UN084
+    cardSprite: {fileID: 21300000, guid: 15e36d03ca5ec75409ff75f6a6966b46, type: 3}

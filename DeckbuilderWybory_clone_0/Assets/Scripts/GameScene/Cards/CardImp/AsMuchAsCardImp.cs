@@ -23,8 +23,15 @@ public class AsMuchAsCardImp : MonoBehaviour
 
     public async void CardLibrary(string instanceId,string cardIdDropped, bool ignoreCost)
     {
-        
-            DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
+        bool tmp = await cardUtilities.CheckCardLimit(playerId);
+
+        if (tmp)
+        {
+            Debug.Log("Limit kart w turze to 1");
+            return;
+        }
+
+        DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
             int cost, playerBudget, playerIncome, chosenRegion = -1;
             string cardType, enemyId = string.Empty;
             bool budgetChange = false, supportChange = false, isBonusRegion = false, incomeChange = false;
@@ -163,7 +170,7 @@ public class AsMuchAsCardImp : MonoBehaviour
                     return;
                 }
 
-                ProcessBonusOptionsPerCard(snapshot.Child("support"), supportBonusOptionsDictionary, "Support");
+            ProcessBonusOptionsPerCard(snapshot.Child("support"), supportBonusOptionsDictionary, "Support");
                 ProcessOptionsPerCard(snapshot.Child("support"), supportOptionsDictionary, "Support");
             }
 
@@ -186,8 +193,19 @@ public class AsMuchAsCardImp : MonoBehaviour
 
             playerIncome = playerStatsSnapshot.Child("income").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("income").Value) : throw new Exception("Branch income does not exist.");
 
+        ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
+
         if (!(await cardUtilities.CheckBlockedCard(playerId)))
         {
+            if (!ignoreCost)
+            {
+                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+                playerBudget -= cost;
+            }
+            else
+            {
+                ignoreCost = false;
+            }
 
             if (supportChange)
             {
@@ -206,17 +224,31 @@ public class AsMuchAsCardImp : MonoBehaviour
             }
         }
 
-            if (!ignoreCost)
+        if (ignoreCost)
+        {
+            DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+            if (currentBudgetSnapshot.Exists)
             {
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+                int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                int updatedBudget = currentBudget + cost;
+                await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
             }
+            else
+            {
+                Debug.LogError("Failed to fetch current player budget.");
+                return;
+            }
+        }
 
 
-            dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
             await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
         DataTransfer.IsFirstCardInTurn = false;
+
+        await cardUtilities.CheckIfPlayed2Cards(playerId);
+         tmp = await cardUtilities.CheckCardLimit(playerId);
     }
 
     private async Task<DatabaseReference> IncomeAction(bool isBonusRegion, Dictionary<int, OptionDataPerCard> incomeOptionsDictionary,

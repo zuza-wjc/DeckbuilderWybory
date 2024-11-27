@@ -27,8 +27,14 @@ public class CardCardImp : MonoBehaviour
 
     public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
-       
-            DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
+        bool tmp = await cardUtilities.CheckCardLimit(playerId);
+
+        if (tmp)
+        {
+            Debug.Log("Limit kart w turze to 1");
+            return;
+        }
+        DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
             int cost, playerBudget, chosenRegion = -1;
             string cardType, enemyId = string.Empty, source = string.Empty, target = string.Empty;
             bool supportChange = false, isBonusRegion = false, cardsChange = false, onHandChanged = false;
@@ -167,6 +173,8 @@ public class CardCardImp : MonoBehaviour
                 return;
             }
 
+        ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
+
         if (!(await cardUtilities.CheckBlockedCard(playerId)))
         {
 
@@ -195,6 +203,8 @@ public class CardCardImp : MonoBehaviour
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
         DataTransfer.IsFirstCardInTurn = false;
+        await cardUtilities.CheckIfPlayed2Cards(playerId);
+        tmp = await cardUtilities.CheckCardLimit(playerId);
     }
    
     private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion,string cardType,Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
@@ -283,6 +293,10 @@ public class CardCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
                         return (dbRefPlayerStats, -1);
+                    } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
                     }
                     else
                     {
@@ -367,7 +381,12 @@ public class CardCardImp : MonoBehaviour
                         {
                             Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
                             return(dbRefPlayerStats,-1);
-                        } else
+                        } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                        {
+                            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            return (dbRefPlayerStats, -1);
+                        }
+                        else
                         {
                             await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
                             Debug.Log("Now choosing from enemy hand");
@@ -458,7 +477,12 @@ public class CardCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
                         return (dbRefPlayerStats, -1);
-                    } else
+                    } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else
                     {
                         target = enemyId;
                         if (data.Source == "player") { source = playerId; }
@@ -476,6 +500,11 @@ public class CardCardImp : MonoBehaviour
                     return (dbRefPlayerStats, -1);
                 }
                 if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                {
+                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    return (dbRefPlayerStats, -1);
+                }
+                else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                 {
                     Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
                     return (dbRefPlayerStats, -1);
@@ -751,9 +780,13 @@ public class CardCardImp : MonoBehaviour
                 continue;
             }
 
-            bool isProtected = await cardUtilities.CheckIfProtected(enemyId, -1);
+            if (await cardUtilities.CheckIfProtected(enemyId, -1))
+            {
+                Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
+                return true;
+            }
 
-            if (isProtected)
+            if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
             {
                 Debug.Log($"Enemy {enemyId} is protected. Action cannot proceed.");
                 return true;

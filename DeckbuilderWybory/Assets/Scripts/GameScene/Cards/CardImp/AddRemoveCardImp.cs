@@ -24,6 +24,13 @@ public class AddRemoveCardImp : MonoBehaviour
 
     public async void CardLibrary(string instanceId, string cardIdDropped, bool ignoreCost)
     {
+        bool tmp = await cardUtilities.CheckCardLimit(playerId);
+
+        if (tmp)
+        {
+            Debug.Log("Limit kart w turze to 1");
+            return;
+        }
         
             Dictionary<int, OptionData> budgetOptionsDictionary = new();
             Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
@@ -196,9 +203,22 @@ public class AddRemoveCardImp : MonoBehaviour
                 return;
             }
 
+        ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
+
             if (!(await cardUtilities.CheckBlockedCard(playerId)))
             {
-                if (supportChange)
+
+            if(!ignoreCost)
+            {
+                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+                playerBudget -= cost;
+            } else
+            {
+                ignoreCost = false;
+            }
+
+
+            if (supportChange)
                 {
                     (chosenRegion, isBonusRegion, enemyId) = await SupportAction(cardIdDropped, chosenRegion, isBonusRegion, cardType, enemyId, cardsChange, supportOptionsDictionary, supportBonusOptionsDictionary, cardsBonusOptionsDictionary);
                 }
@@ -219,17 +239,32 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
             }
 
-            if (!ignoreCost)
+        if (ignoreCost)
+        {
+            DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+            if (currentBudgetSnapshot.Exists)
             {
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+                int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                int updatedBudget = currentBudget + cost;
+                await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
             }
+            else
+            {
+                Debug.LogError("Failed to fetch current player budget.");
+                return;
+            }
+        }
 
-            DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
+
+        DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
             await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
             await dbRefPlayerDeck.Child("played").SetValueAsync(true);
 
             DataTransfer.IsFirstCardInTurn = false;
-       
+
+        await cardUtilities.CheckIfPlayed2Cards(playerId);
+
+        tmp = await cardUtilities.CheckCardLimit(playerId);
     }
 
 
@@ -266,7 +301,37 @@ public class AddRemoveCardImp : MonoBehaviour
 
             if (data.Target == "player")
             {
-                if(cardId == "AD007")
+                if(cardId == "AD059")
+                {
+                    await BonusBudget();
+                } else if(cardId == "AD057")
+                {
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        enemyId = await playerListManager.SelectEnemyPlayer();
+                        if (string.IsNullOrEmpty(enemyId))
+                        {
+                            Debug.LogError("Failed to select an enemy player.");
+                            return (dbRefPlayerStats, -1, false, -1, null); 
+                        }
+                    }
+                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1, false, -1, null); 
+                    }
+                    else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        return (dbRefPlayerStats, -1, false, -1, null);
+                    }
+                    else
+                    {
+                        await MoreThan2Cards(enemyId);
+                    }
+
+                }
+                else if(cardId == "AD007")
                 {
                     await ProtectRegions();
 
@@ -320,7 +385,7 @@ public class AddRemoveCardImp : MonoBehaviour
                             if (string.IsNullOrEmpty(enemyId))
                             {
                                 Debug.LogError("Failed to select an enemy player.");
-                                return (dbRefPlayerStats, -1, false, -1, null); ;
+                                return (dbRefPlayerStats, -1, false, -1, null); 
                             }
                         }
                         playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
@@ -454,6 +519,15 @@ public class AddRemoveCardImp : MonoBehaviour
                     chosenRegion = await mapManager.SelectArea();
                 }
                 await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+
+                if(cardId== "AD075")
+                {
+                    isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+                    if(isBonusRegion)
+                    {
+                        await IgnoreCost();
+                    }
+                }
             }
             else if (data.Target == "player-random")
             {
@@ -641,6 +715,11 @@ public class AddRemoveCardImp : MonoBehaviour
                     continue;
                 }
 
+                if (await cardUtilities.CheckIfProtectedOneCard(playerID, value))
+                {
+                    continue;
+                }
+
                 if (int.TryParse(playerIncomeSnapshot.Value.ToString(), out int currentIncome))
                 {
                     await cardUtilities.CheckIfBudgetPenalty(playerID, areaId);
@@ -710,6 +789,15 @@ public class AddRemoveCardImp : MonoBehaviour
                             return;
                         }
 
+                        if (await cardUtilities.CheckIfProtectedOneCard(playerId, value))
+                        {
+                            Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                            return;
+                        }
+
+                        await cardUtilities.CheckBonusBudget(playerId, value);
+
+                        value = await cardUtilities.CheckBonusSupport(playerId, value);
 
                         int updatedSupportValue = currentSupportValue + value;
 
@@ -784,6 +872,14 @@ public class AddRemoveCardImp : MonoBehaviour
                             continue;
                         }
 
+                        if (await cardUtilities.CheckIfProtectedOneCard(playerId, value))
+                        {
+                            continue;
+                        }
+
+                        await cardUtilities.CheckBonusBudget(playerId, value);
+
+                        value = await cardUtilities.CheckBonusSupport(playerId, value);
 
                         int updatedSupportValue = currentSupportValue + value;
 
@@ -839,8 +935,6 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             string playerID = playerSnapshot.Key;
 
-            Debug.Log($"{cardholderId} rzucaj¹cy, a to inny gracz ${playerID}");
-
             if (playerID == cardholderId) continue;
 
             DataSnapshot playerStatSnapshot = playerSnapshot.Child("stats").Child(statType);
@@ -862,6 +956,11 @@ public class AddRemoveCardImp : MonoBehaviour
             updatedStat = Mathf.Max(updatedStat, 0);
 
             if (await cardUtilities.CheckIfProtected(playerID, value))
+            {
+                continue;
+            }
+
+            if (await cardUtilities.CheckIfProtectedOneCard(playerID, value))
             {
                 continue;
             }
@@ -1222,7 +1321,6 @@ public class AddRemoveCardImp : MonoBehaviour
         { "currentPlayerTurnsTaken", currentPlayerTurnsTaken },
         { "playerId", playerId }
     };
-        Debug.Log($"{value} playerId: {playerId}, nextPlayerId: {nextPlayerId}");
 
         if (budgetPenaltySnapshot.Exists)
         {
@@ -1236,6 +1334,117 @@ public class AddRemoveCardImp : MonoBehaviour
         }
     }
 
+    private async Task MoreThan2Cards(string enemyId)
+    {
+        if (string.IsNullOrEmpty(enemyId))
+        {
+            Debug.LogError("Enemy ID is null or empty.");
+            return;
+        }
+
+        DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats");
+
+        DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+        if (!playerStatsSnapshot.Exists)
+        {
+            Debug.LogError($"Player stats for {playerId} not found.");
+            return;
+        }
+
+        DataSnapshot turnsTakenSnapshot = playerStatsSnapshot.Child("turnsTaken");
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError("TurnsTaken stat not found for playerId.");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId)
+            .Child("twoCards");
+
+        var twoCardsData = new Dictionary<string, object>
+    {
+        { "turnsTaken", turnsTaken },
+        { "played", 0 },
+        { "playerId", playerId }
+
+    };
+
+        await dbRefEnemy.SetValueAsync(twoCardsData);
+
+    }
+
+    private async Task BonusBudget()
+    {
+
+        DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        DatabaseReference dbRefBudgetBonus = dbRefPlayer.Child("bonusBudget");
+
+        DatabaseReference dbRefTurnsTaken = dbRefPlayer
+            .Child("stats")
+            .Child("turnsTaken");
+
+        DataSnapshot turnsTakenSnapshot = await dbRefTurnsTaken.GetValueAsync();
+
+        if (!turnsTakenSnapshot.Exists)
+        {
+            Debug.LogError($"Field 'turnsTaken' does not exist for player {playerId}. Cannot block card.");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
+
+        var bonusBudgetData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken }
+            };
+
+        await dbRefBudgetBonus.SetValueAsync(bonusBudgetData);
+    }
+
+    private async Task IgnoreCost()
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Player ID is null or empty.");
+            return;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+
+        var dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        var statsSnapshot = await dbRefPlayer.Child("stats").GetValueAsync();
+        if (!statsSnapshot.Exists || !statsSnapshot.Child("turnsTaken").Exists)
+        {
+            Debug.LogError($"Stats or turnsTaken for player {playerId} not found.");
+            return;
+        }
+
+        int turnsTaken = Convert.ToInt32(statsSnapshot.Child("turnsTaken").Value);
+
+        await dbRefPlayer.Child("ignoreCost").SetValueAsync(turnsTaken);
+
+    }
 
 
 }

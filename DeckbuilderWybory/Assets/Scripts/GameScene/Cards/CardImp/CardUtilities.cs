@@ -205,9 +205,19 @@ public class CardUtilities : MonoBehaviour
             return;
         }
 
+        if (await CheckIfProtectedOneCard(playerId, supportToAdd))
+        {
+            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+            return;
+        }
+
+        await CheckBonusBudget(playerId, supportToAdd);
+
+        supportToAdd = await CheckBonusSupport(playerId, supportToAdd);
+
         await CheckIfBudgetPenalty(playerId, areaId);
 
-        support += supportToAdd;
+        support = Math.Max(0, support + supportToAdd);
 
         await dbRefSupport.SetValueAsync(support);
 
@@ -273,7 +283,13 @@ public class CardUtilities : MonoBehaviour
             return -1;
         }
 
-        await dbRefEnemyStats.Child(statType).SetValueAsync(updatedStat);
+            if (await CheckIfProtectedOneCard(enemyId, value))
+            {
+                Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                return -1;
+            }
+
+            await dbRefEnemyStats.Child(statType).SetValueAsync(updatedStat);
 
         if (statType == "money")
         {
@@ -1123,7 +1139,6 @@ public class CardUtilities : MonoBehaviour
         return false;
     }
 
-
     public async Task<bool> CheckIncreaseCostAllTurn(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
@@ -1185,6 +1200,335 @@ public class CardUtilities : MonoBehaviour
 
         return false;
     }
+
+    public async Task CheckIfPlayed2Cards(string playerId)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Player ID is null or empty.");
+            return;
+        }
+
+        DatabaseReference dbRefPlayerTwoCards = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("twoCards");
+
+        DataSnapshot twoCardsSnapshot = await dbRefPlayerTwoCards.GetValueAsync();
+        if (!twoCardsSnapshot.Exists)
+        {
+            return;
+        }
+
+        int turnsTakenInTwoCards = Convert.ToInt32(twoCardsSnapshot.Child("turnsTaken").Value);
+        int played = Convert.ToInt32(twoCardsSnapshot.Child("played").Value);
+        string relatedPlayerId = twoCardsSnapshot.Child("playerId").Value.ToString();
+
+        DatabaseReference dbRefRelatedPlayerStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(relatedPlayerId)
+            .Child("stats");
+
+        DataSnapshot relatedPlayerStatsSnapshot = await dbRefRelatedPlayerStats.GetValueAsync();
+        if (!relatedPlayerStatsSnapshot.Exists)
+        {
+            Debug.LogError($"Related player {relatedPlayerId} stats not found.");
+            return;
+        }
+
+        int turnsTakenForRelatedPlayer = Convert.ToInt32(relatedPlayerStatsSnapshot.Child("turnsTaken").Value);
+
+        if (turnsTakenInTwoCards != turnsTakenForRelatedPlayer)
+        {
+            return;
+        }
+
+        if (played == 0)
+        {
+            await dbRefPlayerTwoCards.Child("played").SetValueAsync(1);
+        }
+        else if (played == 1)
+        {
+            int currentMoney = Convert.ToInt32(relatedPlayerStatsSnapshot.Child("money").Value);
+            int updatedMoney = currentMoney + 5;
+
+            await dbRefRelatedPlayerStats.Child("money").SetValueAsync(updatedMoney);
+
+            await dbRefPlayerTwoCards.RemoveValueAsync();
+        }
+    }
+
+    public async Task CheckBonusBudget(string playerId, int value)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Player ID is null or empty.");
+            return;
+        }
+
+        if (value <= 0)
+        {
+            return;
+        }
+
+        DatabaseReference dbRefBonusBudget = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("bonusBudget");
+
+        DataSnapshot bonusBudgetSnapshot = await dbRefBonusBudget.GetValueAsync();
+        if (!bonusBudgetSnapshot.Exists)
+        {
+            return;
+        }
+
+        int bonusBudgetTurnsTaken = Convert.ToInt32(bonusBudgetSnapshot.Child("turnsTaken").Value);
+
+        DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats");
+
+        DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+        if (!playerStatsSnapshot.Exists)
+        {
+            Debug.LogError($"Stats for player {playerId} not found.");
+            return;
+        }
+
+        int playerTurnsTaken = Convert.ToInt32(playerStatsSnapshot.Child("turnsTaken").Value);
+
+        if (bonusBudgetTurnsTaken != playerTurnsTaken)
+        {
+            return;
+        }
+
+        int currentMoney = Convert.ToInt32(playerStatsSnapshot.Child("money").Value);
+        int updatedMoney = currentMoney + 5;
+
+        await dbRefPlayerStats.Child("money").SetValueAsync(updatedMoney);
+    }
+
+    public async Task<bool> CheckIfProtectedOneCard(string playerId, int value)
+    {
+        if (value >= 0)
+        {
+            return false;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+
+        var dbRefProtectedOneCard = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        var protectedTask = dbRefProtectedOneCard
+            .Child("protected")
+            .Child("allOneCard")
+            .GetValueAsync();
+
+        var turnsTakenTask = dbRefProtectedOneCard
+            .Child("stats")
+            .Child("turnsTaken")
+            .GetValueAsync();
+
+        await Task.WhenAll(protectedTask, turnsTakenTask);
+
+        if (protectedTask.Result.Exists && turnsTakenTask.Result.Exists)
+        {
+            if (int.TryParse(protectedTask.Result.Value.ToString(), out int protectedTurn) &&
+                int.TryParse(turnsTakenTask.Result.Value.ToString(), out int turnsTaken))
+            {
+                if (turnsTaken == protectedTurn)
+                {
+                    await dbRefProtectedOneCard.Child("protected").Child("allOneCard").RemoveValueAsync();
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public async Task<bool> CheckIgnoreCost(string playerId)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Player ID is null or empty.");
+            return false;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+
+        var dbRefPlayer = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId);
+
+        var ignoreCostTask = dbRefPlayer.Child("ignoreCost").GetValueAsync();
+        var statsTask = dbRefPlayer.Child("stats").GetValueAsync();
+
+        await Task.WhenAll(ignoreCostTask, statsTask);
+
+        var ignoreCostSnapshot = ignoreCostTask.Result;
+        var statsSnapshot = statsTask.Result;
+
+        if (!ignoreCostSnapshot.Exists || !statsSnapshot.Exists || !statsSnapshot.Child("turnsTaken").Exists)
+        {
+            return false;
+        }
+
+        int ignoreCostValue = Convert.ToInt32(ignoreCostSnapshot.Value);
+        int turnsTaken = Convert.ToInt32(statsSnapshot.Child("turnsTaken").Value);
+
+        if (ignoreCostValue == turnsTaken)
+        {
+            await dbRefPlayer.Child("ignoreCost").RemoveValueAsync();
+            return true;
+        }
+
+        return false;
+    }
+
+    public async Task<bool> CheckCardLimit(string playerId)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Player ID is null or empty.");
+            return false;
+        }
+
+        string lobbyId = DataTransfer.LobbyId;
+
+        var dbRefLimitCards = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("limitCards");
+
+        var limitCardsSnapshot = await dbRefLimitCards.GetValueAsync();
+        if (!limitCardsSnapshot.Exists)
+        {
+            return false;
+        }
+
+        string limitCardsPlayerId = limitCardsSnapshot.Child("playerId").Value?.ToString();
+        int limitCardsTurnsTaken = Convert.ToInt32(limitCardsSnapshot.Child("turnsTaken").Value);
+        int playedCards = Convert.ToInt32(limitCardsSnapshot.Child("playedCards").Value);
+
+        if (string.IsNullOrEmpty(limitCardsPlayerId))
+        {
+            Debug.LogError("playerId is missing in limitCards.");
+            return false;
+        }
+
+        var dbRefPlayerStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(limitCardsPlayerId)
+            .Child("stats");
+
+        var playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+        if (!playerStatsSnapshot.Exists || !playerStatsSnapshot.Child("turnsTaken").Exists)
+        {
+            Debug.LogError($"Stats or turnsTaken for player {limitCardsPlayerId} not found.");
+            return false;
+        }
+
+        int playerTurnsTaken = Convert.ToInt32(playerStatsSnapshot.Child("turnsTaken").Value);
+
+        if (limitCardsTurnsTaken == playerTurnsTaken)
+        {
+            if (playedCards == 1)
+            {
+                return true;
+            }
+
+            if (playedCards == 0)
+            {
+                await dbRefLimitCards.Child("playedCards").SetValueAsync(1); 
+                return false;
+            }
+
+            if (playedCards == -1)
+            {
+                await dbRefLimitCards.Child("playedCards").SetValueAsync(0);
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    public async Task<int> CheckBonusSupport(string playerId, int value)
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Player ID is null or empty.");
+            return value;
+        }
+
+        if (value <= 0)
+        {
+            return value;
+        }
+
+        DatabaseReference dbRefBonusSupport = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("bonusSupport");
+
+        DataSnapshot bonusSupportSnapshot = await dbRefBonusSupport.GetValueAsync();
+        if (!bonusSupportSnapshot.Exists)
+        {
+            return value;
+        }
+
+        int bonusSupportTurnsTaken = Convert.ToInt32(bonusSupportSnapshot.Child("turnsTaken").Value);
+
+        DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats");
+
+        DataSnapshot playerStatsSnapshot = await dbRefPlayerStats.GetValueAsync();
+        if (!playerStatsSnapshot.Exists)
+        {
+            Debug.LogError($"Stats for player {playerId} not found.");
+            return value;
+        }
+
+        int playerTurnsTaken = Convert.ToInt32(playerStatsSnapshot.Child("turnsTaken").Value);
+
+        if (bonusSupportTurnsTaken != playerTurnsTaken)
+        {
+            return value;
+        }
+
+        await dbRefBonusSupport.RemoveValueAsync();
+
+        return 2 * value;
+    }
+
+
+
 }
 
 public class OptionData
