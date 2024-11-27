@@ -1764,6 +1764,7 @@ MonoBehaviour:
   deckController: {fileID: 1025589057}
   cardSelectionUI: {fileID: 859441751}
   cardTypeManager: {fileID: 308241388}
+  turnController: {fileID: 1280964203}
 --- !u!1001 &668718708
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2026,6 +2027,8 @@ MonoBehaviour:
   cardUtilities: {fileID: 399039783}
   cardSelectionUI: {fileID: 859441751}
   cardTypeManager: {fileID: 308241388}
+  deckController: {fileID: 1025589057}
+  turnController: {fileID: 1280964203}
 --- !u!1 &745041914
 GameObject:
   m_ObjectHideFlags: 0
