@@ -303,12 +303,11 @@ public class TurnController : MonoBehaviour
         turnPlayerName.text = "Twoja tura!";
         passButton.interactable = true;
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
+        turnsTaken++;
+        dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
         dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
         isMyTurn = true;
         DataTransfer.IsFirstCardInTurn = true;
-
-        turnsTaken++;
-        dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
 
     }
 

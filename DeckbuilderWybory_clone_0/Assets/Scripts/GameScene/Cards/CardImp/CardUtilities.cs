@@ -215,7 +215,7 @@ public class CardUtilities : MonoBehaviour
 
         supportToAdd = await CheckBonusSupport(playerId, supportToAdd);
 
-        await CheckIfBudgetPenalty(playerId, areaId);
+        //await CheckIfBudgetPenalty(playerId, areaId);
 
         support = Math.Max(0, support + supportToAdd);
 
@@ -830,9 +830,11 @@ public class CardUtilities : MonoBehaviour
         return false;
     }
 
-    public async Task CheckIfBudgetPenalty(string playerId, int areaId)
+  /*  public async Task CheckIfBudgetPenalty(string playerId, int areaId)
     {
         string lobbyId = DataTransfer.LobbyId;
+
+        Debug.Log($"Rozpoczêto sprawdzanie BudgetPenalty dla gracza o ID: {playerId} w lobby: {lobbyId}.");
 
         DatabaseReference dbRefPlayer = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -847,13 +849,16 @@ public class CardUtilities : MonoBehaviour
             Debug.LogError($"Brak danych gracza o ID: {playerId} w bazie.");
             return;
         }
+        Debug.Log($"Pobrano dane gracza o ID: {playerId}.");
 
         DataSnapshot budgetPenaltySnapshot = playerSnapshot.Child("budgetPenalty");
 
         if (!budgetPenaltySnapshot.Exists)
         {
+            Debug.Log($"Brak ga³êzi 'budgetPenalty' dla gracza o ID: {playerId}.");
             return;
         }
+        Debug.Log($"Znaleziono 'budgetPenalty' dla gracza o ID: {playerId}.");
 
         string budgetPenaltyPlayerId = Convert.ToString(budgetPenaltySnapshot.Child("playerId").Value);
 
@@ -862,6 +867,7 @@ public class CardUtilities : MonoBehaviour
             Debug.LogError("Nie znaleziono 'playerId' w ga³êzi 'budgetPenalty'.");
             return;
         }
+        Debug.Log($"'playerId' w 'budgetPenalty' wskazuje na gracza o ID: {budgetPenaltyPlayerId}.");
 
         DatabaseReference dbRefBudgetPenaltyPlayer = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -873,15 +879,20 @@ public class CardUtilities : MonoBehaviour
 
         if (!budgetPenaltyPlayerSnapshot.Exists)
         {
-            Debug.LogError($"Brak danych gracza {budgetPenaltyPlayerId} w bazie.");
+            Debug.LogError($"Brak danych gracza o ID: {budgetPenaltyPlayerId} wskazanego w 'budgetPenalty'.");
             return;
         }
+        Debug.Log($"Pobrano dane gracza o ID: {budgetPenaltyPlayerId} wskazanego w 'budgetPenalty'.");
 
         int budgetPenaltyTurnsTaken = Convert.ToInt32(budgetPenaltySnapshot.Child("turnsTaken").Value);
+        Debug.Log($"Liczba tur z 'budgetPenalty': {budgetPenaltyTurnsTaken}.");
+
         int budgetPenaltyPlayerTurnsTaken = Convert.ToInt32(budgetPenaltyPlayerSnapshot.Child("stats").Child("turnsTaken").Value);
+        Debug.Log($"Liczba tur gracza wskazanego w 'budgetPenalty': {budgetPenaltyPlayerTurnsTaken}.");
 
         if (budgetPenaltyTurnsTaken != budgetPenaltyPlayerTurnsTaken)
         {
+            Debug.Log($"Liczba tur siê nie zgadza. 'BudgetPenalty' (tury): {budgetPenaltyTurnsTaken}, gracz (tury): {budgetPenaltyPlayerTurnsTaken}. Przerywam.");
             return;
         }
 
@@ -893,6 +904,7 @@ public class CardUtilities : MonoBehaviour
         if (areaSupportSnapshot.Exists)
         {
             int areaSupport = Convert.ToInt32(areaSupportSnapshot.Value);
+            Debug.Log($"Poparcie dla regionu {areaId} wynosi: {areaSupport}.");
 
             if (areaSupport > 0)
             {
@@ -902,15 +914,18 @@ public class CardUtilities : MonoBehaviour
                 await dbRefPlayer.Child("stats").Child("money").SetValueAsync(newMoney);
                 await dbRefPlayer.Child("budgetPenalty").RemoveValueAsync();
 
-                Debug.Log($"Zmniejszono pieni¹dze gracza o ID: {playerId} do {newMoney}. Usuniêto ga³¹Ÿ 'budgetPenalty'.");
+                Debug.Log($"Zmniejszono pieni¹dze gracza o ID: {playerId} z {currentMoney} do {newMoney}. Usuniêto ga³¹Ÿ 'budgetPenalty'.");
             }
-
+            else
+            {
+                Debug.Log($"Poparcie dla regionu {areaId} jest równe 0. Kara pieniê¿na nie zosta³a na³o¿ona.");
+            }
         }
         else
         {
-            Debug.Log($"Brak poparcia dla regionu {areaId} w statystykach gracza {budgetPenaltyPlayerId}.");
+            Debug.Log($"Brak danych o poparciu dla regionu {areaId} w statystykach gracza {budgetPenaltyPlayerId}.");
         }
-    }
+    }*/
 
     public async Task<bool> CheckSupportBlock(string playerId)
     {

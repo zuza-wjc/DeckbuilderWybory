@@ -370,7 +370,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if(cardId == "AD047")
                     {
-                        await BudgetPenalty(data.Number);
+                       // await BudgetPenalty();
                         
                     } else if(cardId == "AD090")
                     {
@@ -722,7 +722,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
                 if (int.TryParse(playerIncomeSnapshot.Value.ToString(), out int currentIncome))
                 {
-                    await cardUtilities.CheckIfBudgetPenalty(playerID, areaId);
+                    //await cardUtilities.CheckIfBudgetPenalty(playerID, areaId);
 
                     int updatedIncome = Math.Max(0, currentIncome + value);
 
@@ -809,7 +809,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
                         await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
 
-                        await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
+                        //await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
 
                         await dbRefAllPlayersStats
                             .Child(playerId)
@@ -891,7 +891,7 @@ public class AddRemoveCardImp : MonoBehaviour
                         updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
                         await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
 
-                        await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
+                       // await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
 
                         await dbRefAllPlayersStats
                             .Child(playerId)
@@ -1250,7 +1250,7 @@ public class AddRemoveCardImp : MonoBehaviour
         }
     }
 
-    private async Task BudgetPenalty(int value)
+    /*private async Task BudgetPenalty()
     {
         DatabaseReference dbRefPlayers = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -1337,24 +1337,20 @@ public class AddRemoveCardImp : MonoBehaviour
 
         var budgetPenaltyData = new Dictionary<string, object>
     {
-        { "value", value },
-        { "currentPlayerTurnsTaken", currentPlayerTurnsTaken }, // Liczba tur wykonanych przez zagrywaj¹cego
+        { "currentPlayerTurnsTaken", currentPlayerTurnsTaken }, 
         { "playerId", playerId }
     };
 
         if (budgetPenaltySnapshot.Exists)
         {
-            await dbRefNextPlayer.Child("value").SetValueAsync(value);
-            await dbRefNextPlayer.Child("turnsTaken").SetValueAsync(currentPlayerTurnsTaken); // Poprawne dane
+            await dbRefNextPlayer.Child("turnsTaken").SetValueAsync(currentPlayerTurnsTaken);
             await dbRefNextPlayer.Child("playerId").SetValueAsync(playerId);
         }
         else
         {
             await dbRefNextPlayer.SetValueAsync(budgetPenaltyData);
         }
-    }
-
-
+    }*/
 
     private async Task MoreThan2Cards(string enemyId)
     {
