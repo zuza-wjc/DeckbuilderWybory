@@ -261,6 +261,72 @@ public class TurnController : MonoBehaviour
             onComplete?.Invoke();
         });
     }
+    void DrawNewCardsFromDeck()
+    {
+        // Referencja do talii gracza
+        DatabaseReference deckRef = dbRef.Child(playerId).Child("deck");
+
+        // Pobranie kart z talii
+        deckRef.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+
+                if (snapshot.Exists)
+                {
+                    List<DataSnapshot> availableCards = new List<DataSnapshot>();
+
+                    // Przejœcie przez wszystkie karty w talii
+                    foreach (DataSnapshot cardSnapshot in snapshot.Children)
+                    {
+                        bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+                        bool played = cardSnapshot.Child("played").Value as bool? ?? false;
+
+                        // Dodanie kart, które mog¹ byæ dobrane
+                        if (!onHand && !played)
+                        {
+                            availableCards.Add(cardSnapshot);
+                        }
+                    }
+
+                    if (availableCards.Count > 0)
+                    {
+                        // Losowanie jednej z dostêpnych kart
+                        int randomIndex = UnityEngine.Random.Range(0, availableCards.Count);
+                        DataSnapshot selectedCard = availableCards[randomIndex];
+
+                        // Aktualizacja w³aœciwoœci karty: ustawienie `onHand` na true
+                        string cardId = selectedCard.Key;
+                        deckRef.Child(cardId).Child("onHand").SetValueAsync(true).ContinueWithOnMainThread(updateTask =>
+                        {
+                            if (updateTask.IsCompleted)
+                            {
+                                Debug.Log($"Dodano kartê {cardId} na rêkê gracza.");
+                            }
+                            else
+                            {
+                                Debug.LogError($"B³¹d podczas dodawania karty {cardId} na rêkê: {updateTask.Exception}");
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Brak dostêpnych kart do dobrania.");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Talia gracza jest pusta.");
+                }
+            }
+            else
+            {
+                Debug.LogError("B³¹d podczas pobierania talii gracza: " + task.Exception);
+            }
+        });
+    }
+
 
     void StartTurn()
     {
@@ -301,6 +367,7 @@ public class TurnController : MonoBehaviour
 */
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
+        DrawNewCardsFromDeck();
         passButton.interactable = true;
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
         turnsTaken++;
@@ -308,6 +375,7 @@ public class TurnController : MonoBehaviour
         dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
         isMyTurn = true;
         DataTransfer.IsFirstCardInTurn = true;
+        
 
     }
 
