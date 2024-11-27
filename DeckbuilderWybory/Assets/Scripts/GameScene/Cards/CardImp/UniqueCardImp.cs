@@ -570,7 +570,7 @@ public class UniqueCardImp : MonoBehaviour
 
         support += value;
 
-            await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
+          //  await cardUtilities.CheckIfBudgetPenalty(playerId, areaId);
 
             await dbRefSupport.SetValueAsync(support);
 
@@ -627,7 +627,7 @@ public class UniqueCardImp : MonoBehaviour
         var maxPlayer = maxSupportPlayers[UnityEngine.Random.Range(0, maxSupportPlayers.Count)];
         var minPlayer = minSupportPlayers[UnityEngine.Random.Range(0, minSupportPlayers.Count)];
 
-        await cardUtilities.CheckIfBudgetPenalty(cardHolderId, chosenRegion);
+       // await cardUtilities.CheckIfBudgetPenalty(cardHolderId, chosenRegion);
 
         var maxSupportRef = dbRefPlayersStats
             .Child(maxPlayer.playerId)
@@ -731,7 +731,7 @@ public class UniqueCardImp : MonoBehaviour
 
         await cardUtilities.CheckBonusBudget(playerId, enemySupport-playerSupport);
 
-        await cardUtilities.CheckIfBudgetPenalty(playerId, chosenRegion);
+      //  await cardUtilities.CheckIfBudgetPenalty(playerId, chosenRegion);
 
         await playerSupportRef.SetValueAsync(enemySupport);
         await enemySupportRef.SetValueAsync(playerSupport);
@@ -837,7 +837,7 @@ public class UniqueCardImp : MonoBehaviour
                 .Child("region")
                 .Child(regionId.ToString());
 
-            await cardUtilities.CheckIfBudgetPenalty(playerId, regionId);
+            //await cardUtilities.CheckIfBudgetPenalty(playerId, regionId);
 
             await dbRefProtectedRegion.SetValueAsync(turnsTaken);
 
