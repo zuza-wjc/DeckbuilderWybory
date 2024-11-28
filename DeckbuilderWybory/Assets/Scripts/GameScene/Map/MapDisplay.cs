@@ -16,10 +16,15 @@ public class MapDisplay : MonoBehaviour
     string lobbyId;
     string playerId;
     string playerName;
+    string[] playerValues = new string[6];
     string playerSupport;
+    string[] mapType = new string[] {"0","0","0","0","0","0"};
+
     string regionMax;
     int regionMaxInt;
     public GameObject mapPanel;
+    public Text regionType;
+    public Image[] regionImage;
 
     public Text[] regionText;
 
@@ -34,6 +39,8 @@ public class MapDisplay : MonoBehaviour
 
     public GameObject regions;
     public GameObject regionStatsPanel;
+    public Image regionStatsBackgroundPanel;
+    public Color[] regionTypeColor;
 
     public Text regionStatsName;
     public Text regionStatsMax;
@@ -49,6 +56,13 @@ public class MapDisplay : MonoBehaviour
 
 
     private List<GameObject> createdButtons = new List<GameObject>();
+
+    public GameObject regionPlayerStatsPanel;
+    public Transform regionPlayerStatsContainer;
+
+    public Text regionStatsPlayerName;
+    public GameObject buttonRegionPlayerTemplate;
+    public GameObject scrollViewContentRegionPlayer;
 
     //private Dictionary<string, string> playerNameToIdMap = new Dictionary<string, string>();
 
@@ -91,6 +105,13 @@ public class MapDisplay : MonoBehaviour
         int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Child("maxSupport").Value.ToString());
         int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Child("maxSupport").Value.ToString());
         int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Child("maxSupport").Value.ToString());
+
+        mapType[0] = mapSnapshot.Child("region1").Child("type").Value.ToString();
+        mapType[1] = mapSnapshot.Child("region2").Child("type").Value.ToString();
+        mapType[2] = mapSnapshot.Child("region3").Child("type").Value.ToString();
+        mapType[3] = mapSnapshot.Child("region4").Child("type").Value.ToString();
+        mapType[4] = mapSnapshot.Child("region5").Child("type").Value.ToString();
+        mapType[5] = mapSnapshot.Child("region6").Child("type").Value.ToString();
 
         int[] regionValues = new int[6];
 
@@ -145,6 +166,14 @@ public class MapDisplay : MonoBehaviour
         regionText[3].text = $"{regionValues[3]}/{maxRegion4}";
         regionText[4].text = $"{regionValues[4]}/{maxRegion5}";
         regionText[5].text = $"{regionValues[5]}/{maxRegion6}";
+
+        regionImage[0].color = ChooseRegionColor(0);
+        regionImage[1].color = ChooseRegionColor(1);
+        regionImage[2].color = ChooseRegionColor(2);
+        regionImage[3].color = ChooseRegionColor(3);
+        regionImage[4].color = ChooseRegionColor(4);
+        regionImage[5].color = ChooseRegionColor(5);
+
     }
 
     void OpenRegionStats(string regionNumber, int maxRegion, int[] regionValues){
@@ -155,6 +184,9 @@ public class MapDisplay : MonoBehaviour
         regionStatsMax.text= $"{regionValues[regionN-1]}/{maxRegion}";
         string regionNumberDb=(regionN-1).ToString();
 
+
+        regionStatsBackgroundPanel.color= ChooseRegionColor(regionN-1);
+        regionType.text="TYP: " + mapType[regionN-1].ToUpper();
 
         valuesChart = new float[valuesChart.Length];
 
@@ -175,10 +207,24 @@ public class MapDisplay : MonoBehaviour
             {
                 playerId = childSnapshot.Key;
                 playerName = childSnapshot.Child("playerName").Value.ToString();
+                //mapType[0] = snapshot.Child("map").Child("region"+regionNumber).Child("type").Value.ToString();
+
                 playerSupport = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child(regionNumberDb).Value.ToString();
                 float.TryParse(playerSupport, out valuesChart[playerNumber]);
+                //values chart to jest wszystkich graczy w regionie
+
+                Debug.LogError(valuesChart[playerNumber]);
+                playerValues[0] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("0").Value.ToString();
+                playerValues[1] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("1").Value.ToString();
+                playerValues[2] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("2").Value.ToString();
+                playerValues[3] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("3").Value.ToString();
+                playerValues[4] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("4").Value.ToString();
+                playerValues[5] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("5").Value.ToString();
+                //playerValue to sa wszystkie regiony jednego gracza
+
                 // Utw rz przycisk dla innego gracza
-                CreateButton(playerName, playerSupport, playerNumber);
+                CreateButton(playerName, playerValues, playerNumber, regionN-1);
+
                 playerNumber++;
 
             }
@@ -189,22 +235,73 @@ public class MapDisplay : MonoBehaviour
 
     }
 
-    void CreateButton(string playerName, string playerSupport, int playerNumber)
+    Color ChooseRegionColor(int indexMap){
+        switch (mapType[indexMap])
+        {
+            case "Podstawa":
+                return regionTypeColor[0];
+            case "Ambasada":
+                //0 to podstawa
+                return regionTypeColor[1];
+            case "Środowisko":
+                return regionTypeColor[2];
+            case "Przemysł":
+                return regionTypeColor[3];
+            case "Metropolia":
+                return regionTypeColor[4];
+            default:
+                Debug.LogError("Invalid region ID.");
+                return regionTypeColor[5];
+        }
+
+    }
+
+    async Task CreateButton(string playerName, string[] playerSupport, int playerNumber, int regionN)
     {
         GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
         button.SetActive(true);
-        button.GetComponentInChildren<UnityEngine.UI.Text>().text = playerName + ": " + playerSupport;
+        button.GetComponentInChildren<UnityEngine.UI.Text>().text = playerName + ": " + playerSupport[regionN];
         button.GetComponent<Image>().color = segmentColors[playerNumber];
 
         createdButtons.Add(button);
+        //wszystkie regiony i wartosci jednego gracza
+        string[] currentPlayerSupport = (string[])playerSupport.Clone();
+        button.GetComponent<Button>().onClick.AddListener(() => OnButtonClick(playerName, currentPlayerSupport));
+
+    }
+
+    async Task OnButtonClick(string playerName, string[] playerSupport)
+    {
+        regionStatsPlayerName.text = playerName;
+        foreach (Transform child in regionPlayerStatsContainer)
+        {
+            Destroy(child.gameObject);
+        }
+        regionPlayerStatsPanel.SetActive(true);
+        //tuu dodaj imie wybranego
+        //nazwa to region 1,2,3 itd
+        //kolory to typy regionów
+        for(int i=0;i<6;i++)
+        {
+            //pamietaj by kolory odpowiadaly kolorom typów regionów
+            GameObject button = Instantiate(buttonRegionPlayerTemplate, scrollViewContentRegionPlayer.transform);
+            button.SetActive(true);
+            button.GetComponentInChildren<UnityEngine.UI.Text>().text = "Region " + (i+1) + ": " + playerSupport[i];
+            button.GetComponent<Image>().color = ChooseRegionColor(i);
+        }
     }
 
     void BackgroundClicked()
     {
-        regions.SetActive(true);
-        regionStatsPanel.SetActive(false);
+        if(regionPlayerStatsPanel.activeSelf){
+            regionPlayerStatsPanel.SetActive(false);
+        }
+        else{
+            regions.SetActive(true);
+            regionStatsPanel.SetActive(false);
 
-        DestroyButtons();
+            DestroyButtons();
+        }
     }
 
     void DestroyButtons()
