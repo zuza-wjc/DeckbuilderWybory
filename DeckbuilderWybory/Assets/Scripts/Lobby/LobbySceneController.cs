@@ -383,6 +383,8 @@ public class LobbySceneController : MonoBehaviour
                     }
 
                     dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
+                });
+
 
                     dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
                     {
@@ -403,6 +405,7 @@ public class LobbySceneController : MonoBehaviour
                             Debug.Log("Failed to fetch map data: " + mapTask.Exception);
                         }
                     });
+            }
 
                 getTurnOrder(() =>
                 {
@@ -410,7 +413,6 @@ public class LobbySceneController : MonoBehaviour
                 });
             }
         }
-    }
 
     IEnumerator TransitionToGameScene()
     {
