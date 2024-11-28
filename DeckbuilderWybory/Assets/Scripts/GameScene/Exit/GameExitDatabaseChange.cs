@@ -10,6 +10,8 @@ public class GameExitDatabaseChange : MonoBehaviour
     DatabaseReference dbRefPlayers;
     string lobbyId;
     string playerId;
+    string playerName;
+    int lobbySize;
 
     public Button backButton;
 

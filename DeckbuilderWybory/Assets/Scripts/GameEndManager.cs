@@ -12,11 +12,13 @@ using System;
 public class GameEndManager : MonoBehaviour
 {
     public Button backToMainButton;
+    public Text informationText;
 
     private DatabaseReference dbRefLobby;
     private DatabaseReference dbRef;
     private string lobbyId;
     private string playerId;
+    private int rounds;
 
     IEnumerator Start()
     {
@@ -33,30 +35,23 @@ public class GameEndManager : MonoBehaviour
         dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
         backToMainButton.onClick.AddListener(EndGame);
+
+        yield return StartCoroutine(GetRounds());
+
+        if (rounds <= 0)
+        {
+            informationText.text = "Rozgrywka zakoñczona!";
+        }
+        else
+        {
+            informationText.text = "Rozgrywka przerwana! Gracz opuœci³ grê.";
+        }
     }
 
     void EndGame()
     {
-        StartCoroutine(CheckLobby());
+        StartCoroutine(CheckAndHandleEndGame());
     }
-
-    IEnumerator CheckLobby()
-    {
-        // SprawdŸ, czy lobby istnieje
-        var lobbyTask = dbRefLobby.GetValueAsync();
-        yield return new WaitUntil(() => lobbyTask.IsCompleted);
-
-        if (lobbyTask.IsFaulted || lobbyTask.Result == null || !lobbyTask.Result.Exists)
-        {
-            Debug.LogWarning("Lobby does not exist. Returning to Main Menu.");
-            ChangeToScene(); // Jeœli lobby nie istnieje, przejdŸ do g³ównego menu
-            yield break;
-        }
-
-        // Jeœli lobby istnieje, kontynuuj normaln¹ logikê
-        yield return StartCoroutine(CheckAndHandleEndGame());
-    }
-
 
     IEnumerator CheckAndHandleEndGame()
     {
@@ -91,7 +86,7 @@ public class GameEndManager : MonoBehaviour
 
         if (!otherPlayersInGame)
         {
-            yield return StartCoroutine(RemoveSession());
+            yield return StartCoroutine(RemoveSessionAfterDelay());
         }
 
         ChangeToScene();
@@ -102,9 +97,9 @@ public class GameEndManager : MonoBehaviour
         SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
     }
 
-    IEnumerator RemoveSession()
+    IEnumerator RemoveSessionAfterDelay()
     {
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(1.0f);
 
         if (dbRefLobby != null)
         {
@@ -118,6 +113,41 @@ public class GameEndManager : MonoBehaviour
                     Debug.LogError("Failed to remove session: " + task.Exception);
                 }
             });
+        }
+    }
+
+    IEnumerator GetRounds()
+    {
+        bool isCompleted = false;
+
+        dbRefLobby.Child("rounds").GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+
+                if (snapshot.Exists && snapshot.Value != null)
+                {
+                    rounds = int.Parse(snapshot.Value.ToString());
+                }
+                else
+                {
+                    Debug.LogWarning("Rounds not found.");
+                    rounds = 0; // Domyœlna wartoœæ
+                }
+            }
+            else
+            {
+                Debug.LogError("Failed to get rounds: " + task.Exception);
+            }
+
+            isCompleted = true; // Oznacz jako ukoñczone
+        });
+
+        // Czekaj, a¿ `isCompleted` bêdzie true
+        while (!isCompleted)
+        {
+            yield return null;
         }
     }
 

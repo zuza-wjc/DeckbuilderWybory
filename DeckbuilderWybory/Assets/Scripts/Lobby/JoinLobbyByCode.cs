@@ -162,7 +162,7 @@ public class JoinLobbyByCode : MonoBehaviour
                             { "inGame", false },
                             { "money", 0 },
                             { "income", 10 },
-                            { "support", new int[6] { 0, 0, 0, 0, 0, 0 } },
+                            { "support", new int[6] { 5, 5, 5, 5, 5, 5 } },
                             { "playerTurn", 2 }, { "turnsTaken",0 }
                         }
                     }

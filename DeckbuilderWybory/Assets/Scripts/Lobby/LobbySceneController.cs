@@ -160,7 +160,7 @@ public class LobbySceneController : MonoBehaviour
                 if (playerId != playerChanged)
                 {
                     bool isReady = (bool)child.Value;
-                    // Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
+                   // Debug.Log("Player " + playerChanged + " ready status changed to: " + isReady);
 
                     string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
 
@@ -168,7 +168,7 @@ public class LobbySceneController : MonoBehaviour
                     {
                         UpdatePlayerCountsText();
                         UpdateText(playerNameChange, isReady);
-                    });
+                    });                    
                 }
             }
         }
@@ -273,7 +273,7 @@ public class LobbySceneController : MonoBehaviour
                 {
                     if (snapshot.ChildrenCount == 1)
                     {
-                        dbRefLobby.RemoveValueAsync();
+                       dbRefLobby.RemoveValueAsync();
                     }
                     else
                     {
@@ -281,10 +281,10 @@ public class LobbySceneController : MonoBehaviour
                         {
                             if (readyTask.IsCompleted && !readyTask.IsFaulted)
                             {
-                                bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
+                               bool wasReady = readyTask.Result.Value != null && (bool)readyTask.Result.Value;
 
-                                if (wasReady)
-                                {
+                               if (wasReady)
+                               {
                                     getReadyPlayersFromDatabase(() =>
                                     {
                                         readyPlayers -= 1;
@@ -294,8 +294,8 @@ public class LobbySceneController : MonoBehaviour
 
                                 dbRef.Child(playerId).RemoveValueAsync();
                             }
-                            else
-                            {
+                           else
+                           {
                                 Debug.Log("Failed to get player 'ready' status: " + readyTask.Exception);
                             }
                         });
@@ -315,7 +315,7 @@ public class LobbySceneController : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        LeaveLobby();
+       LeaveLobby();
     }
 
     void HandleIsStartedChanged(object sender, ValueChangedEventArgs args)
@@ -429,7 +429,7 @@ public class LobbySceneController : MonoBehaviour
         {
             // Wywo�aj metod� InitializeDeck()
             deckController.InitializeDeck();
-
+          
         }
         else
         {
