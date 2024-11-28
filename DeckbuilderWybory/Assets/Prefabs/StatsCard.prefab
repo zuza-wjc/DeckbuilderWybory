@@ -639,6 +639,7 @@ MonoBehaviour:
   playerCardNumberText: {fileID: 5633510872605041447}
   playerRegionSupportText: {fileID: 8645678981373755896}
   playerTurnNumberText: {fileID: 2096467153865948110}
+  deckTypeText: {fileID: 8839706733115821325}
 --- !u!1 &3826251555943058340
 GameObject:
   m_ObjectHideFlags: 0

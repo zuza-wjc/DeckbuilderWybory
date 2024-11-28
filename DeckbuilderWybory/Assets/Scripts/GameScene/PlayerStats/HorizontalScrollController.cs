@@ -45,8 +45,8 @@ public class HorizontalScrollController : MonoBehaviour
 
                 if (snapshot.Exists)
                 {
-                    List<(string, string, string, string, int, string, int)> playersData = new List<(string, string, string, string, int, string, int)>();
-                    (string, string, string, string, int, string, int)? currentPlayerData = null;
+                    List<(string, string, string, string, int, string, int, string)> playersData = new List<(string, string, string, string, int, string, int, string)>();
+                    (string, string, string, string, int, string, int, string)? currentPlayerData = null;
 
                     foreach (var childSnapshot in snapshot.Child("players").Children)
                     {
@@ -62,6 +62,24 @@ public class HorizontalScrollController : MonoBehaviour
                         string playerMoney = childSnapshot.Child("stats").Child("money").Value?.ToString() ?? "0";
                         string playerIncome = childSnapshot.Child("stats").Child("income").Value?.ToString() ?? "0";
                         int turnNumber = int.Parse(childSnapshot.Child("myTurnNumber").Value?.ToString());
+                        string deckType = childSnapshot.Child("stats").Child("deckType").Value?.ToString() ?? "";
+
+                        if(deckType == "srodowisko")
+                        {
+                            deckType = "ŒRODOWISKO";
+                        }
+                        if (deckType == "ambasada")
+                        {
+                            deckType = "AMBASADA";
+                        }
+                        if (deckType == "przemysl")
+                        {
+                            deckType = "PRZEMYS£";
+                        }
+                        if (deckType == "metropolia")
+                        {
+                            deckType = "METROPOLIA";
+                        }
 
                         DataSnapshot supportSnapshot = childSnapshot.Child("stats").Child("support");
                         int supportSum = 0;
@@ -118,11 +136,11 @@ public class HorizontalScrollController : MonoBehaviour
 
                         if (currentPlayerId == playerId)
                         {
-                            currentPlayerData = (playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber);
+                            currentPlayerData = (playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType);
                         }
                         else
                         {
-                            playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber));
+                            playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType));
                         }
                     }
 
@@ -136,7 +154,7 @@ public class HorizontalScrollController : MonoBehaviour
                         for (int i = 0; i < playersData.Count && i < lobbySize; i++)
                         {
                             var playerData = playersData[i];
-                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4, playerData.Item5, playerData.Item6, playerData.Item7);
+                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4, playerData.Item5, playerData.Item6, playerData.Item7, playerData.Item8);
                         }
                     }
                     else
@@ -153,7 +171,7 @@ public class HorizontalScrollController : MonoBehaviour
     }
 
 
-    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupportText, int turnNumber)
+    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupportText, int turnNumber, string deckType)
     {
         if (statsCardPrefab == null || content == null)
         {
@@ -166,7 +184,7 @@ public class HorizontalScrollController : MonoBehaviour
 
         if (statsCard != null)
         {
-            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber);
+            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType);
         }
         else
         {
