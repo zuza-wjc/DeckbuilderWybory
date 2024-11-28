@@ -14,6 +14,7 @@ public class OptionsCardImp : MonoBehaviour
     public PlayerListManager playerListManager;
     public MapManager mapManager;
     public CardUtilities cardUtilities;
+    public ErrorPanelController errorPanelController;
 
     void Start()
     {
@@ -28,6 +29,7 @@ public class OptionsCardImp : MonoBehaviour
         if (cardLimitReached)
         {
             Debug.Log("Limit kart w turze to 1");
+            errorPanelController.ShowError("card_limit");
             return;
         }
 
@@ -53,6 +55,7 @@ public class OptionsCardImp : MonoBehaviour
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
             Debug.LogError("Firebase is not initialized properly!");
+            errorPanelController.ShowError("general_error");
             return;
         }
 
@@ -62,11 +65,33 @@ public class OptionsCardImp : MonoBehaviour
         if (!snapshot.Exists)
         {
             Debug.LogError($"No data for: {cardIdDropped}.");
+            errorPanelController.ShowError("general_error");
             return;
         }
 
-        cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
-        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+        if (snapshot.Child("cost").Exists)
+        {
+            cost = Convert.ToInt32(snapshot.Child("cost").Value);
+        }
+        else
+        {
+            Debug.LogError("Branch cost does not exist");
+            errorPanelController.ShowError("general_error");
+            return;
+
+        }
+
+        if (snapshot.Child("type").Exists)
+        {
+            cardType = snapshot.Child("type").Value.ToString();
+        }
+        else
+        {
+            Debug.LogError("Branch type does not exist");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
+
 
         if (DataTransfer.IsFirstCardInTurn)
         {
@@ -100,6 +125,7 @@ public class OptionsCardImp : MonoBehaviour
             if (await cardUtilities.CheckSupportBlock(playerId))
             {
                 Debug.Log("support block");
+                errorPanelController.ShowError("action_blocked");
                 return;
             }
 
@@ -113,14 +139,24 @@ public class OptionsCardImp : MonoBehaviour
         if (!playerStatsSnapshot.Exists)
         {
             Debug.LogError($"No data for player {playerId}.");
+            errorPanelController.ShowError("general_error");
             return;
         }
 
-        playerBudget = playerStatsSnapshot.Child("money").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : throw new Exception("Branch money does not exist.");
+        DataSnapshot moneySnapshot = playerStatsSnapshot.Child("money");
+        playerBudget = moneySnapshot.Exists ? Convert.ToInt32(moneySnapshot.Value) : -1;
+
+        if (playerBudget < 0)
+        {
+            Debug.LogError("B³¹d w pobieraniu wartoœci playerBudget");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
 
         if (!ignoreCost && playerBudget < cost)
         {
             Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+            errorPanelController.ShowError("no_budget");
             return;
         }
 
@@ -141,12 +177,47 @@ public class OptionsCardImp : MonoBehaviour
             if (supportChange)
             {
                 (playerBudget, ignoreCost, isBonusRegion, enemyId) = await SupportAction(budgetChange, playerBudget, cardIdDropped, ignoreCost, chosenRegion, isBonusRegion, cardType, supportOptions, supportBonusOptions, enemyId, budgetOptions);
+                if (playerBudget == -1)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
             }
 
             if (budgetChange)
             {
                 (dbRefPlayerStats, playerBudget) = await BudgetAction(dbRefPlayerStats, isBonusRegion, budgetOptions, budgetBonusOptions, playerBudget, enemyId);
+                if(playerBudget == -1)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
             }
+        } else
+        {
+            Debug.Log("Karta zosta³a zablokowana");
+            errorPanelController.ShowError("action_blocked");
+            return;
         }
 
         if (ignoreCost)
@@ -209,6 +280,7 @@ public class OptionsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
+            errorPanelController.ShowError("general_error");
             return (dbRefPlayerStats, -1);
         }
 
@@ -221,6 +293,12 @@ public class OptionsCardImp : MonoBehaviour
         {
             if (data.Target == "player")
             {
+                if(playerBudget < data.Number)
+                {
+                    Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
+                    errorPanelController.ShowError("no_budget");
+                    return (dbRefPlayerStats, -1); 
+                }
                 playerBudget += data.Number;
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
@@ -233,6 +311,7 @@ public class OptionsCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1);
                     }
                 }
@@ -277,6 +356,7 @@ public class OptionsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
+            errorPanelController.ShowError("general_error");
             return (-1, false, false, null);
         }
 
@@ -291,16 +371,38 @@ public class OptionsCardImp : MonoBehaviour
             {
                 case "enemy-random":
                     enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
+                        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
                     chosenRegion = await cardUtilities.RandomizeRegion(enemyId, data.Number, mapManager);
-                    Debug.Log($"Wylosowany region to {chosenRegion}");
-                    await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
+                    if(chosenRegion == -1)
+                    {
+                        Debug.LogError("Failed to randomize region.");
+                        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
+                    bool errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
+                    if(errorCheck)
+                    {
+                        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
                     RemoveTargetOption(ref budgetOptionsDictionary, "player");
                     break;
 
                 case "player-random":
                     chosenRegion = await cardUtilities.RandomizeRegion(playerId, data.Number, mapManager);
-                    Debug.Log($"Wylosowany region to {chosenRegion}");
-                    await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                    if (chosenRegion == -1)
+                    {
+                        Debug.LogError("Failed to randomize region.");
+                        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
+                    errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                    if (errorCheck)
+                    {
+                        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
                     RemoveTargetOption(ref budgetOptionsDictionary, "enemy");
                     break;
 
@@ -309,15 +411,19 @@ public class OptionsCardImp : MonoBehaviour
                     {
                         chosenRegion = await mapManager.SelectArea();
                     }
-
                     enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("No enemy player found in the area.");
+                        errorPanelController.ShowError("general_error");
                         return (-1, false, false, null);
                     }
 
-                    await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
+                    errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
+                    if(errorCheck)
+                    {
+                       return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
                     break;
 
                 case "player-region":
@@ -326,7 +432,12 @@ public class OptionsCardImp : MonoBehaviour
                         chosenRegion = await mapManager.SelectArea();
                     }
 
-                    await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                     errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+
+                    if(errorCheck)
+                    {
+                        return (playerBudget, ignoreCost, isBonusRegion, enemyId);
+                    }
 
                     if (cardId == "OP011") { ignoreCost = UnityEngine.Random.Range(0, 2) == 0; }
                     if (cardId == "OP013") { budgetChange = false; }
@@ -334,6 +445,7 @@ public class OptionsCardImp : MonoBehaviour
 
                 default:
                     Debug.LogError($"Unsupported target type: {data.Target}");
+                    errorPanelController.ShowError("general_error");
                     break;
             }
         }
@@ -391,6 +503,7 @@ public class OptionsCardImp : MonoBehaviour
 
     public Dictionary<int, OptionDataRandom> RandomizeOption(Dictionary<int, OptionDataRandom> optionsDictionary)
     {
+
         if (optionsDictionary.Count == 1)
         {
             return new Dictionary<int, OptionDataRandom> { { 0, optionsDictionary.First().Value } };

@@ -19,6 +19,7 @@ public class CardCardImp : MonoBehaviour
     public CardSelectionUI cardSelectionUI;
     public CardTypeManager cardTypeManager;
     public TurnController turnController;
+    public ErrorPanelController errorPanelController;
 
     private System.Random random = new System.Random();
 
@@ -35,12 +36,13 @@ public class CardCardImp : MonoBehaviour
         if (tmp)
         {
             Debug.Log("Limit kart w turze to 1");
+            errorPanelController.ShowError("card_limit");
             return;
         }
         DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
             int cost, playerBudget, chosenRegion = -1;
             string cardType, enemyId = string.Empty, source = string.Empty, target = string.Empty;
-            bool supportChange = false, isBonusRegion = false, cardsChange = false, onHandChanged = false;
+            bool supportChange = false, isBonusRegion = false, cardsChange = false, onHandChanged = false,errorCheck = false;
 
             Dictionary<int, OptionDataCard> cardsOptionsDictionary = new();
             Dictionary<int, OptionDataCard> cardsBonusOptionsDictionary = new();
@@ -58,7 +60,8 @@ public class CardCardImp : MonoBehaviour
             if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
             {
                 Debug.LogError("Firebase is not initialized properly!");
-                return;
+            errorPanelController.ShowError("general_error");
+            return;
             }
 
             dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child("cards").Child(cardIdDropped);
@@ -67,10 +70,18 @@ public class CardCardImp : MonoBehaviour
             if (!snapshot.Exists)
             {
                 Debug.LogError("No data for: " + cardIdDropped + ".");
-                return;
+            errorPanelController.ShowError("general_error");
+            return;
             }
 
-            cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
+        cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : -1;
+
+        if (cost < -1)
+        {
+            Debug.LogError("Branch cost does not exist");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
 
         if (DataTransfer.IsFirstCardInTurn)
         {
@@ -78,30 +89,6 @@ public class CardCardImp : MonoBehaviour
             {
                 double increasedCost = 1.5 * cost;
 
-                if (cost >= 0)
-                {
-                    if (cost % 2 != 0)
-                    {
-                        cost = (int)Math.Ceiling(increasedCost);
-                    }
-                    else
-                    {
-                        cost = (int)increasedCost;
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("Cost is negative, not increasing cost.");
-                }
-            }
-        }
-
-        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
-        {
-            double increasedCost = 1.5 * cost;
-
-            if (cost >= 0)
-            {
                 if (cost % 2 != 0)
                 {
                     cost = (int)Math.Ceiling(increasedCost);
@@ -110,36 +97,50 @@ public class CardCardImp : MonoBehaviour
                 {
                     cost = (int)increasedCost;
                 }
+
+            }
+        }
+
+        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        {
+            double increasedCost = 1.5 * cost;
+
+            if (cost % 2 != 0)
+            {
+                cost = (int)Math.Ceiling(increasedCost);
             }
             else
             {
-                Debug.LogWarning("Cost is negative, not increasing cost.");
+                cost = (int)increasedCost;
             }
+
         }
 
         if (await cardUtilities.CheckDecreaseCost(playerId))
         {
             double decreasedCost = 0.5 * cost;
 
-            if (cost >= 0)
+            if (cost % 2 != 0)
             {
-                if (cost % 2 != 0)
-                {
-                    cost = (int)Math.Floor(decreasedCost);
-                }
-                else
-                {
-                    cost = (int)decreasedCost;
-                }
+                cost = (int)Math.Floor(decreasedCost);
             }
             else
             {
-                Debug.LogWarning("Cost is negative, not decreasing cost.");
+                cost = (int)decreasedCost;
             }
-        }
-        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
 
-            cardsChange = snapshot.Child("cardsOnHand").Exists;
+        }
+
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : string.Empty;
+
+        if (cardType == string.Empty)
+        {
+            Debug.LogError("Branch type does not exist");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
+
+        cardsChange = snapshot.Child("cardsOnHand").Exists;
             if (cardsChange)
             {
                 cardUtilities.ProcessBonusOptionsCard(snapshot.Child("cardsOnHand"), cardsBonusOptionsDictionary);
@@ -151,9 +152,10 @@ public class CardCardImp : MonoBehaviour
             {
                 if (await cardUtilities.CheckSupportBlock(playerId))
                 {
-                    Debug.Log("support block");
-                    return;
-                }
+                Debug.Log("support block");
+                errorPanelController.ShowError("action_blocked");
+                return;
+            }
 
                 cardUtilities.ProcessBonusOptions(snapshot.Child("support"), supportBonusOptionsDictionary);
                 cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptionsDictionary);
@@ -165,39 +167,106 @@ public class CardCardImp : MonoBehaviour
             if (!playerStatsSnapshot.Exists)
             {
                 Debug.LogError("No data for: " + cardIdDropped + ".");
-                return;
+            errorPanelController.ShowError("general_error");
+            return;
             }
 
-            playerBudget = playerStatsSnapshot.Child("money").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : throw new Exception("Branch money does not exist.");
+        playerBudget = playerStatsSnapshot.Child("money").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : -1;
 
-            if (!ignoreCost && playerBudget < cost)
-            {
-                Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
-                return;
-            }
+        if (playerBudget < 0)
+        {
+            Debug.LogError("B³¹d w pobieraniu wartoœci playerBudget");
+            errorPanelController.ShowError("general_error");
+            return;
+
+        }
+
+        if (!ignoreCost && playerBudget < cost)
+        {
+            Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+            errorPanelController.ShowError("no_budget");
+            return;
+        }
 
         ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
 
         if (!(await cardUtilities.CheckBlockedCard(playerId)))
         {
+            if (!ignoreCost)
+            {
+                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+                playerBudget -= cost;
+            }
+            else
+            {
+                ignoreCost = false;
+            }
 
             if (supportChange)
             {
-                isBonusRegion = await SupportAction(cardIdDropped, isBonusRegion, chosenRegion, cardType, supportOptionsDictionary, supportBonusOptionsDictionary);
+                (isBonusRegion,errorCheck) = await SupportAction(cardIdDropped, isBonusRegion, chosenRegion, cardType, supportOptionsDictionary, supportBonusOptionsDictionary);
+                if (errorCheck)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
+
             }
 
             if (cardsChange)
             {
                 (dbRefPlayerStats, playerBudget) = await CardsAction(instanceId, dbRefPlayerStats, cardIdDropped, isBonusRegion, cardsOptionsDictionary, cardsBonusOptionsDictionary, enemyId, playerBudget, source, target, selectedCardIds);
+
+                if (playerBudget == -1)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
+            }
+        } else
+        {
+            Debug.Log("Karta zosta³a zablokowana");
+            errorPanelController.ShowError("action_blocked");
+            return;
+        }
+
+        if (ignoreCost)
+        {
+            DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+            if (currentBudgetSnapshot.Exists)
+            {
+                int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                int updatedBudget = currentBudget + cost;
+                await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+            }
+            else
+            {
+                Debug.LogError("Failed to fetch current player budget.");
+                return;
             }
         }
 
-            if (!ignoreCost)
-            {
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
-            }
-
-            dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
+        dbRefPlayerDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
 
             if (!onHandChanged)
             {
@@ -210,7 +279,7 @@ public class CardCardImp : MonoBehaviour
         tmp = await cardUtilities.CheckCardLimit(playerId);
     }
 
-    private async Task<bool> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType,
+    private async Task<(bool,bool)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType,
     Dictionary<int, OptionData> supportOptionsDictionary, Dictionary<int, OptionData> supportBonusOptionsDictionary)
     {
         if (cardId == "CA085")
@@ -224,7 +293,8 @@ public class CardCardImp : MonoBehaviour
         if (optionsToApply?.Values?.Any() != true)
         {
             Debug.LogError("No support options available.");
-            return false;
+            errorPanelController.ShowError("general_error");
+            return (false,false);
         }
 
         foreach (var data in optionsToApply.Values)
@@ -235,11 +305,15 @@ public class CardCardImp : MonoBehaviour
                 {
                     chosenRegion = await mapManager.SelectArea();
                 }
-                await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                bool checkError = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                if(checkError)
+                {
+                    return (false,false);
+                }
                 isBonusRegion = false;
             }
         }
-        return isBonusRegion;
+        return (isBonusRegion,false);
     }
 
 
@@ -253,6 +327,7 @@ public class CardCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
+            errorPanelController.ShowError("general_error");
             return (dbRefPlayerStats,-1);
         }
 
@@ -271,6 +346,7 @@ public class CardCardImp : MonoBehaviour
                     if (await CheckIfAnyEnemyProtected())
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     }
                     else
@@ -279,8 +355,18 @@ public class CardCardImp : MonoBehaviour
                     }
                 } else
                 {
+                    int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                    if (cardsOnHand - 1 < data.CardNumber)
+                    {
+                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        errorPanelController.ShowError("cards_lack");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else if (cardsOnHand == -1)
+                    {
+                        return (dbRefPlayerStats, -1);
+                    }
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
-                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
                 }
 
             } else if (data.Target == "player")
@@ -291,30 +377,52 @@ public class CardCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1);
                     }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     }
                     else
                     {
                         string playerCard = await RandomCardFromDeck(playerId);
+                        if(playerCard == null)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
                         string enemyCard = await RandomCardFromDeck(enemyId);
+                        if(enemyCard == null)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
                         string keepCard, destroyCard;
                         (keepCard, destroyCard) = await cardSelectionUI.ShowCardSelectionForPlayerAndEnemy(playerId, playerCard, enemyId, enemyCard);
-                        Debug.Log($"Selected card: {keepCard}, Card to destroy: {destroyCard}");
                         if (destroyCard == playerCard)
                         {
-                            await deckController.RejectCard(playerId, destroyCard);
-                            await AddCardToDeck(keepCard, enemyId);
+                            bool checkError = await deckController.RejectCard(playerId, destroyCard);
+                            if(checkError)
+                            {
+                                return (dbRefPlayerStats, -1);
+                            }
+                            checkError = await AddCardToDeck(keepCard, enemyId);
+                            if (checkError)
+                            {
+                                return (dbRefPlayerStats, -1);
+                            }
                         }
-                        await deckController.RejectCard(enemyId, enemyCard);
+                        bool errorCheck =  await deckController.RejectCard(enemyId, enemyCard);
+                        if (errorCheck)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
                     }
 
                 } else if (cardId == "CA017")
@@ -324,9 +432,14 @@ public class CardCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1);
                     }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, -budgetValue, "money", playerBudget);
+                    if(playerBudget == -1)
+                    {
+                        return (dbRefPlayerStats, -1);
+                    }
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 } else
                 {
@@ -339,27 +452,49 @@ public class CardCardImp : MonoBehaviour
 
                         selectedCardIds.Clear();
 
+                        int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                        if (cardsOnHand - 1 < data.CardNumber)
+                        {
+                            Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                            errorPanelController.ShowError("cards_lack");
+                            return (dbRefPlayerStats, -1);
+                        }
+                        else if (cardsOnHand == -1)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
                         selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, cardFromHandInstanceId, false);
-
-                        Debug.Log($"Wybrane karty z decku: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
 
                         if (selectedCardIds.Count > 0)
                         {
                             string cardFromDeckInstanceId = selectedCardIds[0].Key;
-                            await deckController.ExchangeFromHandToDeck(source, cardFromHandInstanceId, cardFromDeckInstanceId);
+                            bool checkError = await deckController.ExchangeFromHandToDeck(source, cardFromHandInstanceId, cardFromDeckInstanceId);
+                            if(checkError) { return  (dbRefPlayerStats, -1); }
                         }
                         else
                         {
                             Debug.LogWarning("Nie wybrano ¿adnej karty z decku.");
+                            errorPanelController.ShowError("no_selection");
+                            return(dbRefPlayerStats, -1);
                         }
 
 
                     }
                     else if (cardId == "CA077")
                     {
-                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, false);
 
-                        Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
+                        int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                        if (cardsOnHand - 1 < data.CardNumber)
+                        {
+                            Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                            errorPanelController.ShowError("cards_lack");
+                            return (dbRefPlayerStats, -1);
+                        }
+                        else if (cardsOnHand == -1)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, false);
 
                         if (selectedCardIds.Count > 0)
                         {
@@ -370,13 +505,19 @@ public class CardCardImp : MonoBehaviour
                         }
                         else
                         {
-                            Debug.LogWarning("Nie wybrano ¿adnej karty.");
+                            Debug.LogWarning("Nie wybrano ¿adnej karty z decku.");
+                            errorPanelController.ShowError("no_selection");
+                            return (dbRefPlayerStats, -1);
                         }
 
                     }
                     else if (cardId == "CA033")
                     {
-                        await deckController.GetRandomCardsFromHand(playerId, enemyId, data.CardNumber,selectedCardIds);
+                        bool errorCheck = await deckController.GetRandomCardsFromHand(playerId, enemyId, data.CardNumber,selectedCardIds);
+                        if(errorCheck)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
 
                     } else if (cardId == "CA067")
                     {
@@ -384,24 +525,54 @@ public class CardCardImp : MonoBehaviour
                         if (await cardUtilities.CheckIfProtected(enemyId, -1))
                         {
                             Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
-                            return(dbRefPlayerStats,-1);
+                            errorPanelController.ShowError("player_protected");
+                            return (dbRefPlayerStats,-1);
                         } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                         {
                             Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            errorPanelController.ShowError("player_protected");
                             return (dbRefPlayerStats, -1);
                         }
                         else
                         {
-                            await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
-                            Debug.Log("Now choosing from enemy hand");
+                            bool checkError = await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
+                            if(checkError)
+                            {
+                                return (dbRefPlayerStats, -1);
+                            }
+                            int cardsOnHand = await cardUtilities.CountCardsOnHand(enemyId);
+                            if (cardsOnHand - 1 < data.CardNumber)
+                            {
+                                Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                                errorPanelController.ShowError("cards_lack");
+                                return (dbRefPlayerStats, -1);
+                            }
+                            else if (cardsOnHand == -1)
+                            {
+                                return (dbRefPlayerStats, -1);
+                            }
                             selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true, selectedCardIds);
-                            await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
+                            checkError = await deckController.GetCardFromHand(enemyId, playerId, selectedCardIds);
+                            if (checkError)
+                            {
+                                return (dbRefPlayerStats, -1);
+                            }
                         }
                     } else
                     {
+                        bool checkError = false;
                         for (int i = 0; i < data.CardNumber; i++)
                         {
-                            await deckController.GetCardFromDeck(source, target);
+                            checkError = await deckController.GetCardFromDeck(source, target);
+                            if(checkError)
+                            {
+                                break;
+                            }
+                        }
+
+                        if(checkError)
+                        {
+                            return (dbRefPlayerStats,-1);
                         }
 
                         if(cardId == "CA030")
@@ -418,22 +589,39 @@ public class CardCardImp : MonoBehaviour
                     if(DataTransfer.IsFirstCardInTurn)
                     {
                         int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                        if(cardsOnHand == -1)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
+                        bool checkError = false;
                         for (int i = 0; i < cardsOnHand-1; i++)
                         {
-                            await deckController.RejectRandomCard(playerId,instanceId);
+                           checkError= await deckController.RejectRandomCard(playerId,instanceId);
+                            if(checkError) { break; }
                         }
+
+                        if(checkError) { return (dbRefPlayerStats, -1); }
 
                     } else
                     {
                         Debug.Log("Karta ta mo¿e byæ zagrana tylko jako pierwsza w turze");
+                        errorPanelController.ShowError("not_first");
                         return(dbRefPlayerStats, -1);
                     }
                 }
                 else
                 {
+                    int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                    if(cardsOnHand-1 < data.CardNumber)
+                    {
+                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        errorPanelController.ShowError("cards_lack");
+                        return(dbRefPlayerStats, -1);
+                    } else if(cardsOnHand == -1)
+                    {
+                        return (dbRefPlayerStats, -1);
+                    }
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
-
-                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
 
                     if (data.Source == "player")
                     {
@@ -442,12 +630,17 @@ public class CardCardImp : MonoBehaviour
 
                     if (cardId == "CA031")
                     {
+                        bool checkError = false;
+
                         foreach (var selectedCard in selectedCardIds)
                         {
                             string selectedInstanceId = selectedCard.Key;
 
-                            await deckController.RejectCard(source, selectedInstanceId);
+                            checkError = await deckController.RejectCard(source, selectedInstanceId);
+                            if(checkError) { break; }  
                         }
+
+                        if(checkError) { return(dbRefPlayerStats, -1); }
                     }
                 }
 
@@ -460,37 +653,60 @@ public class CardCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1);
                     }
                     await cardSelectionUI.ShowCardsForViewing(enemyId);
                 }
                 else if (cardId == "CA068")
                 {
-                    await deckController.GetRandomCardsFromDeck(enemyId, data.CardNumber, selectedCardIds);
+                    bool checkError = await deckController.GetRandomCardsFromDeck(enemyId, data.CardNumber, selectedCardIds);
+                    if(checkError)
+                    {
+                        return (dbRefPlayerStats, -1);
+                    }
                 } else
                 {
+                    int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
+                    if (cardsOnHand - 1 < data.CardNumber)
+                    {
+                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        errorPanelController.ShowError("cards_lack");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else if (cardsOnHand == -1)
+                    {
+                        return (dbRefPlayerStats, -1);
+                    }
+
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
-                    Debug.Log($"Wybrane karty: {string.Join(", ", selectedCardIds.Select(card => card.Key))}");
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId))
                     {
                         Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1);
                     }
                     if(await cardUtilities.CheckIfProtected(enemyId,-1))
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     }
                     else
                     {
                         target = enemyId;
                         if (data.Source == "player") { source = playerId; }
-                        await deckController.GetCardFromHand(source, target, selectedCardIds);
+                        bool errorCheck = await deckController.GetCardFromHand(source, target, selectedCardIds);
+                        if(errorCheck)
+                        {
+                            return (dbRefPlayerStats, -1);
+                        }
                     }
                 }
 
@@ -501,22 +717,37 @@ public class CardCardImp : MonoBehaviour
                 if (string.IsNullOrEmpty(enemyId))
                 {
                     Debug.LogError("Failed to select an enemy player.");
+                    errorPanelController.ShowError("general_error");
                     return (dbRefPlayerStats, -1);
                 }
                 if (await cardUtilities.CheckIfProtected(enemyId, -1))
                 {
                     Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    errorPanelController.ShowError("player_protected");
                     return (dbRefPlayerStats, -1);
                 }
                 else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                 {
                     Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    errorPanelController.ShowError("player_protected");
                     return (dbRefPlayerStats, -1);
                 }
                 else
                 {
+                    int cardsOnHand = await cardUtilities.CountCardsOnHand(enemyId);
+                    if (cardsOnHand - 1 < data.CardNumber)
+                    {
+                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        errorPanelController.ShowError("cards_lack");
+                        return (dbRefPlayerStats, -1);
+                    }
+                    else if (cardsOnHand == -1)
+                    {
+                        return (dbRefPlayerStats, -1);
+                    }
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
-                    await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
+                    bool errorCheck = await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
+                    if(errorCheck) { return (dbRefPlayerStats, -1); }
                 }
             }
         }
@@ -639,6 +870,7 @@ public class CardCardImp : MonoBehaviour
         if (string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Invalid player ID or Lobby ID.");
+            errorPanelController.ShowError("general_error");
             return null;
         }
 
@@ -653,6 +885,7 @@ public class CardCardImp : MonoBehaviour
         if (!playerDeckSnapshot.Exists)
         {
             Debug.LogError($"Deck not found for player {playerId} in lobby {lobbyId}.");
+            errorPanelController.ShowError("general_error");
             return null;
         }
 
@@ -666,6 +899,7 @@ public class CardCardImp : MonoBehaviour
         if (!eligibleCards.Any())
         {
             Debug.LogWarning("No eligible cards found in deck.");
+            errorPanelController.ShowError("no_card");
             return null;
         }
 
@@ -673,9 +907,14 @@ public class CardCardImp : MonoBehaviour
         return eligibleCards[randomIndex];
     }
 
-    private async Task AddCardToDeck(string instanceId, string enemyId)
+    private async Task<bool> AddCardToDeck(string instanceId, string enemyId)
     {
-        if (string.IsNullOrEmpty(instanceId) || string.IsNullOrEmpty(enemyId)) return;
+        if (string.IsNullOrEmpty(instanceId) || string.IsNullOrEmpty(enemyId))
+        {
+            Debug.Log("instanceId or enemyId is empty");
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
 
         string lobbyId = DataTransfer.LobbyId;
         DatabaseReference enemyCardRef = FirebaseInitializer.DatabaseReference
@@ -690,7 +929,8 @@ public class CardCardImp : MonoBehaviour
         if (!enemyCardSnapshot.Exists)
         {
             Debug.LogWarning($"Card with instanceId {instanceId} not found in enemy's deck.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
@@ -703,6 +943,8 @@ public class CardCardImp : MonoBehaviour
 
         await playerDeckRef.SetValueAsync(enemyCardSnapshot.Value);
         await playerDeckRef.Child("played").SetValueAsync(false);
+
+        return false;
     }
 
     public async Task<bool> CheckIfAnyEnemyProtected()

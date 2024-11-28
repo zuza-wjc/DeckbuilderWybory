@@ -111,22 +111,26 @@ public class CardSelectionUI : MonoBehaviour
         bool isSelected = cardSelectionStates[instanceId];
         cardSelectionStates[instanceId] = !isSelected;
 
+
         if (cardSelectionStates[instanceId])
         {
             if (selectedCards.Count < numberOfCardsToSelect)
             {
                 selectedCards.Add(new KeyValuePair<string, string>(instanceId, cardId));
                 border.SetActive(true);
+
             }
             else
             {
                 cardSelectionStates[instanceId] = false;
+
             }
         }
         else
         {
             selectedCards.Remove(new KeyValuePair<string, string>(instanceId, cardId));
             border.SetActive(false);
+
         }
 
         submitButton.gameObject.SetActive(selectedCards.Count == numberOfCardsToSelect);
@@ -198,6 +202,7 @@ public class CardSelectionUI : MonoBehaviour
         }
 
         HideCardSelectionPanel();
+        
         return new List<KeyValuePair<string, string>>(selectedCards);
     }
 
@@ -322,7 +327,6 @@ public class CardSelectionUI : MonoBehaviour
         cardSelectionPanel.SetActive(false);
         submitButton.gameObject.SetActive(false);
         infoText.text = "";
-        selectedCards.Clear();
         cardSelectionStates.Clear();
     }
 

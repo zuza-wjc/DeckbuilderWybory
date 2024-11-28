@@ -12,6 +12,8 @@ public class DeckController : MonoBehaviour
     string lobbyId;
     string playerId;
 
+    public ErrorPanelController errorPanelController;
+
     public void InitializeDeck()
     {
         lobbyId = DataTransfer.LobbyId;
@@ -30,10 +32,11 @@ public class DeckController : MonoBehaviour
 
         List<(string cardId, bool onHand)> cards = new List<(string, bool)>
     {
-        ("OP002", true),
-        ("AD003", true),
-        ("RA004", true),
-        ("OP005", true),
+        ("AD075", true),
+        ("UN076", true),
+        ("CA077", true),
+        ("UN084", true),
+        ("UN086", true)
     };
 
         foreach (var card in cards)
@@ -74,14 +77,15 @@ public class DeckController : MonoBehaviour
         return $"{cardId}_{Guid.NewGuid()}";
     }
 
-    public async Task GetCardFromDeck(string source, string target, bool useUnityRandom = true)
+    public async Task<bool> GetCardFromDeck(string source, string target, bool useUnityRandom = true)
 {
     string lobbyId = DataTransfer.LobbyId;
 
     if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(target))
     {
         Debug.LogError("Lobby ID, source, or target is null or empty. Cannot draw a card.");
-        return;
+            errorPanelController.ShowError("general_error");
+            return true;
     }
 
     DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -102,8 +106,9 @@ public class DeckController : MonoBehaviour
     if (!snapshot.Exists)
     {
         Debug.LogError($"Source deck not found for player {source} in lobby {lobbyId}.");
-        return;
-    }
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
 
     List<string> availableCards = new();
     foreach (var cardSnapshot in snapshot.Children)
@@ -120,7 +125,8 @@ public class DeckController : MonoBehaviour
     if (availableCards.Count == 0)
     {
         Debug.LogWarning($"No cards available to draw for player {source} in lobby {lobbyId}.");
-        return;
+        errorPanelController.ShowError("no_cards");
+        return true;
     }
 
         System.Random random = new();
@@ -141,14 +147,17 @@ public class DeckController : MonoBehaviour
     if (!selectedCardSnapshot.Exists)
     {
         Debug.LogError($"CardId for instance {selectedInstanceId} not found in source deck.");
-        return;
-    }
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
 
     string selectedCardId = selectedCardSnapshot.Value.ToString();
 
     if (source == target)
     {
         await UpdateCardOnHand(sourceDeckRef, selectedInstanceId, true);
+
+            return false;
     }
     else
     {
@@ -161,6 +170,8 @@ public class DeckController : MonoBehaviour
 
         await targetDeckRef.Child(selectedInstanceId).SetValueAsync(cardData);
         await sourceDeckRef.Child(selectedInstanceId).RemoveValueAsync();
+
+            return false;
     }
 }
 
@@ -176,14 +187,15 @@ public class DeckController : MonoBehaviour
         }
     }
 
-    public async Task RejectCard(string source, string instanceId)
+    public async Task<bool> RejectCard(string source, string instanceId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
         if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(instanceId))
         {
             Debug.LogError("Lobby ID, source, or instanceId is null or empty. Cannot reject card.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -198,27 +210,32 @@ public class DeckController : MonoBehaviour
         if (!cardSnapshot.Exists)
         {
             Debug.LogError($"Card {instanceId} not found for player {source} in lobby {lobbyId}.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         try
         {
             await sourceDeckRef.RemoveValueAsync();
+            return false;
         }
         catch (Exception ex)
         {
             Debug.LogError($"Failed to remove card {instanceId} for player {source}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
+            return true;
         }
     }
 
-    public async Task RejectRandomCard(string source, string excludedInstanceId)
+    public async Task<bool> RejectRandomCard(string source, string excludedInstanceId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
         if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source))
         {
             Debug.LogError("Lobby ID or source is null or empty. Cannot reject a random card.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
@@ -232,7 +249,8 @@ public class DeckController : MonoBehaviour
         if (!deckSnapshot.Exists)
         {
             Debug.LogError($"Deck not found for player {source} in lobby {lobbyId}.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         List<string> availableCards = new List<string>();
@@ -255,7 +273,8 @@ public class DeckController : MonoBehaviour
         if (availableCards.Count == 0)
         {
             Debug.LogWarning($"No cards available to reject for player {source}, excluding {excludedInstanceId}.");
-            return;
+            errorPanelController.ShowError("no_cards");
+            return true;
         }
 
         System.Random random = new System.Random();
@@ -266,10 +285,13 @@ public class DeckController : MonoBehaviour
         try
         {
             await randomCardRef.RemoveValueAsync();
+            return false;
         }
         catch (Exception ex)
         {
             Debug.LogError($"Failed to remove random card {randomCardId} for player {source}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
+            return true;
         }
     }
 
@@ -379,14 +401,15 @@ public class DeckController : MonoBehaviour
         }
     }
 
-    public async Task GetCardFromHand(string source, string target, List<KeyValuePair<string, string>> cards)
+    public async Task<bool> GetCardFromHand(string source, string target, List<KeyValuePair<string, string>> cards)
     {
         string lobbyId = DataTransfer.LobbyId;
 
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -431,18 +454,23 @@ public class DeckController : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"Error while processing card {instanceId} for target {target}: {ex.Message}");
+                errorPanelController.ShowError("general_error");
+                return true;
             }
         }
+
+        return false;
     }
 
-    public async Task ExchangeFromHandToDeck(string source, string instanceIdFromHand, string instanceIdFromDeck)
+    public async Task<bool> ExchangeFromHandToDeck(string source, string instanceIdFromHand, string instanceIdFromDeck)
     {
         string lobbyId = DataTransfer.LobbyId;
 
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -463,38 +491,46 @@ public class DeckController : MonoBehaviour
             if (!cardFromHandSnapshot.Exists)
             {
                 Debug.LogError($"Card {instanceIdFromHand} not found in hand of player {source}.");
-                return;
+                errorPanelController.ShowError("general_error");
+                return true;
             }
 
             if (!cardFromDeckSnapshot.Exists)
             {
                 Debug.LogError($"Card {instanceIdFromDeck} not found in deck of player {source}.");
-                return;
+                errorPanelController.ShowError("general_error");
+                return true;
             }
 
             await cardFromHandRef.Child("onHand").SetValueAsync(false);
             await cardFromDeckRef.Child("onHand").SetValueAsync(true);
 
+            return false;
+
         }
         catch (Exception ex)
         {
             Debug.LogError($"Error occurred during card exchange for player {source}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
+            return true;
         }
     }
 
-    public async Task GetRandomCardsFromHand(string target, string source, int howMany, List<KeyValuePair<string, string>> cards)
+    public async Task<bool> GetRandomCardsFromHand(string target, string source, int howMany, List<KeyValuePair<string, string>> cards)
     {
         if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(source) || howMany <= 0)
         {
             Debug.LogError("Invalid target, source, or howMany parameter.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         string lobbyId = DataTransfer.LobbyId;
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -515,7 +551,8 @@ public class DeckController : MonoBehaviour
         if (!sourceSnapshot.Exists)
         {
             Debug.LogError($"Source deck not found for player {source} in lobby {lobbyId}.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         HashSet<string> excludedInstanceIds = new(cards.Select(card => card.Key));
@@ -536,7 +573,8 @@ public class DeckController : MonoBehaviour
         if (eligibleCards.Count == 0)
         {
             Debug.LogWarning("No eligible cards available to transfer.");
-            return;
+            errorPanelController.ShowError("no_cards");
+            return true;
         }
 
         System.Random random = new();
@@ -574,16 +612,19 @@ public class DeckController : MonoBehaviour
             await sourceDeckRef.Child(instanceId).RemoveValueAsync();
 
         }
+
+        return false;
     }
 
-    public async Task ReturnCardToDeck(string source, string instanceId)
+    public async Task<bool> ReturnCardToDeck(string source, string instanceId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
         if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source) || string.IsNullOrEmpty(instanceId))
         {
             Debug.LogError("Lobby ID, source, or instanceId is null or empty. Cannot return card to deck.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference sourceDeckRef = FirebaseInitializer.DatabaseReference
@@ -598,7 +639,8 @@ public class DeckController : MonoBehaviour
         if (!cardSnapshot.Exists)
         {
             Debug.LogError($"Card {instanceId} not found for player {source} in lobby {lobbyId}.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         try
@@ -611,26 +653,32 @@ public class DeckController : MonoBehaviour
 
             await sourceDeckRef.Child(instanceId).UpdateChildrenAsync(updates);
 
+            return false;
+
         }
         catch (Exception ex)
         {
             Debug.LogError($"Failed to return card {instanceId} for player {source}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
+            return true;
         }
     }
 
-    public async Task GetRandomCardsFromDeck(string target, int howMany, List<KeyValuePair<string, string>> cards)
+    public async Task<bool> GetRandomCardsFromDeck(string target, int howMany, List<KeyValuePair<string, string>> cards)
     {
         if (string.IsNullOrEmpty(target) || howMany <= 0)
         {
             Debug.LogError("Invalid target or howMany parameter.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         string lobbyId = DataTransfer.LobbyId;
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         DatabaseReference targetDeckRef = FirebaseInitializer.DatabaseReference
@@ -644,7 +692,8 @@ public class DeckController : MonoBehaviour
         if (!targetDeckSnapshot.Exists)
         {
             Debug.LogError($"Target deck not found for player {target} in lobby {lobbyId}.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         HashSet<string> excludedInstanceIds = new(cards.Select(card => card.Key));
@@ -665,7 +714,8 @@ public class DeckController : MonoBehaviour
         if (eligibleCards.Count == 0)
         {
             Debug.LogWarning("No eligible cards available to transfer.");
-            return;
+            errorPanelController.ShowError("no_card");
+            return true;
         }
 
         int cardsToDraw = Math.Min(howMany, eligibleCards.Count);
@@ -700,6 +750,8 @@ public class DeckController : MonoBehaviour
 
             await targetDeckRef.Child(instanceId).SetValueAsync(cardData);
         }
+
+        return false;
     }
 
 }

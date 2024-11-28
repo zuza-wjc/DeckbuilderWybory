@@ -34,8 +34,18 @@ public static class ErrorMessages
     {
         { "region_protected", "Nie mo¿na zagraæ karty, poniewa¿ region jest chroniony." },
         { "player_protected", "Nie mo¿na zagraæ karty, poniewa¿ gracz jest chroniony." },
-        { "insufficient_funds", "Nie mo¿na zagraæ karty, poniewa¿ brakuje bud¿etu." },
-        { "card_limit", "Nie mo¿na zagraæ wiêcej ni¿ dwie karty na turê." },
-        { "general_error", "Wyst¹pi³ nieznany b³¹d. Spróbuj ponownie." }
+        { "no_budget", "Nie mo¿na zagraæ karty, poniewa¿ brakuje bud¿etu." },
+        { "no_income", "Nie mo¿na zagraæ karty, poniewa¿ brakuje przychodu." },
+        { "card_limit", "Nie mo¿na zagraæ wiêcej kart w tej turze." },
+        { "general_error", "Wyst¹pi³ b³ad w przetwarzaniu karty." },
+        { "action_blocked", "Nie mo¿na zagraæ karty, akcja jest blokowana" },
+        { "no_support_available", "Brak dostêpnego miejsca na poparcie w tym regionie." },
+        { "no_support","Nie mo¿na zagraæ karty ze wzglêdu na niewystarczaj¹ce poparcie."},
+        { "no_player", "Nie znaleziono gracza który spe³nia wymagania karty." },
+        { "no_selection", "Nie wybrano ¿adnej karty." },
+        { "not_first", "Karta ta mo¿e byæ zagrana tylko jako pierwsza w turze." },
+        { "no_cards", "Brak dostêpnych kart." },
+        { "cards_lack", "Za ma³o kart na rêce aby zagraæ kartê." }
+
     };
 }

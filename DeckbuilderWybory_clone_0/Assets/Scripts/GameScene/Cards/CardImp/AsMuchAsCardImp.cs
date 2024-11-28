@@ -14,6 +14,7 @@ public class AsMuchAsCardImp : MonoBehaviour
     public PlayerListManager playerListManager;
     public CardUtilities cardUtilities;
     public MapManager mapManager;
+    public ErrorPanelController errorPanelController;
 
     void Start()
     {
@@ -28,13 +29,14 @@ public class AsMuchAsCardImp : MonoBehaviour
         if (tmp)
         {
             Debug.Log("Limit kart w turze to 1");
+            errorPanelController.ShowError("card_limit");
             return;
         }
 
-        DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
+            DatabaseReference dbRefCard, dbRefPlayerStats, dbRefPlayerDeck;
             int cost, playerBudget, playerIncome, chosenRegion = -1;
             string cardType, enemyId = string.Empty;
-            bool budgetChange = false, supportChange = false, isBonusRegion = false, incomeChange = false;
+        bool budgetChange = false, supportChange = false, isBonusRegion = false, incomeChange = false, errorCheck = false;
 
             Dictionary<int, OptionData> budgetOptionsDictionary = new();
             Dictionary<int, OptionData> budgetBonusOptionsDictionary = new();
@@ -57,7 +59,8 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
             {
                 Debug.LogError("Firebase is not initialized properly!");
-                return;
+            errorPanelController.ShowError("general_error");
+            return;
             }
 
             dbRefCard = FirebaseInitializer.DatabaseReference.Child("cards").Child("id").Child("asMuchAs").Child(cardIdDropped);
@@ -66,10 +69,18 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (!snapshot.Exists)
             {
                 Debug.LogError("No data for: " + cardIdDropped + ".");
-                return;
+            errorPanelController.ShowError("general_error");
+            return;
             }
 
-            cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : throw new Exception("Branch cost does not exist.");
+            cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : -1;
+
+        if(cost <-1)
+        {
+            Debug.LogError("Branch cost does not exist");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
 
         if (DataTransfer.IsFirstCardInTurn)
         {
@@ -77,8 +88,6 @@ public class AsMuchAsCardImp : MonoBehaviour
             {
                 double increasedCost = 1.5 * cost;
 
-                if (cost >= 0)
-                {
                     if (cost % 2 != 0)
                     {
                         cost = (int)Math.Ceiling(increasedCost);
@@ -86,12 +95,8 @@ public class AsMuchAsCardImp : MonoBehaviour
                     else
                     {
                         cost = (int)increasedCost;
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("Cost is negative, not increasing cost.");
-                }
+                    }  
+
             }
         }
 
@@ -99,8 +104,6 @@ public class AsMuchAsCardImp : MonoBehaviour
         {
             double increasedCost = 1.5 * cost;
 
-            if (cost >= 0)
-            {
                 if (cost % 2 != 0)
                 {
                     cost = (int)Math.Ceiling(increasedCost);
@@ -109,19 +112,13 @@ public class AsMuchAsCardImp : MonoBehaviour
                 {
                     cost = (int)increasedCost;
                 }
-            }
-            else
-            {
-                Debug.LogWarning("Cost is negative, not increasing cost.");
-            }
+
         }
 
         if (await cardUtilities.CheckDecreaseCost(playerId))
         {
             double decreasedCost = 0.5 * cost;
 
-            if (cost >= 0)
-            {
                 if (cost % 2 != 0)
                 {
                     cost = (int)Math.Floor(decreasedCost);
@@ -130,14 +127,17 @@ public class AsMuchAsCardImp : MonoBehaviour
                 {
                     cost = (int)decreasedCost;
                 }
-            }
-            else
-            {
-                Debug.LogWarning("Cost is negative, not decreasing cost.");
-            }
+
         }
 
-        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : throw new Exception("Branch type does not exist.");
+        cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : string.Empty;
+
+        if(cardType == string.Empty)
+        {
+            Debug.LogError("Branch type does not exist");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
 
             budgetChange = snapshot.Child("budget").Exists;
             if (budgetChange)
@@ -166,9 +166,10 @@ public class AsMuchAsCardImp : MonoBehaviour
             {
                 if (await cardUtilities.CheckSupportBlock(playerId))
                 {
-                    Debug.Log("support block");
-                    return;
-                }
+                Debug.Log("support block");
+                errorPanelController.ShowError("action_blocked");
+                return;
+            }
 
             ProcessBonusOptionsPerCard(snapshot.Child("support"), supportBonusOptionsDictionary, "Support");
                 ProcessOptionsPerCard(snapshot.Child("support"), supportOptionsDictionary, "Support");
@@ -180,18 +181,35 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (!playerStatsSnapshot.Exists)
             {
                 Debug.LogError("No data for: " + cardIdDropped + ".");
-                return;
+            errorPanelController.ShowError("general_error");
+            return;
             }
 
-            playerBudget = playerStatsSnapshot.Child("money").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : throw new Exception("Branch money does not exist.");
+            playerBudget = playerStatsSnapshot.Child("money").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : -1;
+
+        if(playerBudget < 0)
+        {
+            Debug.LogError("B³¹d w pobieraniu wartoœci playerBudget");
+            errorPanelController.ShowError("general_error");
+            return;
+
+        }
 
             if (!ignoreCost && playerBudget < cost)
             {
-                Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
-                return;
-            }
+            Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+            errorPanelController.ShowError("no_budget");
+            return;
+        }
 
-            playerIncome = playerStatsSnapshot.Child("income").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("income").Value) : throw new Exception("Branch income does not exist.");
+            playerIncome = playerStatsSnapshot.Child("income").Exists ? Convert.ToInt32(playerStatsSnapshot.Child("income").Value) : -1;
+
+        if (playerIncome < 0)
+        {
+            Debug.LogError("B³¹d w pobieraniu wartoœci playerIncome");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
 
         ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
 
@@ -209,19 +227,56 @@ public class AsMuchAsCardImp : MonoBehaviour
 
             if (supportChange)
             {
-                isBonusRegion = await SupportAction(cardIdDropped, isBonusRegion, supportOptionsDictionary, supportBonusOptionsDictionary, chosenRegion, cardType);
+                (isBonusRegion,errorCheck) = await SupportAction(cardIdDropped, isBonusRegion, supportOptionsDictionary, supportBonusOptionsDictionary, chosenRegion, cardType);
+
+                if(errorCheck)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
             }
 
             if (budgetChange)
             {
                 (dbRefPlayerStats, isBonusRegion, playerBudget) = await BudgetAction(dbRefPlayerStats, cardIdDropped, isBonusRegion, budgetOptionsDictionary, budgetBonusOptionsDictionary, budgetOptionsPerCardDictionary,
                     budgetBonusOptionsPerCardDictionary, playerBudget, enemyId, cardType);
+
+                if (playerBudget == -1)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
             }
 
             if (incomeChange)
             {
-                dbRefPlayerStats = await IncomeAction(isBonusRegion, incomeOptionsDictionary, incomeBonusOptionsDictionary, playerIncome, cardType, dbRefPlayerStats);
+                (dbRefPlayerStats,errorCheck) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, incomeBonusOptionsDictionary, playerIncome, cardType, dbRefPlayerStats);
             }
+        } else
+        {
+            Debug.Log("Karta zosta³a zablokowana");
+            errorPanelController.ShowError("action_blocked");
+            return;
         }
 
         if (ignoreCost)
@@ -251,7 +306,7 @@ public class AsMuchAsCardImp : MonoBehaviour
          tmp = await cardUtilities.CheckCardLimit(playerId);
     }
 
-    private async Task<DatabaseReference> IncomeAction(
+    private async Task<(DatabaseReference,bool)> IncomeAction(
     bool isBonusRegion,
     Dictionary<int, OptionDataPerCard> incomeOptionsDictionary,
     Dictionary<int, OptionDataPerCard> incomeBonusOptionsDictionary,
@@ -264,7 +319,8 @@ public class AsMuchAsCardImp : MonoBehaviour
         if (optionsToApply == null || !optionsToApply.Any())
         {
             Debug.LogError("No options to apply.");
-            return dbRefPlayerStats;
+            errorPanelController.ShowError("general_error");
+            return (dbRefPlayerStats,false);
         }
 
         if (isBonusRegion)
@@ -280,15 +336,26 @@ public class AsMuchAsCardImp : MonoBehaviour
                 continue;
             }
 
-            if (data.Target == "player" && !(await cardUtilities.CheckIncomeBlock(playerId)))
+            if (data.Target == "player")
             {
-                int howMany = await CalculateValueFromHand(playerId, cardType);
-                playerIncome += howMany * data.NumberPerCard;
-                await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
+                if (!(await cardUtilities.CheckIncomeBlock(playerId))) {
+                    int howMany = await CalculateValueFromHand(playerId, cardType);
+                    if(howMany == -1)
+                    {
+                        return (dbRefPlayerStats,false);
+                    }
+                    playerIncome += howMany * data.NumberPerCard;
+                    await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
+                } else
+                {
+                    Debug.Log("Income block");
+                    errorPanelController.ShowError("action_blocked");
+                    return (dbRefPlayerStats, false);
+                }
             }
         }
 
-        return dbRefPlayerStats;
+        return (dbRefPlayerStats, false);
     }
 
     private async Task<(DatabaseReference dbRefPlayerStats,bool isBonusRegion,int playerBudget)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, bool isBonusRegion,
@@ -312,7 +379,8 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (optionsData?.Values == null || !optionsData.Values.Any())
             {
                 Debug.LogError("No options to apply.");
-                return(dbRefPlayerStats,false,-1);
+                errorPanelController.ShowError("general_error");
+                return (dbRefPlayerStats,false,-1);
             }
 
             if (isBonus)
@@ -333,8 +401,19 @@ public class AsMuchAsCardImp : MonoBehaviour
                     if (!(await cardUtilities.CheckBudgetBlock(playerId)))
                     {
                         playerBudget += data.Number;
+                        if (playerBudget < 0)
+                        {
+                            Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
+                            errorPanelController.ShowError("no_budget");
+                            return (dbRefPlayerStats, false, -1);
+                        }
                         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                         await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
+                    } else
+                    {
+                        Debug.Log("Budget blocked");
+                        errorPanelController.ShowError("action_blocked");
+                        return(dbRefPlayerStats, false, -1);
                     }
                 }
             }
@@ -345,6 +424,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             if (optionsPerCard?.Values == null || !optionsPerCard.Values.Any())
             {
                 Debug.LogError("No options to apply.");
+                errorPanelController.ShowError("general_error");
                 return (dbRefPlayerStats, false, -1);
             }
 
@@ -369,11 +449,16 @@ public class AsMuchAsCardImp : MonoBehaviour
                         if (string.IsNullOrEmpty(enemyId))
                         {
                             Debug.LogError("Failed to select an enemy player.");
+                            errorPanelController.ShowError("general_error");
                             return (dbRefPlayerStats, false, -1);
                         }
                     }
 
                     int howMany = await CalculateValueFromHand(playerId, cardType);
+                    if(howMany == -1)
+                    {
+                        return (dbRefPlayerStats, false, -1);
+                    }
                     int changeBudget = howMany * data.NumberPerCard;
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, changeBudget, "money", playerBudget);
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
@@ -383,11 +468,12 @@ public class AsMuchAsCardImp : MonoBehaviour
         else
         {
             Debug.LogError("Unexpected optionsToApply type.");
+            errorPanelController.ShowError("general_error");
             return (dbRefPlayerStats, false, -1);
         }
         return (dbRefPlayerStats, isBonusRegion, playerBudget);
     }
-    private async Task<bool> SupportAction(
+    private async Task<(bool,bool)> SupportAction(
     string cardId,
     bool isBonusRegion,
     Dictionary<int, OptionDataPerCard> supportOptionsDictionary,
@@ -400,7 +486,8 @@ public class AsMuchAsCardImp : MonoBehaviour
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No support options available.");
-            return false;
+            errorPanelController.ShowError("general_error");
+            return (false,false);
         }
 
         if (isBonusRegion)
@@ -431,7 +518,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             }
         }
 
-        return isBonusRegion;
+        return (isBonusRegion,false);
     }
 
     private void ProcessOptionsPerCard(DataSnapshot snapshot, Dictionary<int, OptionDataPerCard> optionsDictionary, string optionType)
@@ -522,7 +609,7 @@ public class AsMuchAsCardImp : MonoBehaviour
 
     private async Task<int> CalculateValueFromHand(string playerId, string cardType)
     {
-        int cardCount = 0;
+        int cardCount = -1;
 
         var dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -536,6 +623,7 @@ public class AsMuchAsCardImp : MonoBehaviour
         if (!snapshot.Exists)
         {
             Debug.LogError("No deck data found for the player.");
+            errorPanelController.ShowError("general_error");
             return cardCount;
         }
 
@@ -570,10 +658,38 @@ public class AsMuchAsCardImp : MonoBehaviour
 
     private async Task<string> GetCardType(string cardId)
     {
+        string cardType = cardId.Substring(0, 2);
+
+        switch (cardType)
+        {
+            case "AD":
+                cardType = "addRemove";
+                break;
+            case "AS":
+                cardType = "asMuchAs";
+                break;
+            case "CA":
+                cardType = "cards";
+                break;
+            case "OP":
+                cardType = "options";
+                break;
+            case "RA":
+                cardType = "random";
+                break;
+            case "UN":
+                cardType = "unique";
+                break;
+            default:
+                cardType = "";
+                break;
+
+        }
+
         var dbRefCard = FirebaseInitializer.DatabaseReference
             .Child("cards")
             .Child("id")
-            .Child("asMuchAs")
+            .Child(cardType)
             .Child(cardId);
 
         var snapshot = await dbRefCard.GetValueAsync();

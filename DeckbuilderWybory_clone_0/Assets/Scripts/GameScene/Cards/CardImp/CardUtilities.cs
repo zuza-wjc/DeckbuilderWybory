@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class CardUtilities : MonoBehaviour
 {
+    public ErrorPanelController errorPanelController;
+
     public void ProcessOptions(DataSnapshot snapshot, Dictionary<int, OptionData> optionsDictionary)
     {
         foreach (var optionSnapshot in snapshot.Children)
@@ -166,7 +168,7 @@ public class CardUtilities : MonoBehaviour
         }
     }
 
-    public async Task ChangeSupport(string playerId, int value, int areaId, string cardId, MapManager mapManager)
+    public async Task<bool> ChangeSupport(string playerId, int value, int areaId, string cardId, MapManager mapManager)
     {
         string lobbyId = DataTransfer.LobbyId;
         DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
@@ -182,13 +184,15 @@ public class CardUtilities : MonoBehaviour
         if (!snapshot.Exists)
         {
             Debug.LogError("No support data found for the given region in the player's stats.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         if (!int.TryParse(snapshot.Value.ToString(), out int support))
         {
             Debug.LogError("Failed to parse support value from the database.");
-            return;
+            errorPanelController.ShowError("general_error");
+            return true;
         }
 
         var maxSupportTask = mapManager.GetMaxSupportForRegion(areaId);
@@ -202,7 +206,8 @@ public class CardUtilities : MonoBehaviour
         if (availableSupport <= 0)
         {
             Debug.Log("Brak dostêpnego miejsca na poparcie w tym regionie.");
-            return;
+            errorPanelController.ShowError("no_support_available");
+            return true;
         }
 
         int supportToAdd = Math.Min(value, availableSupport);
@@ -212,7 +217,8 @@ public class CardUtilities : MonoBehaviour
             if (currentAreaSupport < value)
             {
                 Debug.Log("Nie mo¿na zagraæ karty ze wzglêdu na niewystarczaj¹ce poparcie w tym regionie");
-                return;
+                errorPanelController.ShowError("no_support");
+                return true;
             }
         }
 
@@ -222,21 +228,24 @@ public class CardUtilities : MonoBehaviour
         if (isRegionProtected)
         {
             Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
-            return;
+            errorPanelController.ShowError("region_protected");
+            return true;
         }
 
         bool isProtected = await CheckIfProtected(playerId, supportToAdd);
         if (isProtected)
         {
             Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
-            return;
+            errorPanelController.ShowError("region_protected");
+            return true;
         }
 
         bool isProtectedOneCard = await CheckIfProtectedOneCard(playerId, supportToAdd);
         if (isProtectedOneCard)
         {
             Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
-            return;
+            errorPanelController.ShowError("region_protected");
+            return true;
         }
 
 
@@ -249,6 +258,8 @@ public class CardUtilities : MonoBehaviour
         await dbRefSupport.SetValueAsync(support);
 
         await CheckAndAddCopySupport(playerId, areaId, supportToAdd, mapManager);
+
+        return false;
     }
 
     public async Task<int> ChangeEnemyStat(string enemyId, int value, string statType, int playerBudget)
@@ -259,6 +270,7 @@ public class CardUtilities : MonoBehaviour
         if (string.IsNullOrEmpty(enemyId))
         {
             Debug.LogError($"Enemy ID is null or empty. ID: {enemyId}");
+            errorPanelController.ShowError("general_error");
             return -1;
         }
 
@@ -276,12 +288,14 @@ public class CardUtilities : MonoBehaviour
             if (!statSnapshot.Exists)
             {
                 Debug.LogError($"Branch '{statType}' does not exist for enemy ID: {enemyId}");
+                errorPanelController.ShowError("general_error");
                 return -1;
             }
 
             if (!int.TryParse(statSnapshot.Value.ToString(), out int enemyStat))
             {
                 Debug.LogError($"Failed to parse '{statType}' value for enemy ID: {enemyId}. Value: {statSnapshot.Value}");
+                errorPanelController.ShowError("general_error");
                 return -1;
             }
 
@@ -314,6 +328,7 @@ public class CardUtilities : MonoBehaviour
             if (isProtected)
             {
                 Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                errorPanelController.ShowError("player_protected");
                 return -1;
             }
 
@@ -321,6 +336,7 @@ public class CardUtilities : MonoBehaviour
             if (isProtectedOneCard)
             {
                 Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                errorPanelController.ShowError("player_protected");
                 return -1;
             }
 
@@ -332,6 +348,7 @@ public class CardUtilities : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogError($"An error occurred while changing the enemy {statType}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
             return -1;
         }
     }
@@ -372,7 +389,7 @@ public class CardUtilities : MonoBehaviour
                 {
                     int updatedSupportValue = currentSupportValue + value;
 
-                    if (updatedSupportValue < 0) continue;
+                    if (updatedSupportValue < 0) updatedSupportValue = 0;
 
                     int regionId = Convert.ToInt32(supportChildSnapshot.Key);
                     var maxSupportTask = mapManager.GetMaxSupportForRegion(regionId);
@@ -389,6 +406,7 @@ public class CardUtilities : MonoBehaviour
                 else
                 {
                     Debug.LogError($"Invalid support value for region {supportChildSnapshot.Key}. Value: {supportChildSnapshot.Value}");
+                    return -1;
                 }
             }
 
@@ -400,6 +418,7 @@ public class CardUtilities : MonoBehaviour
             else
             {
                 Debug.LogError($"No valid regions found for player {playerId} with at least {value}% support.");
+                errorPanelController.ShowError("no_player");
                 return -1;
             }
         }
@@ -744,7 +763,8 @@ public class CardUtilities : MonoBehaviour
         if (!snapshot.Exists)
         {
             Debug.LogWarning($"Deck for player {playerId} does not exist.");
-            return 0;
+            errorPanelController.ShowError("general_error");
+            return -1;
         }
 
         int cardsOnHand = 0;
