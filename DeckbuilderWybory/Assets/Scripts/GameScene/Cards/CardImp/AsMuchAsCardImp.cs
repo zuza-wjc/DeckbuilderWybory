@@ -15,7 +15,7 @@ public class AsMuchAsCardImp : MonoBehaviour
     public CardUtilities cardUtilities;
     public MapManager mapManager;
     public ErrorPanelController errorPanelController;
-    public HistoryController historyController;
+
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -139,16 +139,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             return;
         }
 
-        string desc = snapshot.Child("playDescriptionPositive").Exists ? snapshot.Child("playDescriptionPositive").Value.ToString() : string.Empty;
-
-        if (desc == string.Empty)
-        {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playDescriptionPositive");
-            errorPanelController.ShowError("general_error");
-            return;
-        }
-
-        budgetChange = snapshot.Child("budget").Exists;
+            budgetChange = snapshot.Child("budget").Exists;
             if (budgetChange)
             {
                 if (cardIdDropped == "AS072")
@@ -313,8 +304,6 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         await cardUtilities.CheckIfPlayed2Cards(playerId);
          tmp = await cardUtilities.CheckCardLimit(playerId);
-
-        await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
     }
 
     private async Task<(DatabaseReference,bool)> IncomeAction(

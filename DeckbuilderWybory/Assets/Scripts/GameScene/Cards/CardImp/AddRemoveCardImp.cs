@@ -16,7 +16,7 @@ public class AddRemoveCardImp : MonoBehaviour
     public DeckController deckController;
     public CardUtilities cardUtilities;
     public ErrorPanelController errorPanelController;
-    public HistoryController historyController;
+
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -106,16 +106,6 @@ public class AddRemoveCardImp : MonoBehaviour
         if (cardType == string.Empty)
         {
             Debug.LogError("B³¹d w pobieraniu wartoœci cardType");
-            errorPanelController.ShowError("general_error");
-            return;
-        }
-
-        DataSnapshot descSnapshot = snapshot.Child("playDescriptionPositive");
-        string desc = descSnapshot.Exists ? descSnapshot.Value.ToString() : string.Empty;
-
-        if (desc == string.Empty)
-        {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playDescriptionPositive");
             errorPanelController.ShowError("general_error");
             return;
         }
@@ -313,9 +303,8 @@ public class AddRemoveCardImp : MonoBehaviour
         DataTransfer.IsFirstCardInTurn = false;
 
         await cardUtilities.CheckIfPlayed2Cards(playerId);
-        tmp = await cardUtilities.CheckCardLimit(playerId);
 
-        await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
+        tmp = await cardUtilities.CheckCardLimit(playerId);
     }
 
     private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion,

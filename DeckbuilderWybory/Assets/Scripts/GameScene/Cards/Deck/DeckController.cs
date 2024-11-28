@@ -32,7 +32,11 @@ public class DeckController : MonoBehaviour
 
         List<(string cardId, bool onHand)> cards = new List<(string, bool)>
     {
-        ("RA012", true),
+        ("AD075", true),
+        ("UN076", true),
+        ("CA077", true),
+        ("UN084", true),
+        ("UN086", true)
     };
 
         foreach (var card in cards)
