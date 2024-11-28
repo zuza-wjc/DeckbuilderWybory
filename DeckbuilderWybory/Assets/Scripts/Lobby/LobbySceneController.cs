@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using Firebase.Extensions;
 using System;
 using System.Linq;
+using System.Collections;
 
 public class LobbySceneController : MonoBehaviour
 {
@@ -55,10 +56,7 @@ public class LobbySceneController : MonoBehaviour
 
         getLobbySizeFromDatabase(() =>
         {
-            getReadyPlayersFromDatabase(() =>
-            {
-                UpdatePlayerCountsText();
-            });
+            getReadyPlayersFromDatabase();
         });
 
         dbRefLobby.Child("isStarted").ValueChanged += HandleIsStartedChanged;
@@ -69,6 +67,11 @@ public class LobbySceneController : MonoBehaviour
         image = readyButton.GetComponent<Image>();
         readyButton.onClick.AddListener(ToggleReady);
         copyButton.onClick.AddListener(CopyFromClipboard);
+    }
+
+    void Update()
+    {
+        playerCountsText.text = "GOTOWI GRACZE: " + readyPlayers + " / " + lobbySize;
     }
 
     void getLobbySizeFromDatabase(Action onComplete)
@@ -92,7 +95,7 @@ public class LobbySceneController : MonoBehaviour
         });
     }
 
-    void getReadyPlayersFromDatabase(Action onComplete)
+    void getReadyPlayersFromDatabase(Action onComplete = null)
     {
         dbRefLobby.GetValueAsync().ContinueWithOnMainThread(task =>
         {
@@ -134,10 +137,7 @@ public class LobbySceneController : MonoBehaviour
             return;
         }
 
-        getReadyPlayersFromDatabase(() =>
-        {
-            UpdatePlayerCountsText();
-        });
+        getReadyPlayersFromDatabase();
 
         string playerName = args.Snapshot.Child("playerName").Value.ToString();
         RemoveText(playerName);
@@ -166,7 +166,6 @@ public class LobbySceneController : MonoBehaviour
 
                     getReadyPlayersFromDatabase(() =>
                     {
-                        UpdatePlayerCountsText();
                         UpdateText(playerNameChange, isReady);
                     });                    
                 }
@@ -237,29 +236,62 @@ public class LobbySceneController : MonoBehaviour
     {
         readyState = !readyState;
 
-        getReadyPlayersFromDatabase(() =>
+        // Disable the ready button immediately after clicking
+        readyButton.interactable = false;
+
+        dbRefLobby.Child("readyPlayers").RunTransaction(mutableData =>
         {
-            readyPlayers += readyState ? 1 : -1;
+            int currentReadyPlayers = mutableData.Value == null ? 0 : Convert.ToInt32(mutableData.Value);
 
-            dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
-            dbRefLobby.Child("readyPlayers").SetValueAsync(readyPlayers);
+            // Increase or decrease the count of ready players
+            if (readyState)
+            {
+                currentReadyPlayers++;
+            }
+            else
+            {
+                currentReadyPlayers--;
+            }
 
-            UpdatePlayerCountsText();
-            UpdateText(playerName, readyState);
-            UpdateReadyButton();
+            mutableData.Value = currentReadyPlayers;
+            return TransactionResult.Success(mutableData);
+        }).ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                // Update the player's ready state in the database
+                dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
-            LoadPlayerCards();
+                // Fetch the updated ready players count and update UI
+                getReadyPlayersFromDatabase(() =>
+                {
+                    UpdateText(playerName, readyState);
+                    UpdateReadyButton();
+                    LoadPlayerCards();
+
+                    // Re-enable the button after a delay
+                    StartCoroutine(EnableButtonAfterDelay(1));
+                });
+            }
+            else
+            {
+                Debug.LogError("Transaction failed: " + task.Exception);
+
+                // Re-enable the button if the transaction fails
+                StartCoroutine(EnableButtonAfterDelay(2));
+            }
         });
+    }
+
+    IEnumerator EnableButtonAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        readyButton.interactable = true;
     }
 
     void UpdateReadyButton()
     {
         image.sprite = readyState ? selected : notSelected;
-    }
-
-    void UpdatePlayerCountsText()
-    {
-        playerCountsText.text = "GOTOWI GRACZE: " + readyPlayers + " / " + lobbySize;
     }
 
     public void LeaveLobby()
@@ -351,6 +383,8 @@ public class LobbySceneController : MonoBehaviour
                     }
 
                     dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
+                });
+
 
                     dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
                     {
@@ -371,14 +405,37 @@ public class LobbySceneController : MonoBehaviour
                             Debug.Log("Failed to fetch map data: " + mapTask.Exception);
                         }
                     });
+            }
 
-                    getTurnOrder(() =>
-                    {
-                        SceneManager.LoadScene("Game", LoadSceneMode.Single);
-                    });
+                getTurnOrder(() =>
+                {
+                    StartCoroutine(TransitionToGameScene());
                 });
             }
         }
+
+    IEnumerator TransitionToGameScene()
+    {
+        // Czekaj na zapisanie wartości `inGame`
+        var inGameTask = dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
+
+        // Poczekaj, aż zadanie zakończy się
+        while (!inGameTask.IsCompleted)
+        {
+            yield return null; // Odczekaj jedną klatkę
+        }
+
+        if (inGameTask.IsFaulted || inGameTask.Exception != null)
+        {
+            Debug.LogError("Nie udało się zapisać wartości 'inGame' w bazie danych: " + inGameTask.Exception);
+            yield break; // Przerwij, jeśli zapis nie powiódł się
+        }
+
+        // Dodaj 1-sekundowe opóźnienie
+        yield return new WaitForSeconds(1f);
+
+        // Przejdź do sceny "Game"
+        SceneManager.LoadScene("Game", LoadSceneMode.Single);
     }
 
 
