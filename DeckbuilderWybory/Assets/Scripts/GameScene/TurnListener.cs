@@ -9,10 +9,12 @@ using UnityEngine.SceneManagement;
 public class TurnListener : MonoBehaviour
 {
     DatabaseReference dbRef;
+    DatabaseReference dbRefLobby;
     string lobbyId;
 
     private float timer = 30f;
-    private float maxIdleTime = 30f; // maksymalny czas oczekiwania na zmianê tury
+    private float maxIdleTime = 30f; // Maksymalny czas oczekiwania na zmianê tury
+    private bool sessionRemoved = false; // Flaga, aby unikn¹æ wielokrotnego usuwania
 
     void Start()
     {
@@ -25,6 +27,7 @@ public class TurnListener : MonoBehaviour
         }
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+        dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
         StartListening();
     }
@@ -71,11 +74,37 @@ public class TurnListener : MonoBehaviour
         timer -= Time.deltaTime;
 
         // SprawdŸ, czy czas siê skoñczy³
-        if (timer <= 0)
+        if (timer <= 0 && !sessionRemoved)
         {
-            Debug.LogWarning("No turn change detected for 30 seconds. Ending game.");
-            SceneManager.LoadScene("End Game", LoadSceneMode.Single);
+            sessionRemoved = true; // Ustaw flagê, aby unikn¹æ wielokrotnego usuwania
+            Debug.LogWarning("No turn change detected for 30 seconds. Ending game and deleting lobby.");
+
+            StartCoroutine(RemoveSessionAndEndGame());
         }
+    }
+
+    IEnumerator RemoveSessionAndEndGame()
+    {
+        // Usuñ sesjê z opóŸnieniem
+        yield return new WaitForSeconds(1.0f);
+
+        if (dbRefLobby != null)
+        {
+            var task = dbRefLobby.RemoveValueAsync();
+            yield return new WaitUntil(() => task.IsCompleted);
+
+            if (task.IsFaulted)
+            {
+                Debug.LogError("Failed to remove session: " + task.Exception);
+            }
+            else
+            {
+                Debug.Log("Session removed successfully.");
+            }
+        }
+
+        // PrzejdŸ do sceny koñcowej
+        SceneManager.LoadScene("End Game", LoadSceneMode.Single);
     }
 
     void OnDestroy()
