@@ -245,7 +245,7 @@ public class CardOnHandController : MonoBehaviour
         controller.UpdateElementCount();
     }
 
-    private void ForceUpdateUI()
+    public void ForceUpdateUI()
     {
         if (this == null)
         {
