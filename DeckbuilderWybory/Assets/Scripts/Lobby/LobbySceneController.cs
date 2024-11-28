@@ -23,6 +23,8 @@ public class LobbySceneController : MonoBehaviour
     public Button copyButton;
     public Text playerCountsText;
 
+    public DeckController deckController;
+
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
     string lobbyId;
@@ -423,8 +425,6 @@ public class LobbySceneController : MonoBehaviour
     // Funkcja do �adowania kart gracza z Firebase przed rozpocz�ciem gry
     void LoadPlayerCards()
     {
-        DeckController deckController = FindObjectOfType<DeckController>();
-
         if (deckController != null)
         {
             // Wywo�aj metod� InitializeDeck()
