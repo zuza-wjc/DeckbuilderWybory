@@ -12,8 +12,8 @@ public class TurnListener : MonoBehaviour
     DatabaseReference dbRefLobby;
     string lobbyId;
 
-    private float timer = 30f;
-    private float maxIdleTime = 30f; // Maksymalny czas oczekiwania na zmianê tury
+    private float timer = 120f;
+    private float maxIdleTime = 120f; // Maksymalny czas oczekiwania na zmianê tury
     private bool sessionRemoved = false; // Flaga, aby unikn¹æ wielokrotnego usuwania
 
     void Start()
@@ -77,7 +77,7 @@ public class TurnListener : MonoBehaviour
         if (timer <= 0 && !sessionRemoved)
         {
             sessionRemoved = true; // Ustaw flagê, aby unikn¹æ wielokrotnego usuwania
-            Debug.LogWarning("No turn change detected for 30 seconds. Ending game and deleting lobby.");
+            Debug.LogWarning("No turn change detected for 120 seconds. Ending game and deleting lobby.");
 
             StartCoroutine(RemoveSessionAndEndGame());
         }

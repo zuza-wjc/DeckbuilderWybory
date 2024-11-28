@@ -11,8 +11,9 @@ public class StatsCard : MonoBehaviour
     public Text playerCardNumberText;
     public Text playerRegionSupportText;
     public Text playerTurnNumberText;
+    public Text deckTypeText;
 
-    public void SetPlayerData(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupport, int turnNumber)
+    public void SetPlayerData(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupport, int turnNumber, string deckType)
     {
         playerNameText.text = playerName;
         playerSupportText.text = playerSupport + "%";
@@ -21,5 +22,6 @@ public class StatsCard : MonoBehaviour
         playerCardNumberText.text = playerCardNumber.ToString();
         playerRegionSupportText.text = regionSupport;
         playerTurnNumberText.text = turnNumber.ToString();
+        deckTypeText.text = deckType;
     }
 }
