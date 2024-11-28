@@ -5,10 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8c850f2d-f4a0-4c5d-9c82-7f137fcf5a7a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/Button example.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Prefabs/Button example.prefab" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameScenes/GameBoard.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameScenes/GameBoard.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/EditorBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/ProjectSettings/EditorBuildSettings.asset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/EditorUserSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameScenes/Game.unity" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scenes/GameScenes/Game.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/Assets/Scripts/GameScene/Map/MapManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Layouts/default-2022.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/DeckbuilderWybory/UserSettings/Layouts/default-2022.dwlt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

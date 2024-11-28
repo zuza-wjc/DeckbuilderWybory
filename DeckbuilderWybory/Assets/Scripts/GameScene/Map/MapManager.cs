@@ -13,12 +13,16 @@ public class MapManager : MonoBehaviour
     string lobbyId;
     public GameObject mapPanel;
 
-    public TextMeshProUGUI region1Text;
-    public TextMeshProUGUI region2Text;
-    public TextMeshProUGUI region3Text;
-    public TextMeshProUGUI region4Text;
-    public TextMeshProUGUI region5Text;
-    public TextMeshProUGUI region6Text;
+    string[] mapType = new string[] {"0","0","0","0","0","0"};
+    public Image[] regionImage;
+    public Color[] regionTypeColor;
+
+    public Text region1Text;
+    public Text region2Text;
+    public Text region3Text;
+    public Text region4Text;
+    public Text region5Text;
+    public Text region6Text;
 
     public Button region1Button;
     public Button region2Button;
@@ -88,6 +92,13 @@ public class MapManager : MonoBehaviour
             int maxRegion4 = int.Parse(mapSnapshot.Child("region4").Child("maxSupport").Value.ToString());
             int maxRegion5 = int.Parse(mapSnapshot.Child("region5").Child("maxSupport").Value.ToString());
             int maxRegion6 = int.Parse(mapSnapshot.Child("region6").Child("maxSupport").Value.ToString());
+
+            mapType[0] = mapSnapshot.Child("region1").Child("type").Value.ToString();
+            mapType[1] = mapSnapshot.Child("region2").Child("type").Value.ToString();
+            mapType[2] = mapSnapshot.Child("region3").Child("type").Value.ToString();
+            mapType[3] = mapSnapshot.Child("region4").Child("type").Value.ToString();
+            mapType[4] = mapSnapshot.Child("region5").Child("type").Value.ToString();
+            mapType[5] = mapSnapshot.Child("region6").Child("type").Value.ToString();
 
             int[] regionValues = new int[6];
 
@@ -242,6 +253,13 @@ public class MapManager : MonoBehaviour
         region4Text.text = $"{regionValues[3]}/{maxRegion4}";
         region5Text.text = $"{regionValues[4]}/{maxRegion5}";
         region6Text.text = $"{regionValues[5]}/{maxRegion6}";
+
+        regionImage[0].color = ChooseRegionColor(0);
+        regionImage[1].color = ChooseRegionColor(1);
+        regionImage[2].color = ChooseRegionColor(2);
+        regionImage[3].color = ChooseRegionColor(3);
+        regionImage[4].color = ChooseRegionColor(4);
+        regionImage[5].color = ChooseRegionColor(5);
     }
 
     void InitializeRegionButtons()
@@ -290,5 +308,26 @@ public class MapManager : MonoBehaviour
             return null;
         }
         return snapshot;
+    }
+
+    Color ChooseRegionColor(int indexMap){
+        switch (mapType[indexMap])
+        {
+            case "Podstawa":
+                return regionTypeColor[0];
+            case "Ambasada":
+                //0 to podstawa
+                return regionTypeColor[1];
+            case "Środowisko":
+                return regionTypeColor[2];
+            case "Przemysł":
+                return regionTypeColor[3];
+            case "Metropolia":
+                return regionTypeColor[4];
+            default:
+                Debug.LogError("Invalid region ID.");
+                return regionTypeColor[5];
+        }
+
     }
 }
