@@ -7,15 +7,41 @@ public class CardSpriteManager : ScriptableObject
     [System.Serializable]
     public class CardSprite
     {
-        public string cardId; 
+        public string cardId;
         public Sprite cardSprite;
     }
 
+    private Dictionary<string, Sprite> cardSpritesDictionary = new Dictionary<string, Sprite>();
+
     public List<CardSprite> cardSprites = new List<CardSprite>();
+
+    private void OnEnable()
+    {
+        cardSpritesDictionary.Clear();
+        foreach (var card in cardSprites)
+        {
+            if (!cardSpritesDictionary.ContainsKey(card.cardId))
+            {
+                cardSpritesDictionary.Add(card.cardId, card.cardSprite);
+            }
+            else
+            {
+                Debug.LogWarning($"Duplicate cardId found: {card.cardId}");
+            }
+        }
+    }
 
     public Sprite GetCardSprite(string cardId)
     {
-        CardSprite card = cardSprites.Find(x => x.cardId == cardId);
-        return card != null ? card.cardSprite : null;
+        if (cardSpritesDictionary.TryGetValue(cardId, out Sprite cardSprite))
+        {
+            return cardSprite;
+        }
+        else
+        {
+            Debug.LogError($"Card sprite for cardId '{cardId}' not found.");
+            return null;
+        }
     }
+
 }

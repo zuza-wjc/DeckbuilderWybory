@@ -7,11 +7,11 @@ using UnityEngine.UI;
 
 public class CardOnHandController : MonoBehaviour
 {
-    public GameObject cardPrefab;  
-    public GameObject cardListContainer; 
-    public GameObject cardPanel;    
-    public Image panelImage;           
-    public Button closeButton;       
+    public GameObject cardPrefab;
+    public GameObject cardListContainer;
+    public GameObject cardPanel;
+    public Image panelImage;
+    public Button closeButton;
     public CardSpriteManager cardSpriteManager;
     public ScrollViewController controller;
 
@@ -111,9 +111,9 @@ public class CardOnHandController : MonoBehaviour
         DraggableItem draggableItem = newCard.GetComponent<DraggableItem>();
         if (draggableItem != null)
         {
-            draggableItem.cardPanel = cardPanel;  
-            draggableItem.panelImage = panelImage; 
-            draggableItem.closeButton = closeButton; 
+            draggableItem.cardPanel = cardPanel;
+            draggableItem.panelImage = panelImage;
+            draggableItem.closeButton = closeButton;
             draggableItem.image = newCard.GetComponent<Image>();
             draggableItem.instanceId = instanceId;
             draggableItem.cardId = cardId;
@@ -121,7 +121,6 @@ public class CardOnHandController : MonoBehaviour
 
         cardObjects[instanceId] = newCard;
         controller.UpdateElementCount();
-
     }
 
     private void ListenForCardOnHandChange(string instanceId)
@@ -244,7 +243,6 @@ public class CardOnHandController : MonoBehaviour
         };
 
         controller.UpdateElementCount();
-
     }
 
     private void ForceUpdateUI()
@@ -255,8 +253,6 @@ public class CardOnHandController : MonoBehaviour
         }
 
         StartCoroutine(LoadCardsOnHand());
-
         controller.UpdateElementCount();
-
     }
 }

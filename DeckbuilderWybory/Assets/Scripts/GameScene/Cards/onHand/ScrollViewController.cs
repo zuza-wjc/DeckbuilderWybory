@@ -5,9 +5,9 @@ public class ScrollViewController : MonoBehaviour
 {
     public ScrollRect scrollRect;
     public int visibleItems = 4;
-    private float scrollStep;
+
     private int currentIndex = 0;
-    private int totalItems;   
+    private int totalItems;
 
     void Start()
     {
@@ -18,11 +18,14 @@ public class ScrollViewController : MonoBehaviour
     {
         totalItems = scrollRect.content.childCount;
 
-        scrollStep = totalItems > visibleItems ? 1f / (totalItems - visibleItems) : 0;
+        if (totalItems <= visibleItems)
+        {
+            return;
+        }
 
         if (currentIndex > totalItems - visibleItems)
         {
-            currentIndex = Mathf.Max(0, totalItems - visibleItems);
+            currentIndex = totalItems - visibleItems;
             UpdateScrollPosition();
         }
     }
@@ -40,7 +43,7 @@ public class ScrollViewController : MonoBehaviour
 
     public void ScrollRight()
     {
-        if (totalItems <= visibleItems) return; 
+        if (totalItems <= visibleItems) return;
 
         if (currentIndex < totalItems - visibleItems)
         {
@@ -51,8 +54,7 @@ public class ScrollViewController : MonoBehaviour
 
     private void UpdateScrollPosition()
     {
-        float targetPosition = scrollStep * currentIndex;
-
+        float targetPosition = (float)currentIndex / (totalItems - visibleItems);
         scrollRect.horizontalNormalizedPosition = Mathf.Clamp01(targetPosition);
     }
 }

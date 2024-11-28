@@ -23,129 +23,223 @@ public class PlayerListManager : MonoBehaviour
 
     public async Task<string> SelectEnemyPlayer()
     {
-        ClearOldButtons();
-        await FetchPlayersList();
-        return await WaitForEnemySelection();
+        try
+        {
+            ClearOldButtons();
+            await FetchPlayersList();
+            return await WaitForEnemySelection();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error selecting enemy player: {ex.Message}");
+            return null;
+        }
     }
 
     public async Task<string> SelectEnemyPlayerInArea(int areaId)
     {
-        ClearOldButtons();
-        await FetchPlayersListInArea(areaId);
-        return await WaitForEnemySelection();
+        try
+        {
+            ClearOldButtons();
+            await FetchPlayersListInArea(areaId);
+            return await WaitForEnemySelection();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error selecting enemy player in area {areaId}: {ex.Message}");
+            return null;
+        }
     }
 
     private void ClearOldButtons()
     {
-
-        foreach (Transform child in scrollViewContent.transform)
+        try
         {
-            if (child != buttonTemplate.transform)
+            foreach (Transform child in scrollViewContent.transform)
             {
-                Destroy(child.gameObject);
+                if (child != buttonTemplate.transform)
+                {
+                    Destroy(child.gameObject);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error clearing old buttons: {ex.Message}");
         }
     }
 
     private async Task FetchPlayersList()
     {
-        dbRefPlayers = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
-        var snapshot = await dbRefPlayers.GetValueAsync();
-
-        if (snapshot.Exists)
+        try
         {
-            foreach (var childSnapshot in snapshot.Child("players").Children)
-            {
-                string otherPlayerId = childSnapshot.Key;
-                if (otherPlayerId != playerId)
-                {
-                    string otherPlayerName = childSnapshot.Child("playerName").Value.ToString();
-                    playerNameToIdMap[otherPlayerName] = otherPlayerId;
+            dbRefPlayers = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
+            var snapshot = await dbRefPlayers.GetValueAsync();
 
+            if (snapshot.Exists)
+            {
+                var playersSnapshot = snapshot.Child("players");
+                if (!playersSnapshot.Exists) return;
+
+                foreach (var childSnapshot in playersSnapshot.Children)
+                {
+                    string otherPlayerId = childSnapshot.Key;
+
+                    if (otherPlayerId == playerId) continue;
+
+                    string otherPlayerName = childSnapshot.Child("playerName")?.Value?.ToString();
+                    if (string.IsNullOrEmpty(otherPlayerName)) continue;
+
+                    playerNameToIdMap[otherPlayerName] = otherPlayerId;
                     CreateButton(otherPlayerName);
                 }
-            }
 
+                UpdatePlayerListPanel();
+            }
+            else
+            {
+                Debug.LogError("No player data found in the database.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error fetching players list: {ex.Message}");
+        }
+    }
+
+    private void UpdatePlayerListPanel()
+    {
+        if (playerListPanel != null)
+        {
             playerListPanel.SetActive(true);
             playerListPanel.transform.SetAsLastSibling();
-        }
-        else
-        {
-            Debug.LogError("No player data found in the database.");
         }
     }
 
     private async Task FetchPlayersListInArea(int areaId)
     {
-        dbRefPlayers = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
-        var snapshot = await dbRefPlayers.GetValueAsync();
-
-        if (snapshot.Exists)
+        try
         {
-            foreach (var childSnapshot in snapshot.Child("players").Children)
+            dbRefPlayers = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
+            var snapshot = await dbRefPlayers.GetValueAsync();
+
+            if (snapshot.Exists)
             {
-                string otherPlayerId = childSnapshot.Key;
-                if (otherPlayerId != playerId)
+                var playersSnapshot = snapshot.Child("players");
+                if (!playersSnapshot.Exists) return;
+
+                foreach (var childSnapshot in playersSnapshot.Children)
                 {
-                    string otherPlayerName = childSnapshot.Child("playerName").Value.ToString();
+                    string otherPlayerId = childSnapshot.Key;
+                    if (otherPlayerId == playerId) continue;
+
+                    string otherPlayerName = childSnapshot.Child("playerName")?.Value?.ToString();
+                    if (string.IsNullOrEmpty(otherPlayerName)) continue;
 
                     var supportSnapshot = childSnapshot.Child("stats").Child("support");
+                    if (!supportSnapshot.Exists) continue;
 
-                    if (supportSnapshot.Exists)
+                    var areaSupport = supportSnapshot.Child(areaId.ToString());
+                    if (areaSupport.Exists && int.TryParse(areaSupport.Value?.ToString(), out int supportValue) && supportValue > 0)
                     {
-                        int supportValue = 0;
-
-                        var areaSupport = supportSnapshot.Child(areaId.ToString());
-                        if (areaSupport.Exists && int.TryParse(areaSupport.Value.ToString(), out supportValue) && supportValue > 0)
-                        {
-                            playerNameToIdMap[otherPlayerName] = otherPlayerId;
-                            CreateButton(otherPlayerName);
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Player {otherPlayerId} has no support data.");
+                        playerNameToIdMap[otherPlayerName] = otherPlayerId;
+                        CreateButton(otherPlayerName);
                     }
                 }
-            }
 
-            playerListPanel.SetActive(true);
-            playerListPanel.transform.SetAsLastSibling();
+                UpdatePlayerListPanel();
+            }
+            else
+            {
+                Debug.LogError("No player data found in the database.");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Debug.LogError("No player data found in the database.");
+            Debug.LogError($"Error fetching players list for area {areaId}: {ex.Message}");
         }
     }
 
-
     private void CreateButton(string otherPlayerName)
     {
-        GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
-        button.SetActive(true);
-        button.GetComponentInChildren<UnityEngine.UI.Text>().text = otherPlayerName;
+        if (string.IsNullOrEmpty(otherPlayerName)) return;
 
-        button.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(() => TaskOnClick(otherPlayerName));
+        try
+        {
+            GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
+            button.SetActive(true);
+
+            var textComponent = button.GetComponentInChildren<UnityEngine.UI.Text>();
+            if (textComponent != null)
+            {
+                textComponent.text = otherPlayerName;
+            }
+
+            var buttonComponent = button.GetComponent<UnityEngine.UI.Button>();
+            if (buttonComponent != null)
+            {
+                buttonComponent.onClick.RemoveAllListeners();
+                buttonComponent.onClick.AddListener(() => TaskOnClick(otherPlayerName));
+            }
+            else
+            {
+                Debug.LogWarning("Button component not found on the instantiated button.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error creating button for {otherPlayerName}: {ex.Message}");
+        }
     }
 
     private Task<string> WaitForEnemySelection()
     {
         var tcs = new TaskCompletionSource<string>();
-        TaskOnClickCompleted = (selectedEnemyId) => tcs.TrySetResult(selectedEnemyId);
-        return tcs.Task;
+
+        try
+        {
+            TaskOnClickCompleted = (selectedEnemyId) =>
+            {
+                if (!string.IsNullOrEmpty(selectedEnemyId))
+                {
+                    tcs.TrySetResult(selectedEnemyId);
+                }
+                else
+                {
+                    tcs.TrySetException(new ArgumentException("Selected enemy ID is null or empty."));
+                }
+            };
+
+            return tcs.Task;
+        }
+        catch (Exception ex)
+        {
+            tcs.TrySetException(ex);
+            return tcs.Task;
+        }
     }
 
     public void TaskOnClick(string otherPlayerName)
     {
-        if (playerNameToIdMap.TryGetValue(otherPlayerName, out string otherPlayerId))
+        try
         {
-            TaskOnClickCompleted?.Invoke(otherPlayerId);
+            if (playerNameToIdMap.TryGetValue(otherPlayerName, out string otherPlayerId))
+            {
+                TaskOnClickCompleted?.Invoke(otherPlayerId);
+            }
+            else
+            {
+                Debug.LogError($"PlayerId not found for the given playerName: {otherPlayerName}");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Debug.LogError($"PlayerId not found for the given playerName: {otherPlayerName}");
+            Debug.LogError($"Error in TaskOnClick for {otherPlayerName}: {ex.Message}");
         }
-
-        playerListPanel.SetActive(false);
+        finally
+        {
+            playerListPanel.SetActive(false);
+        }
     }
+
 }
