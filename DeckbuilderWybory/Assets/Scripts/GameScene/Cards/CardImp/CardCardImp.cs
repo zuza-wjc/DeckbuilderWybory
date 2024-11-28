@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,6 +22,8 @@ public class CardCardImp : MonoBehaviour
     public ErrorPanelController errorPanelController;
 
     private System.Random random = new System.Random();
+
+    public HistoryController historyController;
 
     void Start()
     {
@@ -140,6 +142,15 @@ public class CardCardImp : MonoBehaviour
             return;
         }
 
+        string desc = snapshot.Child("playDescriptionPositive").Exists ? snapshot.Child("playDescriptionPositive").Value.ToString() : string.Empty;
+
+        if (desc == string.Empty)
+        {
+            Debug.LogError("Bï¿½ï¿½d w pobieraniu wartoï¿½ci playDescriptionPositive");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
+
         cardsChange = snapshot.Child("cardsOnHand").Exists;
             if (cardsChange)
             {
@@ -175,7 +186,7 @@ public class CardCardImp : MonoBehaviour
 
         if (playerBudget < 0)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playerBudget");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci playerBudget");
             errorPanelController.ShowError("general_error");
             return;
 
@@ -183,7 +194,7 @@ public class CardCardImp : MonoBehaviour
 
         if (!ignoreCost && playerBudget < cost)
         {
-            Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+            Debug.LogError("Brak budÅ¼etu aby zagraÄ‡ kartÄ™.");
             errorPanelController.ShowError("no_budget");
             return;
         }
@@ -245,7 +256,7 @@ public class CardCardImp : MonoBehaviour
             }
         } else
         {
-            Debug.Log("Karta zosta³a zablokowana");
+            Debug.Log("Karta zostaÅ‚a zablokowana");
             errorPanelController.ShowError("action_blocked");
             return;
         }
@@ -277,6 +288,8 @@ public class CardCardImp : MonoBehaviour
         DataTransfer.IsFirstCardInTurn = false;
         await cardUtilities.CheckIfPlayed2Cards(playerId);
         tmp = await cardUtilities.CheckCardLimit(playerId);
+
+        await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
     }
 
     private async Task<(bool,bool)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType,
@@ -345,7 +358,7 @@ public class CardCardImp : MonoBehaviour
                 {
                     if (await CheckIfAnyEnemyProtected())
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     }
@@ -358,7 +371,7 @@ public class CardCardImp : MonoBehaviour
                     int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
                     if (cardsOnHand - 1 < data.CardNumber)
                     {
-                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                         errorPanelController.ShowError("cards_lack");
                         return (dbRefPlayerStats, -1);
                     }
@@ -382,12 +395,12 @@ public class CardCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     }
@@ -455,7 +468,7 @@ public class CardCardImp : MonoBehaviour
                         int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
                         if (cardsOnHand - 1 < data.CardNumber)
                         {
-                            Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                            Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                             errorPanelController.ShowError("cards_lack");
                             return (dbRefPlayerStats, -1);
                         }
@@ -473,7 +486,7 @@ public class CardCardImp : MonoBehaviour
                         }
                         else
                         {
-                            Debug.LogWarning("Nie wybrano ¿adnej karty z decku.");
+                            Debug.LogWarning("Nie wybrano Å¼adnej karty z decku.");
                             errorPanelController.ShowError("no_selection");
                             return(dbRefPlayerStats, -1);
                         }
@@ -486,7 +499,7 @@ public class CardCardImp : MonoBehaviour
                         int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
                         if (cardsOnHand - 1 < data.CardNumber)
                         {
-                            Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                            Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                             errorPanelController.ShowError("cards_lack");
                             return (dbRefPlayerStats, -1);
                         }
@@ -505,7 +518,7 @@ public class CardCardImp : MonoBehaviour
                         }
                         else
                         {
-                            Debug.LogWarning("Nie wybrano ¿adnej karty z decku.");
+                            Debug.LogWarning("Nie wybrano Å¼adnej karty z decku.");
                             errorPanelController.ShowError("no_selection");
                             return (dbRefPlayerStats, -1);
                         }
@@ -524,12 +537,12 @@ public class CardCardImp : MonoBehaviour
                         enemyId = await RandomEnemy();
                         if (await cardUtilities.CheckIfProtected(enemyId, -1))
                         {
-                            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                             errorPanelController.ShowError("player_protected");
                             return (dbRefPlayerStats,-1);
                         } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                         {
-                            Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                            Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                             errorPanelController.ShowError("player_protected");
                             return (dbRefPlayerStats, -1);
                         }
@@ -543,7 +556,7 @@ public class CardCardImp : MonoBehaviour
                             int cardsOnHand = await cardUtilities.CountCardsOnHand(enemyId);
                             if (cardsOnHand - 1 < data.CardNumber)
                             {
-                                Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                                Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                                 errorPanelController.ShowError("cards_lack");
                                 return (dbRefPlayerStats, -1);
                             }
@@ -604,7 +617,7 @@ public class CardCardImp : MonoBehaviour
 
                     } else
                     {
-                        Debug.Log("Karta ta mo¿e byæ zagrana tylko jako pierwsza w turze");
+                        Debug.Log("Karta ta moÅ¼e byÄ‡ zagrana tylko jako pierwsza w turze");
                         errorPanelController.ShowError("not_first");
                         return(dbRefPlayerStats, -1);
                     }
@@ -614,7 +627,7 @@ public class CardCardImp : MonoBehaviour
                     int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
                     if(cardsOnHand-1 < data.CardNumber)
                     {
-                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                         errorPanelController.ShowError("cards_lack");
                         return(dbRefPlayerStats, -1);
                     } else if(cardsOnHand == -1)
@@ -670,7 +683,7 @@ public class CardCardImp : MonoBehaviour
                     int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
                     if (cardsOnHand - 1 < data.CardNumber)
                     {
-                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                         errorPanelController.ShowError("cards_lack");
                         return (dbRefPlayerStats, -1);
                     }
@@ -689,12 +702,12 @@ public class CardCardImp : MonoBehaviour
                     }
                     if(await cardUtilities.CheckIfProtected(enemyId,-1))
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1);
                     }
@@ -722,13 +735,13 @@ public class CardCardImp : MonoBehaviour
                 }
                 if (await cardUtilities.CheckIfProtected(enemyId, -1))
                 {
-                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                     errorPanelController.ShowError("player_protected");
                     return (dbRefPlayerStats, -1);
                 }
                 else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                 {
-                    Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                    Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                     errorPanelController.ShowError("player_protected");
                     return (dbRefPlayerStats, -1);
                 }
@@ -737,7 +750,7 @@ public class CardCardImp : MonoBehaviour
                     int cardsOnHand = await cardUtilities.CountCardsOnHand(enemyId);
                     if (cardsOnHand - 1 < data.CardNumber)
                     {
-                        Debug.Log("Za ma³o kart na rêce aby zagraæ kartê");
+                        Debug.Log("Za maÅ‚o kart na rÄ™ce aby zagraÄ‡ kartÄ™");
                         errorPanelController.ShowError("cards_lack");
                         return (dbRefPlayerStats, -1);
                     }

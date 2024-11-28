@@ -8,6 +8,7 @@ using System;
 using Firebase.Extensions;
 using System.Linq;
 using UnityEngine.SceneManagement;
+using System.Threading.Tasks;
 
 public class TurnController : MonoBehaviour
 {
@@ -327,6 +328,51 @@ public class TurnController : MonoBehaviour
         });
     }
 
+    public async Task AddIncomeToBudget()
+    {
+        if (string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogWarning("Player ID is not set.");
+            return;
+        }
+
+        DatabaseReference playerStatsRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(DataTransfer.LobbyId)
+            .Child("players")
+            .Child(DataTransfer.PlayerId)
+            .Child("stats");
+
+        try
+        {
+            var playerStatsSnapshot = await playerStatsRef.GetValueAsync();
+            if (!playerStatsSnapshot.Exists)
+            {
+                Debug.LogWarning("Player not found.");
+                return;
+            }
+
+            int incomeAmount = playerStatsSnapshot.Child("income")?.Value != null ? Convert.ToInt32(playerStatsSnapshot.Child("income").Value) : -1;
+            int currentMoney = playerStatsSnapshot.Child("money")?.Value != null ? Convert.ToInt32(playerStatsSnapshot.Child("money").Value) : -1;
+
+            if (incomeAmount == -1 || currentMoney == -1)
+            {
+                Debug.LogWarning("Income or budget is null or failed to convert");
+                return;
+            }
+
+            int newMoney = currentMoney + incomeAmount;
+
+            await playerStatsRef.Child("money").SetValueAsync(newMoney);
+
+            Debug.Log("added income to budget");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to add income to player budget: {ex.Message}");
+        }
+    }
+
 
     void StartTurn()
     {
@@ -368,6 +414,10 @@ public class TurnController : MonoBehaviour
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
         DrawNewCardsFromDeck();
+        if (turnsTaken > 0)
+        {
+            _ = AddIncomeToBudget();
+        }
         passButton.interactable = true;
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
         turnsTaken++;

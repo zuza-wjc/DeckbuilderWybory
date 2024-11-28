@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ public class AsMuchAsCardImp : MonoBehaviour
     public CardUtilities cardUtilities;
     public MapManager mapManager;
     public ErrorPanelController errorPanelController;
-
+    public HistoryController historyController;
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -139,7 +139,16 @@ public class AsMuchAsCardImp : MonoBehaviour
             return;
         }
 
-            budgetChange = snapshot.Child("budget").Exists;
+        string desc = snapshot.Child("playDescriptionPositive").Exists ? snapshot.Child("playDescriptionPositive").Value.ToString() : string.Empty;
+
+        if (desc == string.Empty)
+        {
+            Debug.LogError("Bï¿½ï¿½d w pobieraniu wartoï¿½ci playDescriptionPositive");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
+
+        budgetChange = snapshot.Child("budget").Exists;
             if (budgetChange)
             {
                 if (cardIdDropped == "AS072")
@@ -189,7 +198,7 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         if(playerBudget < 0)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playerBudget");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci playerBudget");
             errorPanelController.ShowError("general_error");
             return;
 
@@ -197,7 +206,7 @@ public class AsMuchAsCardImp : MonoBehaviour
 
             if (!ignoreCost && playerBudget < cost)
             {
-            Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+            Debug.LogError("Brak budÅ¼etu aby zagraÄ‡ kartÄ™.");
             errorPanelController.ShowError("no_budget");
             return;
         }
@@ -206,7 +215,7 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         if (playerIncome < 0)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playerIncome");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci playerIncome");
             errorPanelController.ShowError("general_error");
             return;
         }
@@ -274,7 +283,7 @@ public class AsMuchAsCardImp : MonoBehaviour
             }
         } else
         {
-            Debug.Log("Karta zosta³a zablokowana");
+            Debug.Log("Karta zostaÅ‚a zablokowana");
             errorPanelController.ShowError("action_blocked");
             return;
         }
@@ -304,6 +313,8 @@ public class AsMuchAsCardImp : MonoBehaviour
 
         await cardUtilities.CheckIfPlayed2Cards(playerId);
          tmp = await cardUtilities.CheckCardLimit(playerId);
+
+        await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
     }
 
     private async Task<(DatabaseReference,bool)> IncomeAction(
@@ -403,7 +414,7 @@ public class AsMuchAsCardImp : MonoBehaviour
                         playerBudget += data.Number;
                         if (playerBudget < 0)
                         {
-                            Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
+                            Debug.LogWarning("Brak wystarczajÄ…cego budÅ¼etu aby zagraÄ‡ kartÄ™.");
                             errorPanelController.ShowError("no_budget");
                             return (dbRefPlayerStats, false, -1);
                         }

@@ -15,7 +15,7 @@ public class RandomCardImp : MonoBehaviour
     public MapManager mapManager;
     public CardUtilities cardUtilities;
     public ErrorPanelController errorPanelController;
-
+    public HistoryController historyController;
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -84,8 +84,8 @@ public class RandomCardImp : MonoBehaviour
 
             if (cardData.SupportChange)
             {
-               (isBonusRegion,errorCheck) = await SupportAction(cardIdDropped, false, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions);
-               if(errorCheck)
+                (isBonusRegion, errorCheck, cardData.Desc) = await SupportAction(cardIdDropped, false, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions, cardData.Desc);
+                if (errorCheck)
                 {
                     await DeductPlayerMoney(-cost, playerBudget);
                     return;
@@ -94,7 +94,7 @@ public class RandomCardImp : MonoBehaviour
 
             if (cardData.BudgetChange)
             {
-               errorCheck=  await BudgetAction(playerBudget, cardData.BudgetOptions, cardData.BudgetBonusOptions, enemyId);
+                (errorCheck, cardData.Desc) = await BudgetAction(playerBudget, cardData.BudgetOptions, cardData.BudgetBonusOptions, enemyId, cardData.Desc);
 
                 if (errorCheck)
                 {
@@ -115,6 +115,8 @@ public class RandomCardImp : MonoBehaviour
 
         await cardUtilities.CheckIfPlayed2Cards(playerId);
         tmp = await cardUtilities.CheckCardLimit(playerId);
+        await historyController.AddCardToHistory(cardIdDropped, playerId, cardData.Desc[0]);
+
     }
 
     private async Task<CardData> GetCardData(string cardIdDropped)
@@ -132,8 +134,16 @@ public class RandomCardImp : MonoBehaviour
         int cost = snapshot.Child("cost").Exists ? Convert.ToInt32(snapshot.Child("cost").Value) : -1;
         string cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : string.Empty;
 
+        List<string> descriptions = new List<string>
+        {
+            snapshot.Child("playDescriptionPositive").Exists ? snapshot.Child("playDescriptionPositive").Value.ToString() : string.Empty,
+            snapshot.Child("playDescriptionNegative").Exists ? snapshot.Child("playDescriptionNegative").Value.ToString() : string.Empty
+        };
+
+
         if (cost < 0) return null;
         if(cardType == string.Empty) return null;
+        if (descriptions[0] == string.Empty) return null;
 
         bool budgetChange = snapshot.Child("budget").Exists;
         bool supportChange = snapshot.Child("support").Exists;
@@ -155,7 +165,7 @@ public class RandomCardImp : MonoBehaviour
             cardUtilities.ProcessOptions(snapshot.Child("support"), supportOptions);
         }
 
-        return new CardData(cost, cardType, budgetChange, supportChange, budgetOptions, budgetBonusOptions, supportOptions, supportBonusOptions);
+        return new CardData(cost, cardType, budgetChange, supportChange, budgetOptions, budgetBonusOptions, supportOptions, supportBonusOptions, descriptions);
     }
 
     private async Task<int> AdjustCardCost(string cardIdDropped, int cost)
@@ -217,16 +227,17 @@ public class RandomCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<bool> BudgetAction(int playerBudget, Dictionary<int, OptionData> budgetOptions, Dictionary<int, OptionData> budgetBonusOptions, string enemyId)
-    {
+    private async Task<(bool, List<string>)> BudgetAction(int playerBudget, Dictionary<int, OptionData> budgetOptions, Dictionary<int, OptionData> budgetBonusOptions, string enemyId, List<string> descriptions) {
+        
         var optionsToApply = budgetBonusOptions.Any() ? budgetBonusOptions : budgetOptions;
-        optionsToApply = RandomizeOption(optionsToApply);
+
+        (optionsToApply, descriptions) = RandomizeOption(optionsToApply, descriptions);
 
         if (optionsToApply?.Values == null || !optionsToApply.Values.Any())
         {
             Debug.LogError("No options to apply.");
             errorPanelController.ShowError("general_error");
-            return true;
+            return (true, descriptions);
         }
 
         foreach (var data in optionsToApply.Values)
@@ -243,7 +254,7 @@ public class RandomCardImp : MonoBehaviour
                         {
                             Debug.LogError("Failed to select an enemy player.");
                             errorPanelController.ShowError("general_error");
-                            return false;
+                            return (true, descriptions);
                         }
                     }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
@@ -254,7 +265,7 @@ public class RandomCardImp : MonoBehaviour
                     {
                         Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
                         errorPanelController.ShowError("no_budget");
-                        return false;
+                        return (true, descriptions);
                     }
 
                     DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
@@ -266,35 +277,34 @@ public class RandomCardImp : MonoBehaviour
                 {
                     Debug.Log("Budget blocked");
                     errorPanelController.ShowError("action_blocked");
-                    return false;
+                    return (true, descriptions);
                 }
             }
         }
 
-        return false;
+        return (false, descriptions);
     }
 
-    private async Task<(bool isBonusRegion,bool errorCheck)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType, Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions)
+    private async Task<(bool isBonusRegion, bool errorCheck, List<string>)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType, Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions, List<string> descriptions)
     {
         chosenRegion = await mapManager.SelectArea();
         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
 
         var optionsToApply = isBonusRegion ? supportBonusOptions : supportOptions;
-        optionsToApply = RandomizeOption(optionsToApply);
+        (optionsToApply, descriptions) = RandomizeOption(optionsToApply, descriptions);
 
         foreach (var data in optionsToApply.Values)
         {
             if (data.Target == "player-region")
             {
                 bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
-                return (isBonusRegion, errorCheck);
+                return (isBonusRegion, errorCheck, descriptions);
             }
         }
-
-        return (isBonusRegion, false);
+        return (isBonusRegion, false, descriptions);
     }
 
-    public static Dictionary<int, OptionData> RandomizeOption(Dictionary<int, OptionData> optionsDictionary)
+    public static (Dictionary<int, OptionData>, List<string>) RandomizeOption(Dictionary<int, OptionData> optionsDictionary, List<string> descriptions)
     {
         if (optionsDictionary == null || optionsDictionary.Count == 0)
             throw new ArgumentException("Dictionary cannot be null or empty");
@@ -305,16 +315,25 @@ public class RandomCardImp : MonoBehaviour
         System.Random random = new();
         int randomNumber = random.Next(minNumber, maxNumber + 1);
 
+        if (randomNumber < 0)
+        {
+            if (descriptions[1] != string.Empty)
+            {
+                descriptions[0] = descriptions[1];
+                descriptions.RemoveAt(1);
+            }
+        }
+
         Debug.Log($"Wylosowana liczba to: {randomNumber}");
 
         string existingTarget = optionsDictionary.Values.First().Target;
 
         var newOption = new OptionData(randomNumber, existingTarget, 1);
 
-        return new Dictionary<int, OptionData>
+        return (new Dictionary<int, OptionData>
         {
             { 1, newOption }
-        };
+        }, descriptions);
     }
 }
 
@@ -329,9 +348,11 @@ public class CardData
     public Dictionary<int, OptionData> SupportOptions { get; }
     public Dictionary<int, OptionData> SupportBonusOptions { get; }
 
+    public List<string> Desc { get; set; }
+
     public CardData(int cost, string cardType, bool budgetChange, bool supportChange,
-                    Dictionary<int, OptionData> budgetOptions, Dictionary<int, OptionData> budgetBonusOptions,
-                    Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions)
+                       Dictionary<int, OptionData> budgetOptions, Dictionary<int, OptionData> budgetBonusOptions,
+                       Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions, List<string> desc)
     {
         Cost = cost;
         CardType = cardType;
@@ -341,6 +362,7 @@ public class CardData
         BudgetBonusOptions = budgetBonusOptions;
         SupportOptions = supportOptions;
         SupportBonusOptions = supportBonusOptions;
+        Desc = desc;
     }
 }
 

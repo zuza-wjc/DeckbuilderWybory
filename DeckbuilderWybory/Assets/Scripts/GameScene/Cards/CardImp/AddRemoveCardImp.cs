@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +16,7 @@ public class AddRemoveCardImp : MonoBehaviour
     public DeckController deckController;
     public CardUtilities cardUtilities;
     public ErrorPanelController errorPanelController;
-
+    public HistoryController historyController;
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -70,7 +70,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if(cost < 0)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci cost");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci cost");
             errorPanelController.ShowError("general_error");
             return;
         }
@@ -105,10 +105,21 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (cardType == string.Empty)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci cardType");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci cardType");
             errorPanelController.ShowError("general_error");
             return;
         }
+
+        DataSnapshot descSnapshot = snapshot.Child("playDescriptionPositive");
+        string desc = descSnapshot.Exists ? descSnapshot.Value.ToString() : string.Empty;
+
+        if (desc == string.Empty)
+        {
+            Debug.LogError("Bï¿½ï¿½d w pobieraniu wartoï¿½ci playDescriptionPositive");
+            errorPanelController.ShowError("general_error");
+            return;
+        }
+
 
         DataSnapshot roundsSnapshot = snapshot.Child("rounds");
         roundChange = roundsSnapshot.Exists ? Convert.ToInt32(roundsSnapshot.Value) : -1;
@@ -160,14 +171,14 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (playerBudget < 0)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playerBudget");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci playerBudget");
             errorPanelController.ShowError("general_error");
             return;
         }
 
         if (!ignoreCost && playerBudget < cost)
         {
-            Debug.LogError("Brak bud¿etu aby zagraæ kartê.");
+            Debug.LogError("Brak budÅ¼etu aby zagraÄ‡ kartÄ™.");
             errorPanelController.ShowError("no_budget");
             return;
         }
@@ -177,7 +188,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (playerIncome < 0)
         {
-            Debug.LogError("B³¹d w pobieraniu wartoœci playerIncome");
+            Debug.LogError("BÅ‚Ä…d w pobieraniu wartoÅ›ci playerIncome");
             errorPanelController.ShowError("general_error");
             return;
         }
@@ -186,7 +197,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (await cardUtilities.CheckBlockedCard(playerId))
         {
-            Debug.Log("Karta zosta³a zablokowana");
+            Debug.Log("Karta zostaÅ‚a zablokowana");
             errorPanelController.ShowError("action_blocked");
             return;
         }
@@ -305,6 +316,8 @@ public class AddRemoveCardImp : MonoBehaviour
         await cardUtilities.CheckIfPlayed2Cards(playerId);
 
         tmp = await cardUtilities.CheckCardLimit(playerId);
+
+        await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
     }
 
     private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion,
@@ -368,13 +381,13 @@ public class AddRemoveCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1, false, -1, null); 
                     }
                     else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie mo¿na zagraæ karty");
+                        Debug.Log("Gracz jest chroniony nie moÅ¼na zagraÄ‡ karty");
                         errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1, false, -1, null);
                     }
@@ -428,7 +441,7 @@ public class AddRemoveCardImp : MonoBehaviour
                             await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
                         } else
                         {
-                            Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
+                            Debug.LogWarning("Brak wystarczajÄ…cego budÅ¼etu aby zagraÄ‡ kartÄ™.");
                             errorPanelController.ShowError("no_budget");
                             return (dbRefPlayerStats, -1, false, -1, null);
                         }
@@ -747,7 +760,7 @@ public class AddRemoveCardImp : MonoBehaviour
                     playerIncome += data.Number;
                     if (playerIncome < 0)
                     {
-                        Debug.Log("Nie wystaraczaj¹cy przychód aby zagraæ kartê");
+                        Debug.Log("Nie wystaraczajÄ…cy przychÃ³d aby zagraÄ‡ kartÄ™");
                         errorPanelController.ShowError("no_income");
                         return (dbRefPlayerStats, -1);
                     }
@@ -949,19 +962,19 @@ public class AddRemoveCardImp : MonoBehaviour
 
             if (isRegionProtected)
             {
-                Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
+                Debug.Log("Obszar jest chroniony, nie moÅ¼na zagraÄ‡ karty");
                 continue;
             }
 
             if (isPlayerProtected)
             {
-                Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
+                Debug.Log("Gracz jest chroniony, nie moÅ¼na zagraÄ‡ karty");
                 continue;
             }
 
             if (isOneCardProtected)
             {
-                Debug.Log("Gracz jest chroniony przez jedn¹ kartê, nie mo¿na zagraæ karty");
+                Debug.Log("Gracz jest chroniony przez jednÄ… kartÄ™, nie moÅ¼na zagraÄ‡ karty");
                 continue;
             }
 
@@ -1459,11 +1472,11 @@ public class AddRemoveCardImp : MonoBehaviour
         }
 
         int currentTurnNumber = -1;
-        int currentPlayerTurnsTaken = -1; // Liczba tur wykonanych przez zagrywaj¹cego
+        int currentPlayerTurnsTaken = -1; // Liczba tur wykonanych przez zagrywajÄ…cego
         int maxTurnNumber = -1;
         string nextPlayerId = null;
 
-        // ZnajdŸ aktualnego gracza i maksymalny numer tury
+        // ZnajdÅº aktualnego gracza i maksymalny numer tury
         foreach (var playerSnapshot in playersSnapshot.Children)
         {
             string id = playerSnapshot.Key;
@@ -1479,7 +1492,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 if (id == playerId)
                 {
                     currentTurnNumber = turnNumber;
-                    currentPlayerTurnsTaken = turnsTaken; // Zapamiêtaj liczbê tur wykonanych
+                    currentPlayerTurnsTaken = turnsTaken; // ZapamiÄ™taj liczbÄ™ tur wykonanych
                 }
 
                 maxTurnNumber = Math.Max(maxTurnNumber, turnNumber);
@@ -1488,11 +1501,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (currentTurnNumber == -1 || currentPlayerTurnsTaken == -1)
         {
-            Debug.LogError("Bie¿¹cy gracz lub jego statystyki nie zosta³y znalezione.");
+            Debug.LogError("BieÅ¼Ä…cy gracz lub jego statystyki nie zostaÅ‚y znalezione.");
             return;
         }
 
-        // ZnajdŸ nastêpnego gracza (cyklicznie)
+        // ZnajdÅº nastÄ™pnego gracza (cyklicznie)
         foreach (var playerSnapshot in playersSnapshot.Children)
         {
             string id = playerSnapshot.Key;
@@ -1514,11 +1527,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (nextPlayerId == null)
         {
-            Debug.LogError("Nie znaleziono nastêpnego gracza.");
+            Debug.LogError("Nie znaleziono nastÄ™pnego gracza.");
             return;
         }
 
-        // Dodaj karê bud¿etow¹ do nastêpnego gracza
+        // Dodaj karÄ™ budÅ¼etowÄ… do nastÄ™pnego gracza
         DatabaseReference dbRefNextPlayer = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
