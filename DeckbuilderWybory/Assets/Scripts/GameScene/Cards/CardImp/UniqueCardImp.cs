@@ -19,7 +19,6 @@ public class UniqueCardImp : MonoBehaviour
     public DeckController deckController;
     public TurnController turnController;
     public ErrorPanelController errorPanelController;
-    public HistoryController historyController;
     void Start()
     {
         playerListManager.Initialize(lobbyId, playerId);
@@ -71,15 +70,6 @@ public class UniqueCardImp : MonoBehaviour
             if (cardType == string.Empty)
             {
                 Debug.LogError("Branch type does not exist");
-                errorPanelController.ShowError("general_error");
-                return;
-            }
-
-            string desc = snapshot.Child("playDescriptionPositive").Exists ? snapshot.Child("playDescriptionPositive").Value.ToString() : string.Empty;
-
-            if (desc == string.Empty)
-            {
-                Debug.LogError("B³¹d w pobieraniu wartoœci playDescriptionPositive");
                 errorPanelController.ShowError("general_error");
                 return;
             }
@@ -170,8 +160,6 @@ public class UniqueCardImp : MonoBehaviour
             await cardUtilities.CheckIfPlayed2Cards(playerId);
 
             cardLimitExceeded = await cardUtilities.CheckCardLimit(playerId);
-
-            await historyController.AddCardToHistory(cardIdDropped, playerId,desc);
         }
         catch (Exception ex)
         {
