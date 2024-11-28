@@ -30,6 +30,8 @@ public class TurnController : MonoBehaviour
     private string previousPlayerId;
     private int turnsTaken = 0;
 
+    public CardOnHandController cardsOnHandController;
+
     void Start()
     {
         lobbyId = DataTransfer.LobbyId;
@@ -262,71 +264,6 @@ public class TurnController : MonoBehaviour
             onComplete?.Invoke();
         });
     }
-    void DrawNewCardsFromDeck()
-    {
-        // Referencja do talii gracza
-        DatabaseReference deckRef = dbRef.Child(playerId).Child("deck");
-
-        // Pobranie kart z talii
-        deckRef.GetValueAsync().ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCompleted && !task.IsFaulted)
-            {
-                DataSnapshot snapshot = task.Result;
-
-                if (snapshot.Exists)
-                {
-                    List<DataSnapshot> availableCards = new List<DataSnapshot>();
-
-                    // Przejœcie przez wszystkie karty w talii
-                    foreach (DataSnapshot cardSnapshot in snapshot.Children)
-                    {
-                        bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
-                        bool played = cardSnapshot.Child("played").Value as bool? ?? false;
-
-                        // Dodanie kart, które mog¹ byæ dobrane
-                        if (!onHand && !played)
-                        {
-                            availableCards.Add(cardSnapshot);
-                        }
-                    }
-
-                    if (availableCards.Count > 0)
-                    {
-                        // Losowanie jednej z dostêpnych kart
-                        int randomIndex = UnityEngine.Random.Range(0, availableCards.Count);
-                        DataSnapshot selectedCard = availableCards[randomIndex];
-
-                        // Aktualizacja w³aœciwoœci karty: ustawienie `onHand` na true
-                        string cardId = selectedCard.Key;
-                        deckRef.Child(cardId).Child("onHand").SetValueAsync(true).ContinueWithOnMainThread(updateTask =>
-                        {
-                            if (updateTask.IsCompleted)
-                            {
-                                Debug.Log($"Dodano kartê {cardId} na rêkê gracza.");
-                            }
-                            else
-                            {
-                                Debug.LogError($"B³¹d podczas dodawania karty {cardId} na rêkê: {updateTask.Exception}");
-                            }
-                        });
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Brak dostêpnych kart do dobrania.");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("Talia gracza jest pusta.");
-                }
-            }
-            else
-            {
-                Debug.LogError("B³¹d podczas pobierania talii gracza: " + task.Exception);
-            }
-        });
-    }
 
     public async Task AddIncomeToBudget()
     {
@@ -373,8 +310,75 @@ public class TurnController : MonoBehaviour
         }
     }
 
+    public async Task DrawCardsUntilLimit(string playerId, int targetCardCount)
+    {
+        string lobbyId = DataTransfer.LobbyId;
 
-    void StartTurn()
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(playerId))
+        {
+            Debug.LogError("Lobby ID or player ID is null or empty.");
+            return;
+        }
+
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var snapshot = await playerDeckRef.GetValueAsync();
+        if (!snapshot.Exists)
+        {
+            Debug.LogError($"Deck not found for player {playerId} in lobby {lobbyId}.");
+            return;
+        }
+
+        // Pobierz obecne karty na rêce
+        List<string> currentHandCards = new();
+        List<string> availableCards = new();
+
+        foreach (var cardSnapshot in snapshot.Children)
+        {
+            bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+            bool played = cardSnapshot.Child("played").Value as bool? ?? false;
+
+            if (onHand) currentHandCards.Add(cardSnapshot.Key);
+            if (!onHand && !played) availableCards.Add(cardSnapshot.Key);
+        }
+
+        int cardsToDraw = Math.Min(targetCardCount - currentHandCards.Count, availableCards.Count);
+
+        Debug.Log($"Player {playerId} has {currentHandCards.Count} cards. Drawing {cardsToDraw} more cards.");
+
+        if (cardsToDraw <= 0)
+        {
+            Debug.Log("No need to draw more cards.");
+            return;
+        }
+
+        System.Random random = new();
+        for (int i = 0; i < cardsToDraw; i++)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, availableCards.Count);
+            string selectedInstanceId = availableCards[randomIndex];
+
+            // Pobierz ID karty i oznacz jako "onHand"
+            var selectedCardSnapshot = await playerDeckRef.Child(selectedInstanceId).Child("cardId").GetValueAsync();
+            if (!selectedCardSnapshot.Exists)
+            {
+                Debug.LogError($"CardId for instance {selectedInstanceId} not found in deck.");
+                continue;
+            }
+
+            await playerDeckRef.Child(selectedInstanceId).Child("onHand").SetValueAsync(true);
+            Debug.Log($"Card {selectedInstanceId} added to hand.");
+            availableCards.RemoveAt(randomIndex); // Usuñ wybran¹ kartê z dostêpnych
+        }
+    }
+
+
+    async void StartTurn()
     {
       /*  var playerRef = dbRef.Child(playerId);
         var blockTurnSnapshot = playerRef.Child("blockTurn");
@@ -413,16 +417,17 @@ public class TurnController : MonoBehaviour
 */
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
-        DrawNewCardsFromDeck();
+        await DrawCardsUntilLimit(playerId, 4);
+        cardsOnHandController.ForceUpdateUI();
         if (turnsTaken > 0)
         {
             _ = AddIncomeToBudget();
         }
         passButton.interactable = true;
-        dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
+        await dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
         turnsTaken++;
-        dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
-        dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
+        await dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
+        await dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
         isMyTurn = true;
         DataTransfer.IsFirstCardInTurn = true;
         
