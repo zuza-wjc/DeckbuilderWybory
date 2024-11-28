@@ -24,9 +24,10 @@ public class TurnController : MonoBehaviour
 
     private List<string> turnOrderList;
     private bool isMyTurn = false;
-    private float timer = 10f;
+    private float timer = 60f;
     private string currentPlayerName;
     private string previousPlayerId;
+    private int turnsTaken = 0;
 
     void Start()
     {
@@ -260,20 +261,127 @@ public class TurnController : MonoBehaviour
             onComplete?.Invoke();
         });
     }
+    void DrawNewCardsFromDeck()
+    {
+        // Referencja do talii gracza
+        DatabaseReference deckRef = dbRef.Child(playerId).Child("deck");
+
+        // Pobranie kart z talii
+        deckRef.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            if (task.IsCompleted && !task.IsFaulted)
+            {
+                DataSnapshot snapshot = task.Result;
+
+                if (snapshot.Exists)
+                {
+                    List<DataSnapshot> availableCards = new List<DataSnapshot>();
+
+                    // Przejœcie przez wszystkie karty w talii
+                    foreach (DataSnapshot cardSnapshot in snapshot.Children)
+                    {
+                        bool onHand = cardSnapshot.Child("onHand").Value as bool? ?? false;
+                        bool played = cardSnapshot.Child("played").Value as bool? ?? false;
+
+                        // Dodanie kart, które mog¹ byæ dobrane
+                        if (!onHand && !played)
+                        {
+                            availableCards.Add(cardSnapshot);
+                        }
+                    }
+
+                    if (availableCards.Count > 0)
+                    {
+                        // Losowanie jednej z dostêpnych kart
+                        int randomIndex = UnityEngine.Random.Range(0, availableCards.Count);
+                        DataSnapshot selectedCard = availableCards[randomIndex];
+
+                        // Aktualizacja w³aœciwoœci karty: ustawienie `onHand` na true
+                        string cardId = selectedCard.Key;
+                        deckRef.Child(cardId).Child("onHand").SetValueAsync(true).ContinueWithOnMainThread(updateTask =>
+                        {
+                            if (updateTask.IsCompleted)
+                            {
+                                Debug.Log($"Dodano kartê {cardId} na rêkê gracza.");
+                            }
+                            else
+                            {
+                                Debug.LogError($"B³¹d podczas dodawania karty {cardId} na rêkê: {updateTask.Exception}");
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Brak dostêpnych kart do dobrania.");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Talia gracza jest pusta.");
+                }
+            }
+            else
+            {
+                Debug.LogError("B³¹d podczas pobierania talii gracza: " + task.Exception);
+            }
+        });
+    }
+
 
     void StartTurn()
     {
-        timer = 10f; // Zresetuj timer
+      /*  var playerRef = dbRef.Child(playerId);
+        var blockTurnSnapshot = playerRef.Child("blockTurn");
+
+        blockTurnSnapshot.GetValueAsync().ContinueWith(task =>
+        {
+            if (task.IsCompleted)
+            {
+                var snapshot = task.Result;
+
+                if (snapshot.Exists && Convert.ToBoolean(snapshot.Value))
+                {
+                    playerRef.Child("blockTurn").RemoveValueAsync();
+                    PassTurn();
+
+                }
+                else
+                {
+                    timer = 10f;
+                    turnPlayerName.text = "Twoja tura!";
+                    passButton.interactable = true;
+                    dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
+                    dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
+                    isMyTurn = true;
+                    DataTransfer.IsFirstCardInTurn = true;
+
+                    turnsTaken++;
+                    dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
+                }
+            }
+            else
+            {
+                Debug.LogError($"Nie uda³o siê pobraæ danych dla gracza {playerId}.");
+            }
+        }); 
+*/
+        timer = 60f;
         turnPlayerName.text = "Twoja tura!";
+        DrawNewCardsFromDeck();
         passButton.interactable = true;
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
+        turnsTaken++;
+        dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
         dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
-        isMyTurn = true; // Wyswietl timer
+        isMyTurn = true;
+        DataTransfer.IsFirstCardInTurn = true;
+        
+
     }
 
     void EndTurn()
     {
-        timer = 10f; // Zresetuj timer
+        timer = 60f; // Zresetuj timer
         passButton.interactable = false;
         isMyTurn = false; // Nie wyswietlaj timera
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
@@ -289,7 +397,7 @@ public class TurnController : MonoBehaviour
         }
     }
 
-    void PassTurn()
+    public void PassTurn()
     {
         if (timer > 0)
         {

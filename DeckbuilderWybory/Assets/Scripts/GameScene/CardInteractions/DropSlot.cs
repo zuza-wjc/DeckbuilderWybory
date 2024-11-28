@@ -6,10 +6,6 @@ public class DropSlot : MonoBehaviour, IDropHandler
 {
     public GameObject playerListPanel;
     public GameObject mapPanel;
-
-    string instanceId;
-    string cardId;
-
     public CardTypeManager cardTypeManager;
 
     private void Awake()
@@ -31,10 +27,7 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
         if (draggableItem != null)
         {
-            instanceId = draggableItem.instanceId;
-            cardId = draggableItem.cardId;
-
-            cardTypeManager.OnCardDropped(instanceId, cardId, false);
+            cardTypeManager.OnCardDropped(draggableItem.instanceId, draggableItem.cardId, false);
         }
     }
 }
