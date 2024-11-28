@@ -5986,6 +5986,7 @@ MonoBehaviour:
   turnPlayerName: {fileID: 1457244259}
   roundText: {fileID: 999618916}
   passButton: {fileID: 1428414126}
+  cardsOnHandController: {fileID: 552155023}
 --- !u!1 &1309352974
 GameObject:
   m_ObjectHideFlags: 0
@@ -6002,7 +6003,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1309352975
 RectTransform:
   m_ObjectHideFlags: 0
