@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory_clone_0\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D3717BA1-8F2C-9990-8559-ADA9EFF00972}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory_clone_0\\assets\\scripts\\gamescene\\historycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D3717BA1-8F2C-9990-8559-ADA9EFF00972}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\historycontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D3717BA1-8F2C-9990-8559-ADA9EFF00972}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory_clone_0\\assets\\scripts\\gamescene\\cardinteractions\\dropslot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D3717BA1-8F2C-9990-8559-ADA9EFF00972}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\cardinteractions\\dropslot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,14 +19,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "HistoryController.cs",
-              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory_clone_0\\Assets\\Scripts\\GameScene\\HistoryController.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\HistoryController.cs",
-              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory_clone_0\\Assets\\Scripts\\GameScene\\HistoryController.cs",
-              "RelativeToolTip": "Assets\\Scripts\\GameScene\\HistoryController.cs",
-              "ViewState": "AQIAAHcAAAAAAAAAAAAgwJoAAAA6AAAA",
+              "Title": "DropSlot.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory_clone_0\\Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory_clone_0\\Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
+              "RelativeToolTip": "Assets\\Scripts\\GameScene\\CardInteractions\\DropSlot.cs",
+              "ViewState": "AQIAACwAAAAAAAAAAAAiwFQAAABVAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-28T17:02:46.336Z",
+              "WhenOpened": "2024-11-28T19:22:59.443Z",
               "EditorCaption": ""
             }
           ]
