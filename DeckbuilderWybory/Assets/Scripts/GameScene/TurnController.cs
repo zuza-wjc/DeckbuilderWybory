@@ -438,9 +438,11 @@ public class TurnController : MonoBehaviour
 
     }
 
-    void EndTurn()
+    async void EndTurn()
     {
         timer = 60f; // Zresetuj timer
+        await DrawCardsUntilLimit(playerId, 4);
+        cardsOnHandController.ForceUpdateUI();
         firstPassButton.interactable = false;
         isMyTurn = false; // Nie wyswietlaj timera
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
