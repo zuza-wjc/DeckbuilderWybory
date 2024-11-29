@@ -25,7 +25,7 @@ public class TurnController : MonoBehaviour
 
     private List<string> turnOrderList;
     private bool isMyTurn = false;
-    private float timer = 10f;
+    private float timer = 60f;
     private string currentPlayerName;
     private string previousPlayerId;
     private int turnsTaken = 0;
@@ -418,7 +418,7 @@ public class TurnController : MonoBehaviour
             }
         }); 
 */
-        timer = 10f;
+        timer = 60f;
         turnPlayerName.text = "Twoja tura!";
         await DrawCardsUntilLimit(playerId, 4);
         cardsOnHandController.ForceUpdateUI();
