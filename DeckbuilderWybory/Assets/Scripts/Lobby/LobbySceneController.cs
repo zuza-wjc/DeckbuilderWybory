@@ -354,25 +354,7 @@ public class LobbySceneController : MonoBehaviour
 
                     dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
 
-                    dbRefLobby.Child("map").GetValueAsync().ContinueWith(mapTask =>
-                    {
-                        if (mapTask.IsCompleted && !mapTask.IsFaulted)
-                        {
-                            DataSnapshot mapSnapshot = mapTask.Result;
-                            if (mapSnapshot.Exists)
-                            {
-                                Debug.Log("Map data already exists in the database.");
-                            }
-                            else
-                            {
-                                CheckAndSetMapData();
-                            }
-                        }
-                        else
-                        {
-                            Debug.Log("Failed to fetch map data: " + mapTask.Exception);
-                        }
-                    });
+
 
                     getTurnOrder(() =>
                     {
@@ -437,38 +419,7 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
-    void CheckAndSetMapData()
-    {
-        dbRefLobby.GetValueAsync().ContinueWith(sessionTask =>
-        {
-            if (sessionTask.IsCompleted && !sessionTask.IsFaulted)
-            {
-                DataSnapshot sessionSnapshot = sessionTask.Result;
-                if (sessionSnapshot.Exists)
-                {
-                    Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
-                {
-                    { "region1", new Dictionary<string, object> { { "maxSupport", 15 }, { "type", "Ambasada" } } },
-                    { "region2", new Dictionary<string, object> { { "maxSupport", 19 }, { "type", "Metropolia" } } },
-                    { "region3", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Środowisko" } } },
-                    { "region4", new Dictionary<string, object> { { "maxSupport", 18 }, { "type", "Przemysł" } } },
-                    { "region5", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Metropolia" } } },
-                    { "region6", new Dictionary<string, object> { { "maxSupport", 16 }, { "type", "Ambasada" } } }
-                };
 
-                    dbRefLobby.Child("map").SetValueAsync(mapData);
-                }
-                else
-                {
-                    Debug.Log("Session has been removed. Not setting map data.");
-                }
-            }
-            else
-            {
-                Debug.Log("Failed to fetch session data: " + sessionTask.Exception);
-            }
-        });
-    }
 
 
     void StartingGame(string lobbyId)

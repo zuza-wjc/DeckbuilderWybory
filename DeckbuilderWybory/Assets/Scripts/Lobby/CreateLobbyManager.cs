@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Firebase;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class CreateLobbyManager : MonoBehaviour
 {
@@ -174,6 +175,26 @@ public class CreateLobbyManager : MonoBehaviour
 
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
 
+        dbRef.Child(lobbyId).Child("map").GetValueAsync().ContinueWith(mapTask =>
+            {
+                if (mapTask.IsCompleted && !mapTask.IsFaulted)
+                {
+                    DataSnapshot mapSnapshot = mapTask.Result;
+                    if (mapSnapshot.Exists)
+                    {
+                        Debug.Log("Map data already exists in the database.");
+                    }
+                    else
+                    {
+                        CheckAndSetMapData(lobbyId);
+                    }
+                }
+                else
+                {
+                    Debug.Log("Failed to fetch map data: " + mapTask.Exception);
+                }
+            });
+
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
         DataTransfer.LobbySize = lobbySize;
@@ -182,6 +203,51 @@ public class CreateLobbyManager : MonoBehaviour
         DataTransfer.PlayerName = playerName;
 
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+    }
+
+    void CheckAndSetMapData(string lobbyId)
+    {
+        dbRef.Child(lobbyId).GetValueAsync().ContinueWith(sessionTask =>
+        {
+            if (sessionTask.IsCompleted && !sessionTask.IsFaulted)
+            {
+                DataSnapshot sessionSnapshot = sessionTask.Result;
+                if (sessionSnapshot.Exists)
+                {
+                    List<string> regionTypes = new List<string> { "Ambasada", "Metropolia", "Środowisko", "Przemysł" };
+                    List<string> typesCopy = regionTypes;
+                    System.Random rng = new System.Random();
+
+                    regionTypes = regionTypes.Concat(typesCopy.OrderBy(x => rng.Next())).ToList();
+
+                    regionTypes.RemoveRange(regionTypes.Count - 2, 2);
+
+                    // Losowe przetasowanie listy, aby rozmieścić typy w różnych regionach
+                    regionTypes = regionTypes.OrderBy(x => rng.Next()).ToList();
+
+                    // Przypisanie typów regionów do sześciu regionów
+                    Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
+                    {
+                        { "region1", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[0] } } },
+                        { "region2", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[1] } } },
+                        { "region3", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[2] } } },
+                        { "region4", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[3] } } },
+                        { "region5", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[4] } } },
+                        { "region6", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[5] } } }
+                    };
+
+                    dbRef.Child(lobbyId).Child("map").SetValueAsync(mapData);
+                }
+                else
+                {
+                    Debug.Log("Session has been removed. Not setting map data.");
+                }
+            }
+            else
+            {
+                Debug.Log("Failed to fetch session data: " + sessionTask.Exception);
+            }
+        });
     }
 
     async Task<string> GenerateUniqueLobbyIdAsync()
