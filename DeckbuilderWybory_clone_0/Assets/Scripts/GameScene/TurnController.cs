@@ -25,10 +25,11 @@ public class TurnController : MonoBehaviour
 
     private List<string> turnOrderList;
     private bool isMyTurn = false;
-    private float timer = 60f;
+    private float timer = 10f;
     private string currentPlayerName;
     private string previousPlayerId;
     private int turnsTaken = 0;
+    private string lastInTurnPlayerId;
 
     public CardOnHandController cardsOnHandController;
 
@@ -129,6 +130,8 @@ public class TurnController : MonoBehaviour
                     }
 
                     turnOrderList = players.OrderBy(p => p.Value).Select(p => p.Key).ToList();
+
+                    lastInTurnPlayerId = turnOrderList.Last();
 
                     int myIndex = turnOrderList.IndexOf(playerId);
                     int previousIndex = (myIndex - 1 + turnOrderList.Count) % turnOrderList.Count;
@@ -415,7 +418,7 @@ public class TurnController : MonoBehaviour
             }
         }); 
 */
-        timer = 60f;
+        timer = 10f;
         turnPlayerName.text = "Twoja tura!";
         await DrawCardsUntilLimit(playerId, 4);
         cardsOnHandController.ForceUpdateUI();
@@ -441,7 +444,7 @@ public class TurnController : MonoBehaviour
         isMyTurn = false; // Nie wyswietlaj timera
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
 
-        if (playerId == turnOrderList.Last())
+        if (playerId == lastInTurnPlayerId)
         {
             FetchRoundsFromDatabase(fetchedRounds =>
             {

@@ -1361,7 +1361,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc9118e4198ae3444a6f635e0c79d2bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cardPrefab: {fileID: 3655812115127719277, guid: 01f50befbf35c6b4a89375af75b36a98, type: 3}
+  cardPrefab: {fileID: 3655812115127719277, guid: bee9c0f28ed87504ea263e20cf6e567c, type: 3}
   cardListContainer: {fileID: 1989908554}
   submitButton: {fileID: 1255922512}
   cardSelectionPanel: {fileID: 2098735595}

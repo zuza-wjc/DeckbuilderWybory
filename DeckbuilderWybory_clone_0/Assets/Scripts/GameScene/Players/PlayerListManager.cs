@@ -26,7 +26,11 @@ public class PlayerListManager : MonoBehaviour
         try
         {
             ClearOldButtons();
-            await FetchPlayersList();
+            bool checkError = await FetchPlayersList();
+            if (checkError)
+            {
+                return null; 
+            }
             return await WaitForEnemySelection();
         }
         catch (Exception ex)
@@ -41,7 +45,11 @@ public class PlayerListManager : MonoBehaviour
         try
         {
             ClearOldButtons();
-            await FetchPlayersListInArea(areaId);
+            bool checkError = await FetchPlayersListInArea(areaId);
+            if (checkError)
+            {
+                return null;
+            }
             return await WaitForEnemySelection();
         }
         catch (Exception ex)
@@ -69,7 +77,7 @@ public class PlayerListManager : MonoBehaviour
         }
     }
 
-    private async Task FetchPlayersList()
+    private async Task<bool> FetchPlayersList()
     {
         try
         {
@@ -79,7 +87,9 @@ public class PlayerListManager : MonoBehaviour
             if (snapshot.Exists)
             {
                 var playersSnapshot = snapshot.Child("players");
-                if (!playersSnapshot.Exists) return;
+                if (!playersSnapshot.Exists) return true;
+
+                playerNameToIdMap.Clear(); // Wyczyœæ mapê przed dodaniem nowych graczy
 
                 foreach (var childSnapshot in playersSnapshot.Children)
                 {
@@ -94,16 +104,26 @@ public class PlayerListManager : MonoBehaviour
                     CreateButton(otherPlayerName);
                 }
 
-                UpdatePlayerListPanel();
+                if (playerNameToIdMap.Count > 0)
+                {
+                    UpdatePlayerListPanel(); // Poka¿ panel, jeœli s¹ gracze
+                    return false;
+                } else
+                {
+                    return true;
+                }
+
             }
             else
             {
                 Debug.LogError("No player data found in the database.");
+                return true;
             }
         }
         catch (Exception ex)
         {
             Debug.LogError($"Error fetching players list: {ex.Message}");
+            return true;
         }
     }
 
@@ -116,7 +136,7 @@ public class PlayerListManager : MonoBehaviour
         }
     }
 
-    private async Task FetchPlayersListInArea(int areaId)
+    private async Task<bool> FetchPlayersListInArea(int areaId)
     {
         try
         {
@@ -126,7 +146,9 @@ public class PlayerListManager : MonoBehaviour
             if (snapshot.Exists)
             {
                 var playersSnapshot = snapshot.Child("players");
-                if (!playersSnapshot.Exists) return;
+                if (!playersSnapshot.Exists) return true;
+
+                playerNameToIdMap.Clear(); // Wyczyœæ mapê przed dodaniem nowych danych
 
                 foreach (var childSnapshot in playersSnapshot.Children)
                 {
@@ -147,18 +169,29 @@ public class PlayerListManager : MonoBehaviour
                     }
                 }
 
-                UpdatePlayerListPanel();
+                if (playerNameToIdMap.Count > 0)
+                {
+                    UpdatePlayerListPanel(); // Poka¿ panel, jeœli s¹ gracze
+                    return false;
+                } else
+                {
+                    return true;
+                }
+ 
             }
             else
             {
                 Debug.LogError("No player data found in the database.");
+                return true;
             }
         }
         catch (Exception ex)
         {
             Debug.LogError($"Error fetching players list for area {areaId}: {ex.Message}");
+            return true;
         }
     }
+
 
     private void CreateButton(string otherPlayerName)
     {
