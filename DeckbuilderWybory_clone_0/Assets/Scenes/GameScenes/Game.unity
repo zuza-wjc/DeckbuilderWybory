@@ -357,7 +357,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -96.05805, y: -75.43695}
+  m_AnchoredPosition: {x: -96.664795, y: -75.02246}
   m_SizeDelta: {x: 481.453, y: 397.1364}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &118501486
@@ -1039,7 +1039,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -379.4, y: -15.5}
+  m_AnchoredPosition: {x: -379.84818, y: -14.839203}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &325094598
@@ -1266,7 +1266,6 @@ GameObject:
   - component: {fileID: 377826297}
   - component: {fileID: 377826296}
   - component: {fileID: 377826295}
-  - component: {fileID: 377826294}
   m_Layer: 5
   m_Name: Region 6
   m_TagString: region6
@@ -1291,23 +1290,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 266, y: -89}
+  m_AnchoredPosition: {x: 265.55164, y: -88.3392}
   m_SizeDelta: {x: 182.9, y: 61.8}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &377826294
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 377826292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c59e7ea99bd0af04e981085fe586ed0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sectionToChange: {fileID: 0}
-  sectionFromChange: {fileID: 1070555288}
 --- !u!114 &377826295
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1351,19 +1336,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 377826296}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 377826294}
-        m_TargetAssemblyTypeName: SectionsManager, Assembly-CSharp
-        m_MethodName: changeSection
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &377826296
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1436,7 +1409,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -183.43936, y: 178.52458}
+  m_AnchoredPosition: {x: -184.0462, y: 178.93907}
   m_SizeDelta: {x: 265.2184, y: 190.185}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &378545578
@@ -1788,7 +1761,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 260.73138, y: -77.53248}
+  m_AnchoredPosition: {x: 260.12476, y: -77.11801}
   m_SizeDelta: {x: 312.2662, y: 216.075}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &429987330
@@ -2124,7 +2097,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 23.3414, y: 100.57151}
+  m_AnchoredPosition: {x: 22.734497, y: 100.98596}
   m_SizeDelta: {x: 279.3707, y: 255.2946}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &540553146
@@ -2177,7 +2150,6 @@ GameObject:
   - component: {fileID: 543299907}
   - component: {fileID: 543299906}
   - component: {fileID: 543299905}
-  - component: {fileID: 543299904}
   m_Layer: 5
   m_Name: Region 3
   m_TagString: region3
@@ -2202,23 +2174,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -183, y: 185}
+  m_AnchoredPosition: {x: -183.44812, y: 185.66084}
   m_SizeDelta: {x: 182.9, y: 61.8}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &543299904
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 543299902}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c59e7ea99bd0af04e981085fe586ed0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sectionToChange: {fileID: 0}
-  sectionFromChange: {fileID: 1070555288}
 --- !u!114 &543299905
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2262,19 +2220,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 543299906}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 543299904}
-        m_TargetAssemblyTypeName: SectionsManager, Assembly-CSharp
-        m_MethodName: changeSection
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &543299906
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2429,7 +2375,6 @@ GameObject:
   - component: {fileID: 603708017}
   - component: {fileID: 603708016}
   - component: {fileID: 603708015}
-  - component: {fileID: 603708014}
   m_Layer: 5
   m_Name: Region 2
   m_TagString: region2
@@ -2454,23 +2399,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -87, y: -82}
+  m_AnchoredPosition: {x: -87.44806, y: -81.3392}
   m_SizeDelta: {x: 182.9, y: 61.8}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &603708014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 603708012}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c59e7ea99bd0af04e981085fe586ed0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sectionToChange: {fileID: 0}
-  sectionFromChange: {fileID: 1070555288}
 --- !u!114 &603708015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2514,19 +2445,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 603708016}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 603708014}
-        m_TargetAssemblyTypeName: SectionsManager, Assembly-CSharp
-        m_MethodName: changeSection
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &603708016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2788,7 +2707,6 @@ GameObject:
   - component: {fileID: 677302272}
   - component: {fileID: 677302271}
   - component: {fileID: 677302270}
-  - component: {fileID: 677302269}
   m_Layer: 5
   m_Name: Region 1
   m_TagString: region1
@@ -2813,23 +2731,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -375, y: 36}
+  m_AnchoredPosition: {x: -375.44812, y: 36.660736}
   m_SizeDelta: {x: 182.9, y: 61.8}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &677302269
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 677302267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c59e7ea99bd0af04e981085fe586ed0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sectionToChange: {fileID: 0}
-  sectionFromChange: {fileID: 1070555288}
 --- !u!114 &677302270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2873,19 +2777,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 677302271}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 677302269}
-        m_TargetAssemblyTypeName: SectionsManager, Assembly-CSharp
-        m_MethodName: changeSection
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &677302271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3037,7 +2929,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -396.17523, y: 4.236398}
+  m_AnchoredPosition: {x: -396.78198, y: 4.6508484}
   m_SizeDelta: {x: 383.0598, y: 356.3719}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &702603406
@@ -3803,7 +3695,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -317, y: -20}
+  m_AnchoredPosition: {x: -317.44812, y: -19.339233}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &903364811
@@ -3937,7 +3829,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -191.55002, y: 139.9}
+  m_AnchoredPosition: {x: -191.99823, y: 140.5607}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &927249821
@@ -4839,6 +4731,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1070555289}
+  - component: {fileID: 1070555291}
+  - component: {fileID: 1070555290}
   m_Layer: 5
   m_Name: Regions
   m_TagString: Untagged
@@ -4875,9 +4769,47 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.000041679516}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 0.6563, y: -0.9677}
+  m_SizeDelta: {x: 1204.2173, y: 663.6625}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1070555290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1070555288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 18e22daf2f834364cb489426ab6bd2a7, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1070555291
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1070555288}
+  m_CullTransparentMesh: 1
 --- !u!1 &1099264136
 GameObject:
   m_ObjectHideFlags: 0
@@ -5427,7 +5359,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 322.00003, y: 54}
+  m_AnchoredPosition: {x: 321.552, y: 54.660797}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1145876856
@@ -5648,6 +5580,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1212436456}
+  - component: {fileID: 1212436457}
   m_Layer: 5
   m_Name: Region Images
   m_TagString: Untagged
@@ -5677,9 +5610,17 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.000061035156}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 0.8887, y: -0.607}
+  m_SizeDelta: {x: 1202.2551, y: 657.7198}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1212436457
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1212436455}
+  m_CullTransparentMesh: 1
 --- !u!1 &1225893520
 GameObject:
   m_ObjectHideFlags: 0
@@ -6427,8 +6368,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mapPanel: {fileID: 1309352974}
-  regionImage: []
-  regionTypeColor: []
+  regionImage:
+  - {fileID: 702603406}
+  - {fileID: 118501486}
+  - {fileID: 378545578}
+  - {fileID: 540553146}
+  - {fileID: 1571712526}
+  - {fileID: 429987330}
+  regionTypeColor:
+  - {r: 0.03529412, g: 0.5058824, b: 0.42352942, a: 1}
+  - {r: 0.65882355, g: 0.31764707, b: 1, a: 1}
+  - {r: 0.23921569, g: 0.6313726, b: 0.25490198, a: 1}
+  - {r: 0.8392157, g: 0.6431373, b: 0.14901961, a: 1}
+  - {r: 1, g: 0.3254902, b: 0.28627452, a: 1}
+  - {r: 1, g: 1, b: 1, a: 1}
   region1Text: {fileID: 325094598}
   region2Text: {fileID: 2019281059}
   region3Text: {fileID: 927249821}
@@ -7112,7 +7065,6 @@ GameObject:
   - component: {fileID: 1535513894}
   - component: {fileID: 1535513893}
   - component: {fileID: 1535513892}
-  - component: {fileID: 1535513891}
   m_Layer: 5
   m_Name: Region 5
   m_TagString: region5
@@ -7137,23 +7089,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 322, y: 99}
+  m_AnchoredPosition: {x: 321.552, y: 99.66083}
   m_SizeDelta: {x: 182.9, y: 61.8}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1535513891
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1535513889}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c59e7ea99bd0af04e981085fe586ed0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sectionToChange: {fileID: 0}
-  sectionFromChange: {fileID: 1070555288}
 --- !u!114 &1535513892
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7197,19 +7135,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1535513893}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1535513891}
-        m_TargetAssemblyTypeName: SectionsManager, Assembly-CSharp
-        m_MethodName: changeSection
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1535513893
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7307,7 +7233,6 @@ GameObject:
   - component: {fileID: 1543539756}
   - component: {fileID: 1543539755}
   - component: {fileID: 1543539754}
-  - component: {fileID: 1543539753}
   m_Layer: 5
   m_Name: Region 4
   m_TagString: region4
@@ -7332,23 +7257,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 26, y: 92}
+  m_AnchoredPosition: {x: 25.55194, y: 92.6608}
   m_SizeDelta: {x: 182.9, y: 61.8}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1543539753
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1543539751}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c59e7ea99bd0af04e981085fe586ed0d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sectionToChange: {fileID: 0}
-  sectionFromChange: {fileID: 1070555288}
 --- !u!114 &1543539754
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7392,19 +7303,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1543539755}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1543539753}
-        m_TargetAssemblyTypeName: SectionsManager, Assembly-CSharp
-        m_MethodName: changeSection
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1543539755
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7477,7 +7376,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 327.80258, y: 73.470406}
+  m_AnchoredPosition: {x: 327.19592, y: 73.88486}
   m_SizeDelta: {x: 438.8016, y: 348.3998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1571712526
@@ -7664,7 +7563,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 257.45004, y: -137.9}
+  m_AnchoredPosition: {x: 257.00195, y: -137.23917}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1590824014
@@ -8188,7 +8087,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 26, y: 45}
+  m_AnchoredPosition: {x: 25.55194, y: 45.660828}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1692618544
@@ -9584,7 +9483,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -87, y: -137.9}
+  m_AnchoredPosition: {x: -87.44806, y: -137.23917}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2019281059
