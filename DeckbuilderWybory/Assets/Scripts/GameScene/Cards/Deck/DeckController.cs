@@ -14,7 +14,7 @@ public class DeckController : MonoBehaviour
 
     public ErrorPanelController errorPanelController;
 
-    public void InitializeDeck()
+    public async void InitializeDeck()
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
@@ -30,21 +30,64 @@ public class DeckController : MonoBehaviour
             .Child(lobbyId)
             .Child("players");
 
-        List<(string cardId, bool onHand)> cards = new List<(string, bool)>
-    {
-        ("AD075", true),
-        ("UN076", false),
-        ("CA077", false),
-        ("UN084", false),
-        ("UN086", false)
-    };
-
-        foreach (var card in cards)
+        try
         {
-            AddCardToDeck(card.cardId, card.onHand);
-        }
+            // Pobranie deckType z Firebase
+            var deckTypeSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckType").GetValueAsync();
+            if (deckTypeSnapshot.Exists)
+            {
+                string deckType = deckTypeSnapshot.Value.ToString();
+                Debug.Log($"DeckType found: {deckType}");
 
-        Debug.Log("Deck loaded");
+                // Pobranie listy kart dla deckType
+                await LoadCardsFromDeckType(deckType);
+            }
+            else
+            {
+                Debug.LogWarning("DeckType not found for the player.");
+                errorPanelController.ShowError("Deck type not assigned to the player!");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error while loading deck type: {ex.Message}");
+            errorPanelController.ShowError("Failed to load deck type.");
+        }
+    }
+
+    private async Task LoadCardsFromDeckType(string deckType)
+    {
+        try
+        {
+            DatabaseReference readyDecksRef = FirebaseInitializer.DatabaseReference
+                .Child("readyDecks")
+                .Child(deckType);
+
+            var deckSnapshot = await readyDecksRef.GetValueAsync();
+            if (!deckSnapshot.Exists)
+            {
+                Debug.LogWarning($"No cards found for deckType: {deckType}");
+                errorPanelController.ShowError($"No cards available for the deck type '{deckType}'.");
+                return;
+            }
+
+            // Pobranie kart i dodanie ich do talii
+            foreach (var cardSnapshot in deckSnapshot.Children)
+            {
+                string cardId = cardSnapshot.Value.ToString();
+                Debug.Log($"Card found: {cardId}");
+
+                // Dodanie karty do decka
+                AddCardToDeck(cardId, false); // Ustawienie `onHand` na false dla wszystkich kart
+            }
+
+            Debug.Log("Deck loaded successfully.");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error while loading cards for deckType {deckType}: {ex.Message}");
+            errorPanelController.ShowError("Failed to load cards for the selected deck type.");
+        }
     }
 
     private async void AddCardToDeck(string cardId, bool isOnHand)

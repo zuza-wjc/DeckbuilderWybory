@@ -29,6 +29,7 @@ public class TurnController : MonoBehaviour
     private string currentPlayerName;
     private string previousPlayerId;
     private int turnsTaken = 0;
+    private string lastInTurnPlayerId;
 
     public CardOnHandController cardsOnHandController;
 
@@ -129,6 +130,8 @@ public class TurnController : MonoBehaviour
                     }
 
                     turnOrderList = players.OrderBy(p => p.Value).Select(p => p.Key).ToList();
+
+                    lastInTurnPlayerId = turnOrderList.Last();
 
                     int myIndex = turnOrderList.IndexOf(playerId);
                     int previousIndex = (myIndex - 1 + turnOrderList.Count) % turnOrderList.Count;
@@ -441,7 +444,7 @@ public class TurnController : MonoBehaviour
         isMyTurn = false; // Nie wyswietlaj timera
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
 
-        if (playerId == turnOrderList.Last())
+        if (playerId == lastInTurnPlayerId)
         {
             FetchRoundsFromDatabase(fetchedRounds =>
             {
