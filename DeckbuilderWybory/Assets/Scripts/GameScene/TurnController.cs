@@ -15,6 +15,7 @@ public class TurnController : MonoBehaviour
     public Text timeText;
     public Text turnPlayerName;
     public Text roundText;
+    public Button firstPassButton;
     public Button passButton;
 
     DatabaseReference dbRef;
@@ -47,7 +48,7 @@ public class TurnController : MonoBehaviour
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
         dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
-        passButton.interactable = false;
+        firstPassButton.interactable = false;
         passButton.onClick.AddListener(PassTurn);
 
         roundText.text = "Runda: 1";
@@ -426,7 +427,7 @@ public class TurnController : MonoBehaviour
         {
             _ = AddIncomeToBudget();
         }
-        passButton.interactable = true;
+        firstPassButton.interactable = true;
         await dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
         turnsTaken++;
         await dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
@@ -440,7 +441,7 @@ public class TurnController : MonoBehaviour
     void EndTurn()
     {
         timer = 60f; // Zresetuj timer
-        passButton.interactable = false;
+        firstPassButton.interactable = false;
         isMyTurn = false; // Nie wyswietlaj timera
         dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
 
