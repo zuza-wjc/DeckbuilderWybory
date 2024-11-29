@@ -53,6 +53,8 @@ public class TurnController : MonoBehaviour
 
         roundText.text = "Runda: 1";
 
+        //await DrawCardsUntilLimit(playerId, 4);
+
         StartCoroutine(InitializeGameFlow());
     }
 
@@ -77,6 +79,10 @@ public class TurnController : MonoBehaviour
 
     IEnumerator InitializeGameFlow()
     {
+        // Rozdaj pocz¹tkowe karty wszystkim graczom
+        yield return DistributeInitialCards();
+
+        // Kontynuuj inicjalizacjê kolejnoœci tur
         yield return StartCoroutine(InitializeTurnOrderCoroutine());
 
         if (playerId != turnOrderList[0])
@@ -93,6 +99,7 @@ public class TurnController : MonoBehaviour
             StartTurn();
         }
     }
+
 
     IEnumerator InitializeTurnOrderCoroutine()
     {
@@ -313,6 +320,35 @@ public class TurnController : MonoBehaviour
             Debug.LogError($"Failed to add income to player budget: {ex.Message}");
         }
     }
+    
+    public async Task DistributeInitialCards()
+    {
+        Debug.Log("Rozpoczynam rozdawanie pocz¹tkowych kart.");
+
+        if (string.IsNullOrEmpty(lobbyId))
+        {
+            Debug.LogError("Lobby ID is null or empty.");
+            return;
+        }
+
+        var playersSnapshot = await dbRef.GetValueAsync();
+        if (!playersSnapshot.Exists)
+        {
+            Debug.LogError("No players found in lobby.");
+            return;
+        }
+
+        foreach (var playerSnapshot in playersSnapshot.Children)
+        {
+            string playerId = playerSnapshot.Key;
+            await DrawCardsUntilLimit(playerId, 4); // Przydziel ka¿demu graczowi do 4 kart
+            Debug.Log($"Przydzielono pocz¹tkowe karty dla gracza {playerId}.");
+        }
+
+        Debug.Log("Zakoñczono rozdawanie pocz¹tkowych kart.");
+        cardsOnHandController.ForceUpdateUI();
+    }
+
 
     public async Task DrawCardsUntilLimit(string playerId, int targetCardCount)
     {
@@ -421,8 +457,8 @@ public class TurnController : MonoBehaviour
 */
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
-        await DrawCardsUntilLimit(playerId, 4);
-        cardsOnHandController.ForceUpdateUI();
+        //await DrawCardsUntilLimit(playerId, 4);
+        //cardsOnHandController.ForceUpdateUI();
         if (turnsTaken > 0)
         {
             _ = AddIncomeToBudget();
