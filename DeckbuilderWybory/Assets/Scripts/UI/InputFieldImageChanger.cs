@@ -3,15 +3,17 @@ using UnityEngine;
 
 public class InputFieldImageChanger : MonoBehaviour
 {
-    private InputField inputField; // Referencja do InputField
-    private Image inputFieldImage; // Referencja do obrazu InputField
-    public Sprite fillImage; // Nowy obraz, który ma byæ ustawiony
+    private InputField inputField;
+    private Image inputFieldImage;
+    public Sprite fillImage;
     public Sprite nullImage;
 
     void Start()
     {
         inputField = GetComponent<InputField>();
         inputFieldImage = inputField.targetGraphic as Image;
+
+        inputField.shouldHideMobileInput = true;
 
         inputField.onValueChanged.AddListener(OnInputFieldChanged);
     }
@@ -20,7 +22,6 @@ public class InputFieldImageChanger : MonoBehaviour
     {
         if (!string.IsNullOrEmpty(text))
         {
-            // Zmieñ obraz, jeœli InputField zawiera jakiœ tekst
             inputFieldImage.sprite = fillImage;
         }
         else

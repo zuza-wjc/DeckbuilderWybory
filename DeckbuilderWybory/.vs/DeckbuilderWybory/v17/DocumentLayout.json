@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\mainmenuexitcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\mainmenuexitcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\gamescene\\cards\\cardimp\\randomcardimp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\cards\\cardimp\\randomcardimp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -11,11 +15,11 @@
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\cards\\cardimp\\addremovecardimp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\gamescene\\map\\mapdisplay.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\gamescene\\map\\mapdisplay.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\map\\mapdisplay.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\gamescene\\turncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\gamescene\\turncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\turncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -35,19 +39,32 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "MainMenuExitController.cs",
+              "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\MainMenuExitController.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\MainMenuExitController.cs",
+              "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\MainMenuExitController.cs",
+              "RelativeToolTip": "Assets\\Scripts\\MainMenuExitController.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAwAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-30T11:02:03.809Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "RandomCardImp.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\CardImp\\RandomCardImp.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Cards\\CardImp\\RandomCardImp.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\CardImp\\RandomCardImp.cs",
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\Cards\\CardImp\\RandomCardImp.cs",
-              "ViewState": "AQIAAD8AAAAAAAAAAAAmwE0AAAAlAAAA",
+              "ViewState": "AQIAAEcAAAAAAAAAAMBdwE0AAAAlAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-30T10:58:12.56Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "MapDisplay.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Map\\MapDisplay.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Map\\MapDisplay.cs",
@@ -55,12 +72,11 @@
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\Map\\MapDisplay.cs",
               "ViewState": "AQIAAAgBAAAAAAAAAAAewBIBAAAwAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-30T10:14:53.797Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-30T10:14:53.797Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "TurnController.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\TurnController.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\TurnController.cs",
@@ -68,12 +84,11 @@
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\TurnController.cs",
               "ViewState": "AQIAANUBAAAAAAAAAAAewNwBAAAYAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-29T08:58:52.084Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-29T08:58:52.084Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "AddRemoveCardImp.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\CardImp\\AddRemoveCardImp.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Cards\\CardImp\\AddRemoveCardImp.cs",
@@ -81,12 +96,11 @@
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\Cards\\CardImp\\AddRemoveCardImp.cs",
               "ViewState": "AQIAAEwDAAAAAAAAAAAiwFwDAAAJAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-29T08:51:55.319Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-29T08:51:55.319Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "PlayerListManager.cs",
               "DocumentMoniker": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Players\\PlayerListManager.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Players\\PlayerListManager.cs",
