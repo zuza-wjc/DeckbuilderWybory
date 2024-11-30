@@ -84,7 +84,7 @@ public class RandomCardImp : MonoBehaviour
 
             if (cardData.SupportChange)
             {
-                (errorCheck, cardData.Desc) = await SupportAction(cardIdDropped, false, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions, cardData.Desc);
+                (errorCheck, cardData.Desc) = await SupportAction(cardIdDropped, isBonusRegion, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions, cardData.Desc);
                 if (errorCheck)
                 {
                     await DeductPlayerMoney(-cost, playerBudget);
