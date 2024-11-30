@@ -308,7 +308,7 @@ public class OptionsCardImp : MonoBehaviour
         {
             if (data.Target == "player")
             {
-                if(playerBudget < data.Number)
+                if(playerBudget + data.Number < 0)
                 {
                     Debug.LogWarning("Brak wystarczającego budżetu aby zagrać kartę.");
                     errorPanelController.ShowError("no_budget");
@@ -331,6 +331,10 @@ public class OptionsCardImp : MonoBehaviour
                     }
                 }
                 playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
+                if(playerBudget == -1)
+                {
+                    return (dbRefPlayerStats, -1, descriptions);
+                }
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
             }
         }

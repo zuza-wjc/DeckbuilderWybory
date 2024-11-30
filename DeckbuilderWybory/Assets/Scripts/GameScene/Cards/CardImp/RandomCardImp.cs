@@ -84,7 +84,7 @@ public class RandomCardImp : MonoBehaviour
 
             if (cardData.SupportChange)
             {
-                (isBonusRegion, errorCheck, cardData.Desc) = await SupportAction(cardIdDropped, false, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions, cardData.Desc);
+                (errorCheck, cardData.Desc) = await SupportAction(cardIdDropped, false, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions, cardData.Desc);
                 if (errorCheck)
                 {
                     await DeductPlayerMoney(-cost, playerBudget);
@@ -94,9 +94,9 @@ public class RandomCardImp : MonoBehaviour
 
             if (cardData.BudgetChange)
             {
-                (errorCheck, cardData.Desc) = await BudgetAction(playerBudget, cardData.BudgetOptions, cardData.BudgetBonusOptions, enemyId, cardData.Desc);
+                (cardData.Desc, playerBudget) = await BudgetAction(playerBudget, cardData.BudgetOptions, cardData.BudgetBonusOptions, enemyId, cardData.Desc);
 
-                if (errorCheck)
+                if (playerBudget == -1)
                 {
                     await DeductPlayerMoney(-cost, playerBudget);
                     return;
@@ -216,8 +216,19 @@ public class RandomCardImp : MonoBehaviour
     {
         DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
             .Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("stats");
+
+        if (playerBudget == -1)
+        {
+            var snapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+            if (snapshot.Exists && int.TryParse(snapshot.Value.ToString(), out int budget))
+            {
+                playerBudget = budget;
+            }
+        }
+
         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
     }
+
 
     private async Task UpdatePlayerDeck(string instanceId)
     {
@@ -227,7 +238,7 @@ public class RandomCardImp : MonoBehaviour
         await dbRefPlayerDeck.Child("played").SetValueAsync(true);
     }
 
-    private async Task<(bool, List<string>)> BudgetAction(int playerBudget, Dictionary<int, OptionData> budgetOptions, Dictionary<int, OptionData> budgetBonusOptions, string enemyId, List<string> descriptions) {
+    private async Task<(List<string>, int)> BudgetAction(int playerBudget, Dictionary<int, OptionData> budgetOptions, Dictionary<int, OptionData> budgetBonusOptions, string enemyId, List<string> descriptions) {
         
         var optionsToApply = budgetBonusOptions.Any() ? budgetBonusOptions : budgetOptions;
 
@@ -237,7 +248,7 @@ public class RandomCardImp : MonoBehaviour
         {
             Debug.LogError("No options to apply.");
             errorPanelController.ShowError("general_error");
-            return (true, descriptions);
+            return (descriptions, -1);
         }
 
         foreach (var data in optionsToApply.Values)
@@ -254,10 +265,15 @@ public class RandomCardImp : MonoBehaviour
                         {
                             Debug.LogError("Failed to select an enemy player.");
                             errorPanelController.ShowError("general_error");
-                            return (true, descriptions);
+                            return (descriptions, -1);
                         }
                     }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
+
+                    if(playerBudget == -1)
+                    {
+                        return (descriptions, -1);
+                    }
 
                     playerBudget += 10 + data.Number;
 
@@ -265,7 +281,7 @@ public class RandomCardImp : MonoBehaviour
                     {
                         Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
                         errorPanelController.ShowError("no_budget");
-                        return (true, descriptions);
+                        return (descriptions, -1);
                     }
 
                     DatabaseReference dbRefPlayerStats = FirebaseInitializer.DatabaseReference
@@ -277,15 +293,15 @@ public class RandomCardImp : MonoBehaviour
                 {
                     Debug.Log("Budget blocked");
                     errorPanelController.ShowError("action_blocked");
-                    return (true, descriptions);
+                    return (descriptions, -1);
                 }
             }
         }
 
-        return (false, descriptions);
+        return (descriptions, playerBudget);
     }
 
-    private async Task<(bool isBonusRegion, bool errorCheck, List<string>)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType, Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions, List<string> descriptions)
+    private async Task<(bool errorCheck, List<string>)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType, Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions, List<string> descriptions)
     {
         chosenRegion = await mapManager.SelectArea();
         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
@@ -298,10 +314,10 @@ public class RandomCardImp : MonoBehaviour
             if (data.Target == "player-region")
             {
                 bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
-                return (isBonusRegion, errorCheck, descriptions);
+                return (errorCheck, descriptions);
             }
         }
-        return (isBonusRegion, false, descriptions);
+        return (false, descriptions);
     }
 
     public static (Dictionary<int, OptionData>, List<string>) RandomizeOption(Dictionary<int, OptionData> optionsDictionary, List<string> descriptions)

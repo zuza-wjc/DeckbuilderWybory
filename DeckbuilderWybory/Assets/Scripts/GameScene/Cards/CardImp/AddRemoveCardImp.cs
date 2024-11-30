@@ -235,7 +235,7 @@ public class AddRemoveCardImp : MonoBehaviour
         if (budgetChange)
         {
            (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId) = await BudgetAction(dbRefPlayerStats, cardIdDropped, chosenRegion, isBonusRegion, cardType, budgetOptionsDictionary, budgetBonusOptionsDictionary, playerBudget, enemyId);
-            if (chosenRegion == -1)
+            if (playerBudget == -1)
             {
                 DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
                 if (currentBudgetSnapshot.Exists)
@@ -420,6 +420,12 @@ public class AddRemoveCardImp : MonoBehaviour
                             return (dbRefPlayerStats, -1, false, -1, null);
                         }
                     int budgetMulti = data.Number * areas;
+                        if(playerBudget + budgetMulti < 0)
+                        {
+                            Debug.LogWarning("Brak wystarczającego budżetu aby zagrać kartę.");
+                            errorPanelController.ShowError("no_budget");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
                     playerBudget += budgetMulti;
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     await cardUtilities.CheckAndAddCopyBudget(playerId, budgetMulti);
@@ -477,6 +483,10 @@ public class AddRemoveCardImp : MonoBehaviour
                             return (dbRefPlayerStats, -1, false, -1, null);
                         }
                         playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money",playerBudget);
+                        if(playerBudget == -1)
+                        {
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
                         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     }
                     else {
@@ -491,6 +501,10 @@ public class AddRemoveCardImp : MonoBehaviour
                             }
                         }
                         playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
+                        if (playerBudget == -1)
+                        {
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
                         await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     }
                 }
