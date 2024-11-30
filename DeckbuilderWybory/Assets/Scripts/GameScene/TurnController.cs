@@ -481,7 +481,7 @@ public class TurnController : MonoBehaviour
         cardsOnHandController.ForceUpdateUI();
         firstPassButton.interactable = false;
         isMyTurn = false; // Nie wyswietlaj timera
-        dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
+        await dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
 
         if (playerId == lastInTurnPlayerId)
         {

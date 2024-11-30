@@ -256,7 +256,7 @@ public class MapDisplay : MonoBehaviour
 
     }
 
-    async Task CreateButton(string playerName, string[] playerSupport, int playerNumber, int regionN)
+    void CreateButton(string playerName, string[] playerSupport, int playerNumber, int regionN)
     {
         GameObject button = Instantiate(buttonTemplate, scrollViewContent.transform);
         button.SetActive(true);
@@ -270,7 +270,7 @@ public class MapDisplay : MonoBehaviour
 
     }
 
-    async Task OnButtonClick(string playerName, string[] playerSupport)
+    void OnButtonClick(string playerName, string[] playerSupport)
     {
         regionStatsPlayerName.text = playerName;
         foreach (Transform child in regionPlayerStatsContainer)

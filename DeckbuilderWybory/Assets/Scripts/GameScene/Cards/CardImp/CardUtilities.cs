@@ -309,6 +309,12 @@ public class CardUtilities : MonoBehaviour
                 if (isPlayerSameAsEnemy && isBudgetNotBlocked)
                 {
                     playerBudget = updatedStat;
+                    if(playerBudget <0)
+                    {
+                        Debug.LogWarning("Brak wystarczaj¹cego bud¿etu aby zagraæ kartê.");
+                        errorPanelController.ShowError("no_budget");
+                        return -1;
+                    }
                 }
 
 
@@ -320,6 +326,8 @@ public class CardUtilities : MonoBehaviour
                 bool isIncomeBlocked = await CheckIncomeBlock(playerId);
                 if (isIncomeBlocked)
                 {
+                    Debug.Log("Nie mo¿na wp³ywaæ na przychód, zosta³o to zablokowane");
+                    errorPanelController.ShowError("action_blocked");
                     return -1;
                 }
             }

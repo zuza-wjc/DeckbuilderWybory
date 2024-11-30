@@ -174,8 +174,8 @@ public class CreateLobbyManager : MonoBehaviour
         };
 
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
-
-        dbRef.Child(lobbyId).Child("map").GetValueAsync().ContinueWith(mapTask =>
+         
+        await dbRef.Child(lobbyId).Child("map").GetValueAsync().ContinueWith(mapTask =>
             {
                 if (mapTask.IsCompleted && !mapTask.IsFaulted)
                 {

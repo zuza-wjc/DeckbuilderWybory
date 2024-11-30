@@ -472,6 +472,10 @@ public class AsMuchAsCardImp : MonoBehaviour
                     }
                     int changeBudget = howMany * data.NumberPerCard;
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, changeBudget, "money", playerBudget);
+                    if(playerBudget == -1)
+                    {
+                        return (dbRefPlayerStats, false, -1);
+                    }
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
             }
