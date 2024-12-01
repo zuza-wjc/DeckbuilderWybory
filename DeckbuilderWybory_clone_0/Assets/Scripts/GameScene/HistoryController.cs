@@ -74,6 +74,9 @@ public class HistoryController : MonoBehaviour
 
     private async Task ProcessInfoTextQueue()
     {
+        if (cardText == null)
+            return;
+
         isShowingInfoText = true;
 
         while (infoTextQueue.Count > 0)
@@ -144,9 +147,11 @@ public class HistoryController : MonoBehaviour
     {
         foreach (Transform child in cardListContainer)
         {
-            Destroy(child.gameObject);
+            if (child != null)
+                Destroy(child.gameObject);
         }
     }
+
 
     public async Task AddCardToHistory(string cardId, string playerId, string desc)
     {
@@ -218,6 +223,9 @@ public class HistoryController : MonoBehaviour
 
     private async Task ShowInfoText()
     {
+        if (infoTextCanvasGroup == null || cardText == null)
+            return;
+
         infoTextCanvasGroup.alpha = 0;
         cardText.gameObject.SetActive(true);
 
@@ -227,6 +235,7 @@ public class HistoryController : MonoBehaviour
 
         await FadeOutText(2f);
     }
+
 
     private async Task FadeInText(float duration)
     {
@@ -261,11 +270,22 @@ public class HistoryController : MonoBehaviour
         cardText.gameObject.SetActive(false);
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
         if (historyRef != null)
         {
             historyRef.ChildAdded -= HistoryRef_ChildAdded;
         }
+
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(HideAndClearUI);
+        }
+
+        if (openHistoryButton != null)
+        {
+            openHistoryButton.onClick.RemoveAllListeners();
+        }
     }
+
 }
