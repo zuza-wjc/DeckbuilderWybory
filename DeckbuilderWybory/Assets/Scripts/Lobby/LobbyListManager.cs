@@ -212,6 +212,19 @@ public class LobbyListManager : MonoBehaviour
                 string playerName = namesToAssign[index];
                 availableNames.Remove(playerName);
 
+                // Losowanie dwóch unikalnych indeksów dla wsparcia
+                int stat1 = random.Next(0, 6);
+                int stat2;
+                do
+                {
+                    stat2 = random.Next(0, 6);
+                } while (stat2 == stat1);
+
+                // Tworzenie tablicy wsparcia
+                int[] support = new int[6];
+                support[stat1] = 5;
+                support[stat2] = 5;
+
                 Dictionary<string, object> playerData = new Dictionary<string, object>
                 {
                     { "playerName", playerName },
@@ -221,8 +234,9 @@ public class LobbyListManager : MonoBehaviour
                             { "inGame", false },
                             { "money", 0 },
                             { "income", 10 },
-                            { "support", new int[6] { 0, 0, 0, 0, 0, 0 } }, 
-                            { "playerTurn", 2 }, { "turnsTaken",0 }
+                            { "support", support },
+                            { "playerTurn", 2 },
+                            { "turnsTaken", 0 }
                         }
                     }
                 };

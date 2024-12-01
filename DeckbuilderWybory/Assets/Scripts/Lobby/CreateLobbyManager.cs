@@ -161,6 +161,19 @@ public class CreateLobbyManager : MonoBehaviour
         int money = 0;
         int readyPlayers = 0;
 
+        // Losowanie dwóch unikalnych indeksów dla wsparcia
+        int stat1 = random.Next(0, 6);
+        int stat2;
+        do
+        {
+            stat2 = random.Next(0, 6);
+        } while (stat2 == stat1);
+
+        // Tworzenie tablicy wsparcia
+        int[] support = new int[6];
+        support[stat1] = 5;
+        support[stat2] = 5;
+
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
         {
             { "lobbyName", lobbyName },
@@ -170,7 +183,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "readyPlayers", readyPlayers },
             { "playerTurnId", "None" },
             { "rounds", 10 },
-            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", 10 }, { "support", new int[6] { 0, 0, 0, 0, 0, 0 } }, { "playerTurn", 2 }, { "turnsTaken",0 } }  } } } } }
+            { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", 10 }, { "support", support }, { "playerTurn", 2 }, { "turnsTaken",0 } }  } } } } }
         };
 
         await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
