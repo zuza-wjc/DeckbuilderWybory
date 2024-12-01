@@ -7,6 +7,7 @@ using Firebase;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using System;
 
 public class CreateLobbyManager : MonoBehaviour
 {
@@ -156,40 +157,16 @@ public class CreateLobbyManager : MonoBehaviour
             StartCoroutine(ShowErrorMessage("NAZWA JEST JUŻ ZAJĘTA"));
             return;
         }
+         
+        await CheckAndSetMapData(lobbyId);
 
         int isStarted = 0;
         int money = 0;
         int readyPlayers = 0;
 
-        // Przydzielanie wsparcia graczowi
-        int[] support = new int[6]; // Tablica wsparcia dla regionów
-        int totalSupport = 8; // Suma punktów wsparcia do rozdania
+        int[] support = new int[6];
 
-        // Losowanie liczby regionów (2 lub 3)
-        int regionsCount = random.Next(2, 4); // 2 lub 3 regiony
-        List<int> chosenRegions = new List<int>();
-
-        // Wybór unikalnych regionów
-        while (chosenRegions.Count < regionsCount)
-        {
-            int region = random.Next(0, 6);
-            if (!chosenRegions.Contains(region))
-            {
-                chosenRegions.Add(region);
-            }
-        }
-
-        // Rozdzielanie punktów wsparcia
-        for (int i = 0; i < regionsCount - 1; i++)
-        {
-            int maxPoints = totalSupport - (regionsCount - i - 1) * 2; // Maksymalna liczba punktów dla regionu
-            int points = random.Next(2, maxPoints + 1); // Minimalnie 2 punkty
-            support[chosenRegions[i]] = points;
-            totalSupport -= points;
-        }
-
-        // Pozostałe punkty przypisane do ostatniego regionu
-        support[chosenRegions.Last()] = totalSupport;
+        support = await AllocateSupportAsync(lobbyId, random);
 
         Dictionary<string, object> lobbyData = new Dictionary<string, object>
         {
@@ -203,27 +180,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "players", new Dictionary<string, object> { { playerId, new Dictionary<string, object> { { "playerName", playerName }, { "ready", false }, { "stats", new Dictionary<string, object> { { "inGame", false }, { "money", money }, { "income", 10 }, { "support", support }, { "playerTurn", 2 }, { "turnsTaken",0 } }  } } } } }
         };
 
-        await dbRef.Child(lobbyId).SetValueAsync(lobbyData);
-         
-        await dbRef.Child(lobbyId).Child("map").GetValueAsync().ContinueWith(mapTask =>
-            {
-                if (mapTask.IsCompleted && !mapTask.IsFaulted)
-                {
-                    DataSnapshot mapSnapshot = mapTask.Result;
-                    if (mapSnapshot.Exists)
-                    {
-                        Debug.Log("Map data already exists in the database.");
-                    }
-                    else
-                    {
-                        CheckAndSetMapData(lobbyId);
-                    }
-                }
-                else
-                {
-                    Debug.Log("Failed to fetch map data: " + mapTask.Exception);
-                }
-            });
+        await dbRef.Child(lobbyId).UpdateChildrenAsync(lobbyData);
 
         DataTransfer.LobbyName = lobbyName;
         DataTransfer.LobbyId = lobbyId;
@@ -235,50 +192,124 @@ public class CreateLobbyManager : MonoBehaviour
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
     }
 
-    void CheckAndSetMapData(string lobbyId)
+    public async Task<int[]> AllocateSupportAsync(string lobbyId, System.Random random)
     {
-        dbRef.Child(lobbyId).GetValueAsync().ContinueWith(sessionTask =>
+        int[] support = new int[6];
+        int totalSupport = 8;
+
+        // Pobranie danych sesji (mapy)
+        var sessionDataSnapshot = await dbRef.Child(lobbyId).Child("map").GetValueAsync();
+        var sessionData = sessionDataSnapshot.Value as Dictionary<string, object>;
+        Dictionary<int, int> maxSupport = new Dictionary<int, int>();
+
+        // Pobranie danych maxSupport z mapy
+        foreach (var regionData in sessionData)
         {
-            if (sessionTask.IsCompleted && !sessionTask.IsFaulted)
+            int regionId = int.Parse(regionData.Key.Replace("region", "")) - 1;
+            var regionDetails = regionData.Value as Dictionary<string, object>;
+
+            int regionMaxSupport = Convert.ToInt32(regionDetails["maxSupport"]);
+            maxSupport[regionId] = regionMaxSupport;
+        }
+
+        // Pobranie danych o wsparciu graczy (jeśli istnieją)
+        var supportDataSnapshot = await dbRef.Child(lobbyId).Child("players").Child("support").GetValueAsync();
+        var supportData = supportDataSnapshot.Value as Dictionary<string, object>;
+        int[] currentSupport = new int[6];
+
+        // Sprawdzamy, czy są dane o wsparciu graczy, jeśli nie, to ustawiamy wszystkie wartości na 0
+        if (supportData != null)
+        {
+            foreach (var areaData in supportData)
             {
-                DataSnapshot sessionSnapshot = sessionTask.Result;
-                if (sessionSnapshot.Exists)
-                {
-                    List<string> regionTypes = new List<string> { "Ambasada", "Metropolia", "Środowisko", "Przemysł" };
-                    List<string> typesCopy = regionTypes;
-                    System.Random rng = new System.Random();
+                int regionId = int.Parse(areaData.Key);
+                currentSupport[regionId] = Convert.ToInt32(areaData.Value);
+            }
+        }
 
-                    regionTypes = regionTypes.Concat(typesCopy.OrderBy(x => rng.Next())).ToList();
+        // Wybór losowej liczby regionów (od 2 do 3)
+        int regionsCount = random.Next(2, 4);
+        List<int> chosenRegions = new List<int>();
+        while (chosenRegions.Count < regionsCount)
+        {
+            int region = random.Next(0, 6);
+            if (!chosenRegions.Contains(region))
+            {
+                chosenRegions.Add(region);
+            }
+        }
 
-                    regionTypes.RemoveRange(regionTypes.Count - 2, 2);
+        // Przydzielanie wsparcia do wybranych regionów
+        for (int i = 0; i < regionsCount - 1; i++)
+        {
+            int maxPoints = totalSupport - (regionsCount - i - 1) * 2;
+            int points;
 
-                    // Losowe przetasowanie listy, aby rozmieścić typy w różnych regionach
-                    regionTypes = regionTypes.OrderBy(x => rng.Next()).ToList();
+            // Sprawdzamy, czy można przydzielić punkty bez przekroczenia limitu
+            do
+            {
+                points = random.Next(2, maxPoints + 1);
+            } while (points > maxSupport[chosenRegions[i]] - currentSupport[chosenRegions[i]]);
 
-                    // Przypisanie typów regionów do sześciu regionów
-                    Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
-                    {
-                        { "region1", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[0] } } },
-                        { "region2", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[1] } } },
-                        { "region3", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[2] } } },
-                        { "region4", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[3] } } },
-                        { "region5", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[4] } } },
-                        { "region6", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[5] } } }
-                    };
+            support[chosenRegions[i]] = points;
+            totalSupport -= points;
+        }
 
-                    dbRef.Child(lobbyId).Child("map").SetValueAsync(mapData);
-                }
-                else
-                {
-                    Debug.Log("Session has been removed. Not setting map data.");
-                }
+        // Przydzielanie pozostałego wsparcia do ostatniego regionu
+        int lastRegion = chosenRegions.Last();
+        if (totalSupport <= maxSupport[lastRegion] - currentSupport[lastRegion])
+        {
+            support[lastRegion] = totalSupport;
+        }
+        else
+        {
+            throw new InvalidOperationException("Nie można przydzielić wsparcia bez przekroczenia limitu.");
+        }
+
+        // Zwracamy przydzielone wsparcie
+        return support;
+    }
+
+
+    async Task CheckAndSetMapData(string lobbyId)
+    {
+        // Przygotowanie listy typów regionów
+        List<string> regionTypes = new List<string> { "Ambasada", "Metropolia", "Środowisko", "Przemysł" };
+        List<string> typesCopy = new List<string>(regionTypes);
+        System.Random rng = new System.Random();
+
+        // Losowanie i przetasowanie typów regionów
+        regionTypes = regionTypes.Concat(typesCopy.OrderBy(x => rng.Next())).ToList();
+        regionTypes.RemoveRange(regionTypes.Count - 2, 2); // Usuń dwa ostatnie elementy, jeśli jest to wymagane
+
+        // Losowe przetasowanie regionów
+        regionTypes = regionTypes.OrderBy(x => rng.Next()).ToList();
+
+        // Stworzenie mapy z sześcioma regionami
+        Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
+    {
+        { "region1", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[0] } } },
+        { "region2", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[1] } } },
+        { "region3", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[2] } } },
+        { "region4", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[3] } } },
+        { "region5", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[4] } } },
+        { "region6", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[5] } } }
+    };
+
+        // Zapisanie mapy do bazy danych Firebase, tworząc nową sesję
+        await dbRef.Child(lobbyId).Child("map").SetValueAsync(mapData).ContinueWith(mapTask =>
+        {
+            if (mapTask.IsCompleted && !mapTask.IsFaulted)
+            {
+                Debug.Log("Map data has been successfully set for lobby " + lobbyId);
             }
             else
             {
-                Debug.Log("Failed to fetch session data: " + sessionTask.Exception);
+                Debug.Log("Failed to set map data: " + mapTask.Exception);
             }
         });
     }
+
 
     async Task<string> GenerateUniqueLobbyIdAsync()
     {

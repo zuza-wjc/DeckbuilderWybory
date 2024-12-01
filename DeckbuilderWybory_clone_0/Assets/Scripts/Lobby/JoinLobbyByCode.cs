@@ -8,6 +8,8 @@ using System.Collections;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using UnityEngine.SocialPlatforms;
+using System.Linq;
+using System;
 
 public class JoinLobbyByCode : MonoBehaviour
 {
@@ -153,18 +155,9 @@ public class JoinLobbyByCode : MonoBehaviour
             string playerName = namesToAssign[index];
             availableNames.Remove(playerName);
 
-            // Losowanie dwóch unikalnych indeksów dla wsparcia
-            int stat1 = random.Next(0, 6);
-            int stat2;
-            do
-            {
-                stat2 = random.Next(0, 6);
-            } while (stat2 == stat1);
-
-            // Tworzenie tablicy wsparcia
             int[] support = new int[6];
-            support[stat1] = 5;
-            support[stat2] = 5;
+
+            support = await AllocateSupportAsync(lobbyId, random);
 
             Dictionary<string, object> playerData = new Dictionary<string, object>
             {
@@ -190,6 +183,84 @@ public class JoinLobbyByCode : MonoBehaviour
         {
             Debug.LogError("Brak dostępnych imion.");
         }
+    }
+
+    public async Task<int[]> AllocateSupportAsync(string lobbyId, System.Random random)
+    {
+        int[] support = new int[6];
+        int totalSupport = 8;
+
+        // Pobranie danych sesji (mapy)
+        var sessionDataSnapshot = await dbRef.Child(lobbyId).Child("map").GetValueAsync();
+        var sessionData = sessionDataSnapshot.Value as Dictionary<string, object>;
+        Dictionary<int, int> maxSupport = new Dictionary<int, int>();
+
+        // Pobranie danych maxSupport z mapy
+        foreach (var regionData in sessionData)
+        {
+            int regionId = int.Parse(regionData.Key.Replace("region", "")) - 1;
+            var regionDetails = regionData.Value as Dictionary<string, object>;
+
+            int regionMaxSupport = Convert.ToInt32(regionDetails["maxSupport"]);
+            maxSupport[regionId] = regionMaxSupport;
+        }
+
+        // Pobranie danych o wsparciu graczy (jeśli istnieją)
+        var supportDataSnapshot = await dbRef.Child(lobbyId).Child("players").Child("support").GetValueAsync();
+        var supportData = supportDataSnapshot.Value as Dictionary<string, object>;
+        int[] currentSupport = new int[6];
+
+        // Sprawdzamy, czy są dane o wsparciu graczy, jeśli nie, to ustawiamy wszystkie wartości na 0
+        if (supportData != null)
+        {
+            foreach (var areaData in supportData)
+            {
+                int regionId = int.Parse(areaData.Key);
+                currentSupport[regionId] = Convert.ToInt32(areaData.Value);
+            }
+        }
+
+        // Wybór losowej liczby regionów (od 2 do 3)
+        int regionsCount = random.Next(2, 4);
+        List<int> chosenRegions = new List<int>();
+        while (chosenRegions.Count < regionsCount)
+        {
+            int region = random.Next(0, 6);
+            if (!chosenRegions.Contains(region))
+            {
+                chosenRegions.Add(region);
+            }
+        }
+
+        // Przydzielanie wsparcia do wybranych regionów
+        for (int i = 0; i < regionsCount - 1; i++)
+        {
+            int maxPoints = totalSupport - (regionsCount - i - 1) * 2;
+            int points;
+
+            // Sprawdzamy, czy można przydzielić punkty bez przekroczenia limitu
+            do
+            {
+                points = random.Next(2, maxPoints + 1);
+            } while (points > maxSupport[chosenRegions[i]] - currentSupport[chosenRegions[i]]);
+
+            support[chosenRegions[i]] = points;
+            totalSupport -= points;
+        }
+
+        // Przydzielanie pozostałego wsparcia do ostatniego regionu
+        int lastRegion = chosenRegions.Last();
+        if (totalSupport <= maxSupport[lastRegion] - currentSupport[lastRegion])
+        {
+            support[lastRegion] = totalSupport;
+        }
+        else
+        {
+            throw new InvalidOperationException("Nie można przydzielić wsparcia bez przekroczenia limitu.");
+        }
+
+        // Zwracamy przydzielone wsparcie
+        return support;
     }
 
 
