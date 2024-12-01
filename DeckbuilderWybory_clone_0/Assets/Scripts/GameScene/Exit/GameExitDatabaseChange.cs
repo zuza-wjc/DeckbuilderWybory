@@ -7,11 +7,14 @@ using UnityEngine.SceneManagement;
 public class GameExitDatabaseChange : MonoBehaviour
 {
     DatabaseReference dbRef;
-    DatabaseReference dbRefPlayers;
+
     string lobbyId;
     string playerId;
 
     public Button backButton;
+    public GameObject exitPanel;
+    public Button yesButton;
+    public Button noButton;
 
     void Start()
     {
@@ -26,23 +29,43 @@ public class GameExitDatabaseChange : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
-        // Dodaj listener do przycisku backButton
-        backButton.onClick.AddListener(ToggleInGame);
+        backButton.onClick.AddListener(ShowExitPanel);
+    }
+
+    void ShowExitPanel()
+    {
+        exitPanel.SetActive(true);
+        yesButton.onClick.AddListener(ToggleInGame);
+        noButton.onClick.AddListener(CloseExitPanel);
     }
 
     void ToggleInGame()
     {
-        // Aktualizacja wartoœci "inGame" w bazie danych
         dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
-
         SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
+        exitPanel.SetActive(false);
+    }
+
+    void CloseExitPanel()
+    {
+        exitPanel.SetActive(false);
     }
 
     void OnDestroy()
     {
         if (backButton != null)
         {
-            backButton.onClick.RemoveListener(ToggleInGame);
+            backButton.onClick.RemoveListener(ShowExitPanel);
+        }
+
+        if (yesButton != null)
+        {
+            yesButton.onClick.RemoveListener(ToggleInGame);
+        }
+
+        if (noButton != null)
+        {
+            noButton.onClick.RemoveListener(CloseExitPanel);
         }
     }
 }

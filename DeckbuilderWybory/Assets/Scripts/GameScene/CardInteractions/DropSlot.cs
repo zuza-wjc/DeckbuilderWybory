@@ -74,12 +74,15 @@ public class DropSlot : MonoBehaviour, IDropHandler
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Wystąpił b��d podczas pobierania danych: {ex.Message}");
+            Debug.LogError($"Wystąpił błąd podczas pobierania danych: {ex.Message}");
         }
     }
 
     private async Task ShowInfoText()
     {
+        if (infoTextCanvasGroup == null || notYourTurnInfo == null)
+            return;
+
         infoTextCanvasGroup.alpha = 0;
         notYourTurnInfo.gameObject.SetActive(true);
 
@@ -92,6 +95,9 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
     private async Task FadeInText(float duration)
     {
+        if (infoTextCanvasGroup == null)
+            return;
+
         float startAlpha = 0;
         float endAlpha = 1;
         float timeElapsed = 0;
@@ -108,6 +114,9 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
     private async Task FadeOutText(float duration)
     {
+        if (infoTextCanvasGroup == null)
+            return;
+
         float startAlpha = infoTextCanvasGroup.alpha;
         float endAlpha = 0;
         float timeElapsed = 0;
@@ -122,4 +131,14 @@ public class DropSlot : MonoBehaviour, IDropHandler
         infoTextCanvasGroup.alpha = endAlpha;
         notYourTurnInfo.gameObject.SetActive(false);
     }
+
+    private void OnDestroy()
+    {
+
+        if (infoTextCanvasGroup != null)
+        {
+            infoTextCanvasGroup.alpha = 0;
+        }
+    }
+
 }
