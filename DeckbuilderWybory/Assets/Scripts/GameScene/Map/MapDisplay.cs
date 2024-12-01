@@ -213,7 +213,6 @@ public class MapDisplay : MonoBehaviour
                 float.TryParse(playerSupport, out valuesChart[playerNumber]);
                 //values chart to jest wszystkich graczy w regionie
 
-                Debug.LogError(valuesChart[playerNumber]);
                 playerValues[0] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("0").Value.ToString();
                 playerValues[1] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("1").Value.ToString();
                 playerValues[2] = snapshot.Child("players").Child(playerId).Child("stats").Child("support").Child("2").Value.ToString();
