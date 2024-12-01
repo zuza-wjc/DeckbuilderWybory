@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
@@ -6,7 +5,6 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Firebase.Extensions;
 using System;
-using System.Linq;
 
 public class LobbySceneController : MonoBehaviour
 {
@@ -174,7 +172,7 @@ public class LobbySceneController : MonoBehaviour
                 }
             }
         }
-        StartingGame(lobbyId);
+        StartingGame();
     }
 
     void CreateText(string playerName, bool readyStatus)
@@ -320,102 +318,15 @@ public class LobbySceneController : MonoBehaviour
 
     void HandleIsStartedChanged(object sender, ValueChangedEventArgs args)
     {
-        if (args.DatabaseError != null)
+        int isStartedValue = Convert.ToInt32(args.Snapshot.Value);
+        if (isStartedValue == 1)
         {
-            Debug.Log(args.DatabaseError.Message);
-            return;
+            SceneManager.LoadScene("LoadingScreen", LoadSceneMode.Single);
         }
 
-        if (args.Snapshot.Exists)
-        {
-            isStarted = int.Parse(args.Snapshot.Value.ToString());
-            if (isStarted == 1)
-            {
-                dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
-
-                getReadyPlayersFromDatabase(() =>
-                {
-                    int budget = 50;
-
-                    if (readyPlayers >= 2 && readyPlayers <= 3)
-                    {
-                        budget = 50;
-                    }
-                    else if (readyPlayers >= 4 && readyPlayers <= 6)
-                    {
-                        budget = 70;
-                    }
-                    else if (readyPlayers >= 7 && readyPlayers <= 8)
-                    {
-                        budget = 90;
-                    }
-
-                    dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
-                });
-
-                getTurnOrder(() =>
-                {
-                    LoadPlayerCards(() =>
-                    {
-                        SceneManager.LoadScene("Game", LoadSceneMode.Single);
-                    });
-                });
-            }
-        }
     }
 
-
-    void getTurnOrder(Action onComplete)
-    {
-        dbRef.GetValueAsync().ContinueWithOnMainThread(task =>
-        {
-            if (task.IsCompleted && !task.IsFaulted)
-            {
-                DataSnapshot snapshot = task.Result;
-                if (snapshot.Exists)
-                {
-                    List<DataSnapshot> playersList = snapshot.Children.ToList();
-                    playersList.Sort((a, b) => string.Compare(
-                        a.Child("playerName").Value.ToString(),
-                        b.Child("playerName").Value.ToString(),
-                        StringComparison.Ordinal));
-
-                    for (int i = 0; i < playersList.Count; i++)
-                    {
-                        string playerKey = playersList[i].Key;
-                        dbRef.Child(playerKey).Child("myTurnNumber").SetValueAsync(i + 1);
-                    }
-
-                    Debug.Log("Turn order assigned successfully.");
-                }
-                else
-                {
-                    Debug.LogWarning("No players found in the lobby.");
-                }
-            }
-            else
-            {
-                Debug.LogError("Failed to fetch players for turn order: " + task.Exception);
-            }
-
-            // Wywołanie callbacka po zakończeniu
-            onComplete?.Invoke();
-        });
-    }
-
-    void LoadPlayerCards(Action onComplete)
-    {
-        if (deckController != null)
-        {
-            deckController.InitializeDeck(onComplete);
-        }
-        else
-        {
-            Debug.LogError("DeckController not found!");
-        }
-    }
-
-    void StartingGame(string lobbyId)
+    void StartingGame()
     {
         getReadyPlayersFromDatabase(() =>
         {
@@ -451,4 +362,6 @@ public class LobbySceneController : MonoBehaviour
             copyButton.onClick.RemoveListener(CopyFromClipboard);
         }
     }
+
+
 }
