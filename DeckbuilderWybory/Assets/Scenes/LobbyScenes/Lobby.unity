@@ -1674,6 +1674,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buttonText: {fileID: 2114681013}
+  readyButton: {fileID: 1641716298}
 --- !u!1 &1191905921
 GameObject:
   m_ObjectHideFlags: 0
