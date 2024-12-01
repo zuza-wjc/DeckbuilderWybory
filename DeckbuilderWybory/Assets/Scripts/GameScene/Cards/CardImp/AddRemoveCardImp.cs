@@ -254,7 +254,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (incomeChange)
         {
-            (dbRefPlayerStats, playerBudget) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, enemyId, incomeBonusOptionsDictionary, playerIncome, dbRefPlayerStats, chosenRegion, playerBudget, cardIdDropped);
+            (dbRefPlayerStats, playerBudget, enemyId) = await IncomeAction(isBonusRegion, incomeOptionsDictionary, enemyId, incomeBonusOptionsDictionary, playerIncome, dbRefPlayerStats, chosenRegion, playerBudget, cardIdDropped);
             if (playerBudget == -1)
             {
                 DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
@@ -317,7 +317,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         tmp = await cardUtilities.CheckCardLimit(playerId);
 
-        await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
+        await historyController.AddCardToHistory(cardIdDropped, playerId, desc, enemyId);
     }
 
     private async Task<(DatabaseReference dbRefPlayerStats, int chosenRegion, bool isBonusRegion, int playerBudget, string enemyId)>BudgetAction(DatabaseReference dbRefPlayerStats,string cardId, int chosenRegion,
@@ -735,14 +735,14 @@ public class AddRemoveCardImp : MonoBehaviour
         return (chosenRegion, isBonusRegion, enemyId);
     }
 
-    private async Task<(DatabaseReference dbRefPlayerStats,int playerBudget)> IncomeAction(bool isBonusRegion,
+    private async Task<(DatabaseReference dbRefPlayerStats,int playerBudget, string)> IncomeAction(bool isBonusRegion,
         Dictionary<int, OptionData> incomeOptionsDictionary,string enemyId,Dictionary<int, OptionData> incomeBonusOptionsDictionary,
         int playerIncome, DatabaseReference dbRefPlayerStats,int chosenRegion, int playerBudget, string cardId)
     {
 
         if(cardId == "AD028" && !isBonusRegion)
         {
-            return (dbRefPlayerStats, playerBudget);
+            return (dbRefPlayerStats, playerBudget, enemyId);
         }
 
         var optionsToApply = isBonusRegion ? incomeBonusOptionsDictionary : incomeOptionsDictionary;
@@ -751,7 +751,7 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             Debug.LogWarning("No income options available.");
             errorPanelController.ShowError("general_error");
-            return (dbRefPlayerStats,-1);
+            return (dbRefPlayerStats,-1, enemyId);
         }
 
         if (isBonusRegion)
@@ -776,7 +776,7 @@ public class AddRemoveCardImp : MonoBehaviour
                     {
                         Debug.Log("Nie wystaraczający przychód aby zagrać kartę");
                         errorPanelController.ShowError("no_income");
-                        return (dbRefPlayerStats, -1);
+                        return (dbRefPlayerStats, -1, enemyId);
                     }
                     else
                     {
@@ -786,7 +786,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     Debug.Log("income block");
                     errorPanelController.ShowError("action_blocked");
-                    return (dbRefPlayerStats, -1);
+                    return (dbRefPlayerStats, -1, enemyId);
                 }
             }
             else if (data.Target == "enemy")
@@ -795,7 +795,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 if (data.TargetNumber == 7)
                 {
                     bool errorCheck = await ChangeAllStats(data.Number, playerId, "income");
-                    if (errorCheck) { return (dbRefPlayerStats, -1); }
+                    if (errorCheck) { return (dbRefPlayerStats, -1, enemyId); }
                 }
                 else
                 {
@@ -807,14 +807,14 @@ public class AddRemoveCardImp : MonoBehaviour
                         {
                             Debug.LogError("Failed to select an enemy player.");
                             errorPanelController.ShowError("general_error");
-                            return (dbRefPlayerStats, -1);
+                            return (dbRefPlayerStats, -1, enemyId);
                         }
                     }
 
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "income", playerBudget);
                     if(playerBudget == -1)
                     {
-                        return (dbRefPlayerStats, -1);
+                        return (dbRefPlayerStats, -1, enemyId);
                     }
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                 }
@@ -827,7 +827,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
             }
         }
-        return (dbRefPlayerStats, playerBudget);
+        return (dbRefPlayerStats, playerBudget, enemyId);
     }
 
     private async Task<int> RoundAction(int roundChange)

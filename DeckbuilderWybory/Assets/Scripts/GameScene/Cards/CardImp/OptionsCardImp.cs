@@ -209,7 +209,7 @@ public class OptionsCardImp : MonoBehaviour
 
             if (budgetChange)
             {
-                (dbRefPlayerStats, playerBudget, descriptions) = await BudgetAction(dbRefPlayerStats, descriptions, isBonusRegion, budgetOptions, budgetBonusOptions, playerBudget, enemyId);
+                (dbRefPlayerStats, playerBudget, descriptions, enemyId) = await BudgetAction(dbRefPlayerStats, descriptions, isBonusRegion, budgetOptions, budgetBonusOptions, playerBudget, enemyId);
                 if (playerBudget == -1)
                 {
                     DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
@@ -259,7 +259,7 @@ public class OptionsCardImp : MonoBehaviour
         await cardUtilities.CheckIfPlayed2Cards(playerId);
         cardLimitReached = await cardUtilities.CheckCardLimit(playerId);
 
-        await historyController.AddCardToHistory(cardIdDropped, playerId, descriptions[0]);
+        await historyController.AddCardToHistory(cardIdDropped, playerId, descriptions[0], enemyId);
     }
 
     private int AdjustCost(int cost, double multiplier, bool decrease = false)
@@ -281,7 +281,7 @@ public class OptionsCardImp : MonoBehaviour
     }
 
 
-    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget, List<string>)> BudgetAction(
+    private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget, List<string>, string)> BudgetAction(
    DatabaseReference dbRefPlayerStats, List<string> descriptions,
    bool isBonusRegion,
    Dictionary<int, OptionDataRandom> budgetOptionsDictionary,
@@ -296,7 +296,7 @@ public class OptionsCardImp : MonoBehaviour
         {
             Debug.LogError("No options to apply.");
             errorPanelController.ShowError("general_error");
-            return (dbRefPlayerStats, -1, descriptions);
+            return (dbRefPlayerStats, -1, descriptions, enemyId);
         }
 
         if (isBonusRegion)
@@ -312,7 +312,7 @@ public class OptionsCardImp : MonoBehaviour
                 {
                     Debug.LogWarning("Brak wystarczającego budżetu aby zagrać kartę.");
                     errorPanelController.ShowError("no_budget");
-                    return (dbRefPlayerStats, -1, descriptions);
+                    return (dbRefPlayerStats, -1, descriptions, enemyId);
                 }
                 playerBudget += data.Number;
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
@@ -327,19 +327,19 @@ public class OptionsCardImp : MonoBehaviour
                     {
                         Debug.LogError("Failed to select an enemy player.");
                         errorPanelController.ShowError("general_error");
-                        return (dbRefPlayerStats, -1, descriptions);
+                        return (dbRefPlayerStats, -1, descriptions, enemyId);
                     }
                 }
                 playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
                 if(playerBudget == -1)
                 {
-                    return (dbRefPlayerStats, -1, descriptions);
+                    return (dbRefPlayerStats, -1, descriptions, enemyId);
                 }
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
             }
         }
 
-        return (dbRefPlayerStats, playerBudget, descriptions);
+        return (dbRefPlayerStats, playerBudget, descriptions, enemyId);
     }
 
     private async Task<(int playerBudget, bool ignoreCost, bool isBonusRegion, string enemyId, List<string>)> SupportAction(
