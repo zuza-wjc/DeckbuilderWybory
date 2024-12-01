@@ -153,31 +153,45 @@ public class JoinLobbyByCode : MonoBehaviour
             string playerName = namesToAssign[index];
             availableNames.Remove(playerName);
 
-            Dictionary<string, object> playerData = new Dictionary<string, object>
-                {
-                    { "playerName", playerName },
-                    { "ready", false },
-                    { "stats", new Dictionary<string, object>
-                        {
-                            { "inGame", false },
-                            { "money", 0 },
-                            { "income", 10 },
-                            { "support", new int[6] { 0, 0, 0, 0, 0, 0 } },
-                            { "playerTurn", 2 }, { "turnsTaken",0 }
-                        }
-                    }
-                };
+            // Losowanie dwóch unikalnych indeksów dla wsparcia
+            int stat1 = random.Next(0, 6);
+            int stat2;
+            do
+            {
+                stat2 = random.Next(0, 6);
+            } while (stat2 == stat1);
 
+            // Tworzenie tablicy wsparcia
+            int[] support = new int[6];
+            support[stat1] = 5;
+            support[stat2] = 5;
+
+            Dictionary<string, object> playerData = new Dictionary<string, object>
+            {
+                { "playerName", playerName },
+                { "ready", false },
+                { "stats", new Dictionary<string, object>
+                    {
+                        { "inGame", false },
+                        { "money", 0 },
+                        { "income", 10 },
+                        { "support", support },
+                        { "playerTurn", 2 },
+                        { "turnsTaken", 0 }
+                    }
+                }
+            };
 
             await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
 
-            DataTransfer.PlayerName= playerName;
+            DataTransfer.PlayerName = playerName;
         }
         else
         {
             Debug.LogError("Brak dostępnych imion.");
         }
     }
+
 
     public async Task<string> AddPlayerAsync(string lobbyId)
     {
