@@ -313,7 +313,6 @@ public class TurnController : MonoBehaviour
 
             await playerStatsRef.Child("money").SetValueAsync(newMoney);
 
-            Debug.Log("added income to budget");
         }
         catch (Exception ex)
         {
@@ -342,7 +341,6 @@ public class TurnController : MonoBehaviour
         {
             string playerId = playerSnapshot.Key;
             await DrawCardsUntilLimit(playerId, 4); // Przydziel ka¿demu graczowi do 4 kart
-            Debug.Log($"Przydzielono pocz¹tkowe karty dla gracza {playerId}.");
         }
 
         Debug.Log("Zakoñczono rozdawanie pocz¹tkowych kart.");
@@ -389,11 +387,8 @@ public class TurnController : MonoBehaviour
 
         int cardsToDraw = Math.Min(targetCardCount - currentHandCards.Count, availableCards.Count);
 
-        Debug.Log($"Player {playerId} has {currentHandCards.Count} cards. Drawing {cardsToDraw} more cards.");
-
         if (cardsToDraw <= 0)
         {
-            Debug.Log("No need to draw more cards.");
             return;
         }
 
@@ -412,7 +407,6 @@ public class TurnController : MonoBehaviour
             }
 
             await playerDeckRef.Child(selectedInstanceId).Child("onHand").SetValueAsync(true);
-            Debug.Log($"Card {selectedInstanceId} added to hand.");
             availableCards.RemoveAt(randomIndex); // Usuñ wybran¹ kartê z dostêpnych
         }
     }

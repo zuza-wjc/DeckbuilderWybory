@@ -75,7 +75,6 @@ public class DeckController : MonoBehaviour
             foreach (var cardSnapshot in deckSnapshot.Children)
             {
                 string cardId = cardSnapshot.Value.ToString();
-                Debug.Log($"Card found: {cardId}");
 
                 // Dodanie karty do decka
                 AddCardToDeck(cardId, false); // Ustawienie `onHand` na false dla wszystkich kart

@@ -144,7 +144,7 @@ public class CardSelectionUI : MonoBehaviour
         }
     }
 
-    private void ClosePanel()
+    public void ClosePanel()
     {
         HideAndClearUI();
     }
@@ -220,7 +220,6 @@ public class CardSelectionUI : MonoBehaviour
         infoText.text = "KARTY GRACZA";
 
         submitButton.onClick.RemoveAllListeners();
-        submitButton.onClick.AddListener(ClosePanel);
 
         bool anyCardAdded = await LoadCardsFromDatabase(playerId, true, false, (instanceId, cardId) =>
         {
@@ -249,7 +248,6 @@ public class CardSelectionUI : MonoBehaviour
         infoText.text = "KARTY GRACZA";
 
         submitButton.onClick.RemoveAllListeners();
-        submitButton.onClick.AddListener(ClosePanel);
 
         bool anyCardAdded = await LoadCardsFromDatabase(playerId, false, false, (instanceId, cardId) =>
         {

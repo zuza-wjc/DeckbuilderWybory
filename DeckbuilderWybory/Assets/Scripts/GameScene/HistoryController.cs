@@ -27,7 +27,6 @@ public class HistoryController : MonoBehaviour
 
     private void Start()
     {
-        closeButton.onClick.AddListener(HideAndClearUI);
 
         if (openHistoryButton != null)
         {
@@ -137,11 +136,12 @@ public class HistoryController : MonoBehaviour
         }
     }
 
-    private void HideAndClearUI()
-    {
-        cardViewerPanel.SetActive(false);
-        ClearUI();
-    }
+    public void HideAndClearUI()
+{
+    cardViewerPanel.SetActive(false);
+    ClearUI();
+}
+
 
     private void ClearUI()
     {
@@ -239,6 +239,9 @@ public class HistoryController : MonoBehaviour
 
     private async Task FadeInText(float duration)
     {
+        if (infoTextCanvasGroup == null)
+            return;
+
         float startAlpha = 0;
         float endAlpha = 1;
         float timeElapsed = 0;
@@ -255,6 +258,9 @@ public class HistoryController : MonoBehaviour
 
     private async Task FadeOutText(float duration)
     {
+        if (infoTextCanvasGroup == null)
+            return;
+
         float startAlpha = infoTextCanvasGroup.alpha;
         float endAlpha = 0;
         float timeElapsed = 0;
@@ -275,11 +281,6 @@ public class HistoryController : MonoBehaviour
         if (historyRef != null)
         {
             historyRef.ChildAdded -= HistoryRef_ChildAdded;
-        }
-
-        if (closeButton != null)
-        {
-            closeButton.onClick.RemoveListener(HideAndClearUI);
         }
 
         if (openHistoryButton != null)
