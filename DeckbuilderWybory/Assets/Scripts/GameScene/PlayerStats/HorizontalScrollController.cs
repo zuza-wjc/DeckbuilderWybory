@@ -56,7 +56,7 @@ public class HorizontalScrollController : MonoBehaviour
 
                         if (currentPlayerId == playerId)
                         {
-                            playerName = "Ty";
+                            playerName = $"Ty - {playerName}";
                         }
 
                         string playerMoney = childSnapshot.Child("stats").Child("money").Value?.ToString() ?? "0";
