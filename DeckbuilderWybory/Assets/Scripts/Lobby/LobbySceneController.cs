@@ -249,8 +249,6 @@ public class LobbySceneController : MonoBehaviour
             UpdatePlayerCountsText();
             UpdateText(playerName, readyState);
             UpdateReadyButton();
-
-            LoadPlayerCards();
         });
     }
 
@@ -353,10 +351,11 @@ public class LobbySceneController : MonoBehaviour
                     }
 
                     dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
+                });
 
-
-
-                    getTurnOrder(() =>
+                getTurnOrder(() =>
+                {
+                    LoadPlayerCards(() =>
                     {
                         SceneManager.LoadScene("Game", LoadSceneMode.Single);
                     });
@@ -404,23 +403,17 @@ public class LobbySceneController : MonoBehaviour
         });
     }
 
-    // Funkcja do �adowania kart gracza z Firebase przed rozpocz�ciem gry
-    void LoadPlayerCards()
+    void LoadPlayerCards(Action onComplete)
     {
         if (deckController != null)
         {
-            // Wywo�aj metod� InitializeDeck()
-            deckController.InitializeDeck();
-
+            deckController.InitializeDeck(onComplete);
         }
         else
         {
             Debug.LogError("DeckController not found!");
         }
     }
-
-
-
 
     void StartingGame(string lobbyId)
     {

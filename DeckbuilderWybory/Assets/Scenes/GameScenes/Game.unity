@@ -6738,6 +6738,7 @@ MonoBehaviour:
   roundText: {fileID: 999618916}
   firstPassButton: {fileID: 785259570}
   passButton: {fileID: 1428414126}
+  passTurnPanel: {fileID: 142209812}
   cardsOnHandController: {fileID: 552155023}
 --- !u!1 &1280987799
 GameObject:
