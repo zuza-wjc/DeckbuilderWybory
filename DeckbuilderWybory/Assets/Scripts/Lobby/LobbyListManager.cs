@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 public class LobbyListManager : MonoBehaviour
 {
@@ -212,18 +213,35 @@ public class LobbyListManager : MonoBehaviour
                 string playerName = namesToAssign[index];
                 availableNames.Remove(playerName);
 
-                // Losowanie dwóch unikalnych indeksów dla wsparcia
-                int stat1 = random.Next(0, 6);
-                int stat2;
-                do
-                {
-                    stat2 = random.Next(0, 6);
-                } while (stat2 == stat1);
+                // Przydzielanie wsparcia graczowi
+                int[] support = new int[6]; // Tablica wsparcia dla regionów
+                int totalSupport = 8; // Suma punktów wsparcia do rozdania
 
-                // Tworzenie tablicy wsparcia
-                int[] support = new int[6];
-                support[stat1] = 5;
-                support[stat2] = 5;
+                // Losowanie liczby regionów (2 lub 3)
+                int regionsCount = random.Next(2, 4); // 2 lub 3 regiony
+                List<int> chosenRegions = new List<int>();
+
+                // Wybór unikalnych regionów
+                while (chosenRegions.Count < regionsCount)
+                {
+                    int region = random.Next(0, 6);
+                    if (!chosenRegions.Contains(region))
+                    {
+                        chosenRegions.Add(region);
+                    }
+                }
+
+                // Rozdzielanie punktów wsparcia
+                for (int i = 0; i < regionsCount - 1; i++)
+                {
+                    int maxPoints = totalSupport - (regionsCount - i - 1) * 2; // Maksymalna liczba punktów dla regionu
+                    int points = random.Next(2, maxPoints + 1); // Minimalnie 2 punkty
+                    support[chosenRegions[i]] = points;
+                    totalSupport -= points;
+                }
+
+                // Pozostałe punkty przypisane do ostatniego regionu
+                support[chosenRegions.Last()] = totalSupport;
 
                 Dictionary<string, object> playerData = new Dictionary<string, object>
                 {
