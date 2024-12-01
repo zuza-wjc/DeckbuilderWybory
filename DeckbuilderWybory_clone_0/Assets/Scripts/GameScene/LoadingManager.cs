@@ -21,6 +21,16 @@ public class LoadingManager : MonoBehaviour
 
     private int readyPlayers;
 
+    private bool isLoading = false;
+
+    private void Update()
+    {
+        if (isLoading && loadingSpinner != null)
+        {
+            loadingSpinner.transform.Rotate(500 * Time.deltaTime * Vector3.forward);
+        }
+    }
+
     private async void Start()
     {
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
@@ -41,19 +51,16 @@ public class LoadingManager : MonoBehaviour
 
         await Task.Delay((int)(waitTime * 1000));
 
-        ShowLoadingAnimation(false);
-
         await LoadSceneAsync();
-    }
 
+    }
 
     private void ShowLoadingAnimation(bool isLoading)
     {
-        loadingSpinner.gameObject.SetActive(isLoading);
-
-        if (isLoading)
+        this.isLoading = isLoading;
+        if (loadingSpinner != null)
         {
-            loadingSpinner.GetComponent<RectTransform>().Rotate(Vector3.forward * 500 * Time.deltaTime);
+            loadingSpinner.gameObject.SetActive(isLoading);
         }
     }
 
@@ -65,7 +72,6 @@ public class LoadingManager : MonoBehaviour
             if (snapshot.Exists && snapshot.Child("readyPlayers").Exists)
             {
                 readyPlayers = int.Parse(snapshot.Child("readyPlayers").Value.ToString());
-                Debug.Log("Got ready players: " + readyPlayers);
             }
             else
             {
@@ -105,7 +111,6 @@ public class LoadingManager : MonoBehaviour
         try
         {
             await dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
-            Debug.Log("Budget set to: " + budget);
         }
         catch (Exception ex)
         {
@@ -120,7 +125,6 @@ public class LoadingManager : MonoBehaviour
             if (deckController != null)
             {
                 deckController.InitializeDeck();
-                Debug.Log("Deck initialized successfully.");
             }
             else
             {
@@ -148,7 +152,6 @@ public class LoadingManager : MonoBehaviour
                     await dbRef.Child(playerKey).Child("myTurnNumber").SetValueAsync(i + 1);
                 }
 
-                Debug.Log("Turn order assigned successfully.");
             }
             else
             {
@@ -166,7 +169,6 @@ public class LoadingManager : MonoBehaviour
         try
         {
             await dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(true);
-            Debug.Log("Player is now marked as in game.");
         }
         catch (Exception ex)
         {
@@ -176,7 +178,8 @@ public class LoadingManager : MonoBehaviour
 
     private async Task LoadSceneAsync()
     {
-        Debug.Log("Loading scene: " + nextSceneName);
+        ShowLoadingAnimation(false);
+
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(nextSceneName);
 
         while (!asyncLoad.isDone)
@@ -184,6 +187,5 @@ public class LoadingManager : MonoBehaviour
             await Task.Yield();
         }
 
-        Debug.Log("Scene loaded successfully.");
     }
 }

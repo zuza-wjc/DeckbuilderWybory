@@ -7,7 +7,7 @@
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamescene\\loadingmanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|c:\\users\\48725\\onedrive\\pulpit\\studia\\inz\\deckbuilderwybory\\deckbuilderwybory\\assets\\scripts\\lobby\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\assets\\scripts\\lobby\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A02528D-03A5-44CA-00C3-86D4CD971A57}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\lobby\\lobbyscenecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -32,7 +32,7 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\LoadingManager.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\LoadingManager.cs",
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\LoadingManager.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAgAAAAbAAAA",
+              "ViewState": "AQIAAAoAAAAAAAAAAAAAACcAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-01T20:11:20.004Z",
               "EditorCaption": ""
@@ -45,7 +45,7 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\Lobby\\LobbySceneController.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\Lobby\\LobbySceneController.cs",
               "RelativeToolTip": "Assets\\Scripts\\Lobby\\LobbySceneController.cs",
-              "ViewState": "AQIAAI8BAAAAAAAAAAAAAKYBAAADAAAA",
+              "ViewState": "AQIAADkAAAAAAAAAAAAYwD8BAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-01T20:09:10.804Z",
               "EditorCaption": ""
@@ -60,8 +60,7 @@
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\Cards\\Deck\\DeckController.cs",
               "ViewState": "AQIAAAgAAAAAAAAAAAAxwBAAAAAkAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-01T14:35:14.963Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-01T14:35:14.963Z"
             }
           ]
         }
