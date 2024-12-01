@@ -132,8 +132,9 @@ public class UniqueCardImp : MonoBehaviour
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
                 playerBudget -= cost;
             }
+            string enemyId = string.Empty;
 
-            playerBudget = await SwitchCase(instanceId, dbRefPlayerStats, playerIncome, playerBudget, cardIdDropped, -1, false, cardType, string.Empty);
+            (playerBudget,enemyId) = await SwitchCase(instanceId, dbRefPlayerStats, playerIncome, playerBudget, cardIdDropped, -1, false, cardType, enemyId);
 
             if(playerBudget == -1)
             {
@@ -172,7 +173,7 @@ public class UniqueCardImp : MonoBehaviour
 
             cardLimitExceeded = await cardUtilities.CheckCardLimit(playerId);
 
-            await historyController.AddCardToHistory(cardIdDropped, playerId, desc);
+            await historyController.AddCardToHistory(cardIdDropped, playerId, desc, enemyId);
         }
         catch (Exception ex)
         {
@@ -220,7 +221,7 @@ public class UniqueCardImp : MonoBehaviour
         }
     }
 
-    private async Task<int> SwitchCase(string instanceId, DatabaseReference dbRefPlayerStats, int playerIncome, int playerBudget, string cardId, int chosenRegion, bool isBonusRegion, string cardType, string enemyId)
+    private async Task<(int,string)> SwitchCase(string instanceId, DatabaseReference dbRefPlayerStats, int playerIncome, int playerBudget, string cardId, int chosenRegion, bool isBonusRegion, string cardType, string enemyId)
     {
         bool errorCheck = false;
         bool checkError = false;
@@ -229,14 +230,14 @@ public class UniqueCardImp : MonoBehaviour
             switch (cardId)
             {
                 case "UN018":
-                    if (await CheckBlockAndLog()) return -1;
+                    if (await CheckBlockAndLog()) return (-1, enemyId);
                     chosenRegion = await mapManager.SelectArea();
                     isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                     enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
 
                     errorCheck = await ProcessEnemySupport(chosenRegion, enemyId, isBonusRegion);
-                    if (errorCheck) return -1;
+                    if (errorCheck) return (-1, enemyId);
                     break;
 
                 case "UN089":
@@ -244,7 +245,7 @@ public class UniqueCardImp : MonoBehaviour
 
                     chosenRegion = await mapManager.SelectArea();
                     errorCheck = await ExchangeSupportMaxMin(playerId, chosenRegion);
-                    if(errorCheck) { return -1; }
+                    if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN025":
@@ -256,7 +257,7 @@ public class UniqueCardImp : MonoBehaviour
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
 
                     errorCheck = await ExchangeSupport(chosenRegion, enemyId, isBonusRegion);
-                    if(errorCheck) { return -1; }
+                    if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN039":
@@ -265,11 +266,11 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Za mało kart na ręce aby zagrać kartę");
                         errorPanelController.ShowError("cards_lack");
-                        return -1;
+                        return (-1, enemyId);
                     }
                     else if (cardsOnHand == -1)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     List<KeyValuePair<string, string>> selectedCards = await cardSelectionUI.ShowCardSelection(playerId, 1, instanceId, true);
                     if (selectedCards.Count > 0)
@@ -283,7 +284,7 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.LogWarning("Nie wybrano żadnej karty.");
                         errorPanelController.ShowError("no_selection");
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -297,7 +298,7 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("budget block");
                         errorPanelController.ShowError("action_blocked");
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -306,14 +307,14 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Support block");
                         errorPanelController.ShowError("action_blocked");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     if (await cardUtilities.CheckIncomeBlock(playerId))
                     {
                         Debug.Log("Income block");
                         errorPanelController.ShowError("action_blocked");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     chosenRegion = await mapManager.SelectArea();
@@ -321,7 +322,7 @@ public class UniqueCardImp : MonoBehaviour
                     checkError = await ChangeIncomePerCard(chosenRegion, isBonusRegion, instanceId);
                     if(checkError)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -331,7 +332,7 @@ public class UniqueCardImp : MonoBehaviour
                     errorCheck = await ProtectRegion(chosenRegion);
                     if(errorCheck)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     if (isBonusRegion)
                     {
@@ -345,7 +346,7 @@ public class UniqueCardImp : MonoBehaviour
                     checkError = await CopySupport(enemyId);
                     if(checkError)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -355,7 +356,7 @@ public class UniqueCardImp : MonoBehaviour
                     checkError = await CopyBudget(enemyId);
                     if (checkError)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -363,21 +364,21 @@ public class UniqueCardImp : MonoBehaviour
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
                     errorCheck = await BlockCard(enemyId);
-                    if(errorCheck) { return -1; }
+                    if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN032":
                     if (DataTransfer.IsFirstCardInTurn)
                     {
                         checkError = await ProtectPlayer();
-                        if(checkError) { return -1; }
+                        if(checkError) { return (-1, enemyId); }
                         turnController.PassTurn();
                     }
                     else
                     {
                         Debug.Log("Karta może być zagrana tylko jako pierwsza w turze");
                         errorPanelController.ShowError("not_first");
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -389,18 +390,18 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     errorCheck = await IncreaseCost(enemyId);
-                    if (errorCheck) return -1;
+                    if (errorCheck) return (-1, enemyId);
                     break;
 
                 case "UN080":
@@ -410,12 +411,12 @@ public class UniqueCardImp : MonoBehaviour
                     errorCheck = await BlockSupportAction(enemyId);
                     if(errorCheck)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, 15, "money", playerBudget);
                     if(playerBudget == -1)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -428,18 +429,18 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     errorCheck = await IncreaseCostAllTurn(enemyId);
-                    if(errorCheck) { return -1; }
+                    if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN048":
@@ -450,14 +451,14 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     await BlockTurn(enemyId);
@@ -467,7 +468,7 @@ public class UniqueCardImp : MonoBehaviour
                     errorCheck = await DecreaseCost();
                     if(errorCheck)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -475,7 +476,7 @@ public class UniqueCardImp : MonoBehaviour
                    errorCheck = await ProtectPlayer();
                     if(errorCheck)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -487,18 +488,18 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     errorCheck = await BlockBudgetAction(enemyId);
-                    if (errorCheck) { return -1; }
+                    if (errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN083":
@@ -510,30 +511,30 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
-                        return -1;
+                        return (-1, enemyId);
                     }
 
                     errorCheck = await BlockIncomeAction(enemyId);
-                    if (errorCheck) { return -1; }
+                    if (errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN074":
                    errorCheck = await ProtectPlayerOneCard();
-                    if(errorCheck) { return -1; }
+                    if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN076":
                     errorCheck = await LimitCards();
                     if(errorCheck)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -541,7 +542,7 @@ public class UniqueCardImp : MonoBehaviour
                     errorCheck = await BonusSupport();
                     if(errorCheck)
                     {
-                        return -1;
+                        return (-1, enemyId);
                     }
                     break;
 
@@ -555,7 +556,7 @@ public class UniqueCardImp : MonoBehaviour
             Debug.LogError($"Error processing card: {ex.Message}");
         }
 
-        return playerBudget;
+        return (playerBudget,enemyId);
     }
 
     private async Task<bool> CheckBlockAndLog()
@@ -569,11 +570,11 @@ public class UniqueCardImp : MonoBehaviour
         return false;
     }
 
-    private int HandleNoEnemyFound()
+    private (int, string) HandleNoEnemyFound()
     {
         Debug.LogError("Failed to select an enemy player.");
         errorPanelController.ShowError("general_error");
-        return -1;
+        return (-1,string.Empty);
     }
 
     private async Task<bool> ProcessEnemySupport(int chosenRegion, string enemyId, bool isBonusRegion)

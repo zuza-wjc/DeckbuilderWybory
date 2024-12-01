@@ -153,7 +153,7 @@ public class HistoryController : MonoBehaviour
     }
 
 
-    public async Task AddCardToHistory(string cardId, string playerId, string desc)
+    public async Task AddCardToHistory(string cardId, string playerId, string desc, string enemyId)
     {
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(desc))
         {
@@ -169,6 +169,13 @@ public class HistoryController : MonoBehaviour
             .Child("players")
             .Child(playerId);
 
+        DatabaseReference enemyRef = string.IsNullOrEmpty(enemyId) ? null :
+            FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(enemyId);
+
         DatabaseReference historyRef = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
@@ -176,19 +183,36 @@ public class HistoryController : MonoBehaviour
 
         try
         {
-            var snapshot = await playerRef.GetValueAsync();
-            if (!snapshot.Exists)
+            var playerSnapshot = await playerRef.GetValueAsync();
+            if (!playerSnapshot.Exists)
             {
                 Debug.LogWarning("Player not found.");
                 return;
             }
 
-            string playerName = snapshot.Child("playerName")?.Value?.ToString();
+            string playerName = playerSnapshot.Child("playerName")?.Value?.ToString();
             if (string.IsNullOrEmpty(playerName))
             {
                 Debug.LogWarning("Player name is null or empty.");
                 return;
             }
+
+            string enemyName = null;
+            if (enemyRef != null)
+            {
+                var enemySnapshot = await enemyRef.GetValueAsync();
+                if (enemySnapshot.Exists)
+                {
+                    enemyName = enemySnapshot.Child("playerName")?.Value?.ToString();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(enemyName) && desc.Contains("rywala"))
+            {
+                desc = desc.Replace("rywala", $"rywala {enemyName}");
+            }
+
+            desc = desc.Replace("Gracz", $"Gracz {playerName}");
 
             var historySnapshot = await historyRef.GetValueAsync();
             if (!historySnapshot.Exists)
@@ -201,8 +225,6 @@ public class HistoryController : MonoBehaviour
                 string oldestKey = historySnapshot.Children.First().Key;
                 await historyRef.Child(oldestKey).RemoveValueAsync();
             }
-
-            desc = desc.Replace("Gracz", $"Gracz {playerName}");
 
             string historyId = historyRef.Push().Key;
             var historyEntry = new Dictionary<string, object>
@@ -220,6 +242,7 @@ public class HistoryController : MonoBehaviour
             Debug.LogError($"Failed to add card to history: {ex.Message}");
         }
     }
+
 
     private async Task ShowInfoText()
     {
