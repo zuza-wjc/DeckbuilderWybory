@@ -640,6 +640,12 @@ MonoBehaviour:
   playerRegionSupportText: {fileID: 8645678981373755896}
   playerTurnNumberText: {fileID: 2096467153865948110}
   deckTypeText: {fileID: 8839706733115821325}
+  deckTypeImage: {fileID: 7061591878358652787}
+  ambasadaSprite: {fileID: 21300000, guid: e4e510cc93342744e92d5728a758a496, type: 3}
+  metropoliaSprite: {fileID: 21300000, guid: aa5c06f53bf08d14f86b9dd88e6c3cae, type: 3}
+  srodowiskoSprite: {fileID: 21300000, guid: 1132ca88545fa4c468583778e5b41aea, type: 3}
+  przemyslSprite: {fileID: 21300000, guid: ee33458122683c84f814a7e75c2802e7, type: 3}
+  podstawaSprite: {fileID: 21300000, guid: 6157b3bf76dc3874ca37aad97075f121, type: 3}
 --- !u!1 &3826251555943058340
 GameObject:
   m_ObjectHideFlags: 0

@@ -247,7 +247,6 @@ public class LobbySceneController : MonoBehaviour
             UpdatePlayerCountsText();
             UpdateText(playerName, readyState);
             UpdateReadyButton();
-
         });
     }
 

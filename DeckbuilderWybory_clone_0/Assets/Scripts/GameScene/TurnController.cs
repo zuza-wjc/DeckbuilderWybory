@@ -17,6 +17,7 @@ public class TurnController : MonoBehaviour
     public Text roundText;
     public Button firstPassButton;
     public Button passButton;
+    public GameObject passTurnPanel;
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
@@ -53,8 +54,6 @@ public class TurnController : MonoBehaviour
 
         roundText.text = "Runda: 1";
 
-        //await DrawCardsUntilLimit(playerId, 4);
-
         StartCoroutine(InitializeGameFlow());
     }
 
@@ -79,7 +78,7 @@ public class TurnController : MonoBehaviour
 
     IEnumerator InitializeGameFlow()
     {
-        // Rozdaj pocz¹tkowe karty wszystkim graczom
+        // Rozdaj pocz¹tkowe karty
         yield return DistributeInitialCards();
 
         // Kontynuuj inicjalizacjê kolejnoœci tur
@@ -87,19 +86,17 @@ public class TurnController : MonoBehaviour
 
         if (playerId != turnOrderList[0])
         {
-            getPlayerName(() =>
-            {
-                turnPlayerName.text = "Tura: " + currentPlayerName;
-            }, turnOrderList[0]);
+            // Upewnij siê, ¿e nazwa aktualnego gracza zosta³a pobrana przed wyœwietleniem
+            yield return StartCoroutine(SetTurnPlayerName(turnOrderList[0]));
 
             Debug.Log("Tura gracza: " + turnOrderList[0]);
         }
         else
         {
+            turnPlayerName.text = "Twoja tura!";
             StartTurn();
         }
     }
-
 
     IEnumerator InitializeTurnOrderCoroutine()
     {
@@ -199,13 +196,9 @@ public class TurnController : MonoBehaviour
         if (args.Snapshot.Exists && args.Snapshot.Value != null)
         {
             string player = args.Snapshot.Value.ToString();
-            if (player != playerId)
+            if (player != playerId && player != "None")
             {
-                getPlayerName(() =>
-                {
-                    turnPlayerName.text = "Tura: " + currentPlayerName;
-                }, player);
-                turnPlayerName.text = "Tura: " + currentPlayerName;
+                StartCoroutine(SetTurnPlayerName(player));
             }
         }
     }
@@ -222,37 +215,33 @@ public class TurnController : MonoBehaviour
             }
             else
             {
-                newRounds = 11 - newRounds;
-                roundText.text = "Runda: " + newRounds;
+                int displayRounds = 11 - newRounds;
+                roundText.text = "Runda: " + displayRounds;
+                Debug.Log($"Zaktualizowano wyœwietlan¹ rundê: {displayRounds}");
             }
         }
     }
 
-    void FetchRoundsFromDatabase(Action<int> onRoundsFetched)
+    IEnumerator SetTurnPlayerName(string currentPlayerId)
     {
-        dbRefLobby.Child("rounds").GetValueAsync().ContinueWithOnMainThread(task =>
+        if (currentPlayerId == playerId)
         {
-            if (task.IsCompleted && !task.IsFaulted)
-            {
-                DataSnapshot snapshot = task.Result;
+            turnPlayerName.text = "Twoja tura!";
+            yield break; // Przerywamy dalsze wykonywanie
+        }
 
-                if (snapshot.Exists && int.TryParse(snapshot.Value.ToString(), out int fetchedRounds))
-                {
-                    Debug.Log("Pobrano liczbê rund: " + fetchedRounds);
-                    onRoundsFetched?.Invoke(fetchedRounds); // Przeka¿ pobran¹ wartoœæ przez callback
-                }
-                else
-                {
-                    Debug.LogWarning("Nie znaleziono liczby rund w bazie danych lub nie jest liczb¹.");
-                    onRoundsFetched?.Invoke(0); // Domyœlnie 0, jeœli brak danych
-                }
-            }
-            else
-            {
-                Debug.LogError("B³¹d podczas pobierania liczby rund: " + task.Exception);
-                onRoundsFetched?.Invoke(0); // Domyœlnie 0 w razie b³êdu
-            }
-        });
+        bool isCompleted = false;
+
+        getPlayerName(() =>
+        {
+            turnPlayerName.text = "Tura: " + currentPlayerName;
+            isCompleted = true; // Oznacz jako zakoñczone
+        }, currentPlayerId);
+
+        while (!isCompleted)
+        {
+            yield return null;
+        }
     }
 
     void getPlayerName(Action onComplete, string currentPlayerId)
@@ -271,6 +260,10 @@ public class TurnController : MonoBehaviour
                     currentPlayerName = "Unknown"; // Ustawienie domyœlnej wartoœci
                     Debug.LogWarning("PlayerName not found.");
                 }
+            }
+            else
+            {
+                Debug.LogError("Failed to retrieve player name: " + task.Exception);
             }
             onComplete?.Invoke();
         });
@@ -330,18 +323,7 @@ public class TurnController : MonoBehaviour
             return;
         }
 
-        var playersSnapshot = await dbRef.GetValueAsync();
-        if (!playersSnapshot.Exists)
-        {
-            Debug.LogError("No players found in lobby.");
-            return;
-        }
-
-        foreach (var playerSnapshot in playersSnapshot.Children)
-        {
-            string playerId = playerSnapshot.Key;
-            await DrawCardsUntilLimit(playerId, 4); // Przydziel ka¿demu graczowi do 4 kart
-        }
+        await DrawCardsUntilLimit(playerId, 4); // Przydziel graczowi do 4 kart
 
         Debug.Log("Zakoñczono rozdawanie pocz¹tkowych kart.");
         cardsOnHandController.ForceUpdateUI();
@@ -414,7 +396,7 @@ public class TurnController : MonoBehaviour
 
     async void StartTurn()
     {
-      /*  var playerRef = dbRef.Child(playerId);
+      /*var playerRef = dbRef.Child(playerId);
         var blockTurnSnapshot = playerRef.Child("blockTurn");
 
         blockTurnSnapshot.GetValueAsync().ContinueWith(task =>
@@ -447,12 +429,9 @@ public class TurnController : MonoBehaviour
             {
                 Debug.LogError($"Nie uda³o siê pobraæ danych dla gracza {playerId}.");
             }
-        }); 
-*/
+        });*/
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
-        //await DrawCardsUntilLimit(playerId, 4);
-        //cardsOnHandController.ForceUpdateUI();
         if (turnsTaken > 0)
         {
             _ = AddIncomeToBudget();
@@ -464,12 +443,11 @@ public class TurnController : MonoBehaviour
         await dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
         isMyTurn = true;
         DataTransfer.IsFirstCardInTurn = true;
-        
-
     }
 
     async void EndTurn()
     {
+        SetPassTurnPanelInactive();
         timer = 60f; // Zresetuj timer
         await DrawCardsUntilLimit(playerId, 4);
         cardsOnHandController.ForceUpdateUI();
@@ -479,12 +457,13 @@ public class TurnController : MonoBehaviour
 
         if (playerId == lastInTurnPlayerId)
         {
-            FetchRoundsFromDatabase(fetchedRounds =>
+            var roundsSnapshot = await dbRefLobby.Child("rounds").GetValueAsync();
+            if (roundsSnapshot.Exists && int.TryParse(roundsSnapshot.Value.ToString(), out int currentRounds))
             {
-                rounds = fetchedRounds - 1; // Zmniejsz liczbê rund
-                dbRefLobby.Child("rounds").SetValueAsync(rounds);
-                Debug.Log("Zaktualizowano liczbê rund: " + rounds);
-            });
+                int updatedRounds = currentRounds - 1;
+                await dbRefLobby.Child("rounds").SetValueAsync(updatedRounds);
+                Debug.Log("Zaktualizowano liczbê rund: " + updatedRounds);
+            }
         }
     }
 
@@ -494,6 +473,18 @@ public class TurnController : MonoBehaviour
         {
             Debug.Log("Skipped turn");
             EndTurn();
+        }
+    }
+
+    public void SetPassTurnPanelInactive()
+    {
+        if (passTurnPanel != null)
+        {
+            passTurnPanel.SetActive(false);
+        }
+        else
+        {
+            Debug.LogWarning("PassTurnPanel nie jest przypisany!");
         }
     }
 

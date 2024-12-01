@@ -14,7 +14,7 @@ public class DeckController : MonoBehaviour
 
     public ErrorPanelController errorPanelController;
 
-    public async void InitializeDeck(Action onComplete)
+    public async Task InitializeDeck()
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
@@ -42,8 +42,6 @@ public class DeckController : MonoBehaviour
                 // Pobranie listy kart dla deckType
                 await LoadCardsFromDeckType(deckType);
 
-                // Wywo³aj callback po za³adowaniu talii
-                onComplete?.Invoke();
             }
             else
             {

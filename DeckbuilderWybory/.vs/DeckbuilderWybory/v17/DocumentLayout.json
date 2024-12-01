@@ -32,7 +32,7 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\LoadingManager.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\LoadingManager.cs",
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\LoadingManager.cs",
-              "ViewState": "AQIAAAoAAAAAAAAAAAAAACcAAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAIIAAAANAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-01T20:11:20.004Z",
               "EditorCaption": ""
@@ -45,7 +45,7 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\Lobby\\LobbySceneController.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\Lobby\\LobbySceneController.cs",
               "RelativeToolTip": "Assets\\Scripts\\Lobby\\LobbySceneController.cs",
-              "ViewState": "AQIAADkAAAAAAAAAAAAYwD8BAAAAAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAEkAAAA0AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-01T20:09:10.804Z",
               "EditorCaption": ""
@@ -58,9 +58,10 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameScene\\Cards\\Deck\\DeckController.cs",
               "ToolTip": "C:\\Users\\48725\\OneDrive\\Pulpit\\studia\\inz\\DeckbuilderWybory\\DeckbuilderWybory\\Assets\\Scripts\\GameScene\\Cards\\Deck\\DeckController.cs",
               "RelativeToolTip": "Assets\\Scripts\\GameScene\\Cards\\Deck\\DeckController.cs",
-              "ViewState": "AQIAAAgAAAAAAAAAAAAxwBAAAAAkAAAA",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA4AAAA1AAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-01T14:35:14.963Z"
+              "WhenOpened": "2024-12-01T14:35:14.963Z",
+              "EditorCaption": ""
             }
           ]
         }

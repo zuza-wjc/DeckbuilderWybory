@@ -118,19 +118,18 @@ public class LoadingManager : MonoBehaviour
         }
     }
 
-    private Task LoadPlayerCardsAsync()
+    private async Task LoadPlayerCardsAsync()
     {
-        return Task.Run(() =>
-        {
+       
             if (deckController != null)
             {
-                deckController.InitializeDeck();
+                await deckController.InitializeDeck();
             }
             else
             {
                 Debug.LogError("DeckController not found!");
             }
-        });
+     
     }
 
     private async Task AssignTurnOrderAsync()
