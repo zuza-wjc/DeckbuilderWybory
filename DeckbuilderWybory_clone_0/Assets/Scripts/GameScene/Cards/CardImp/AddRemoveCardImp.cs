@@ -51,7 +51,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         string lobbyId = DataTransfer.LobbyId;
         int cost = -1, playerBudget = -1, playerIncome = -1;
-        int roundChange = -1, chosenRegion = -2;
+        int roundChange = 0, chosenRegion = -2;
         bool budgetChange = false, incomeChange = false, supportChange = false, cardsChange = false, isBonusRegion = false;
         string enemyId = string.Empty, cardType = string.Empty;
 
@@ -122,7 +122,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
 
         DataSnapshot roundsSnapshot = snapshot.Child("rounds");
-        roundChange = roundsSnapshot.Exists ? Convert.ToInt32(roundsSnapshot.Value) : -1;
+        roundChange = roundsSnapshot.Exists ? Convert.ToInt32(roundsSnapshot.Value) : 0;
 
         if (snapshot.Child("budget").Exists)
         {

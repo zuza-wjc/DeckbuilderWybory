@@ -19,7 +19,6 @@ public class JoinLobbyByCode : MonoBehaviour
     public Text feedbackText;
 
     public GameObject dialogBox;
-    public GameObject background;
 
     DatabaseReference dbRef;
 
@@ -47,14 +46,12 @@ public class JoinLobbyByCode : MonoBehaviour
 
     public void openDialogBox()
     {
-        background.SetActive(true);
         dialogBox.SetActive(true);
         Debug.Log("here");
     }
 
     public void closeDialogBox()
     {
-        background.SetActive(false);
         dialogBox.SetActive(false);
     }
 
