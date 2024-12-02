@@ -189,7 +189,7 @@ public class OptionsCardImp : MonoBehaviour
 
             if (supportChange)
             {
-                (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions) = await SupportAction(budgetChange, descriptions, playerBudget, cardIdDropped, ignoreCost, chosenRegion, isBonusRegion, cardType, supportOptions, supportBonusOptions, enemyId, budgetOptions);
+                (budgetChange,playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions) = await SupportAction(budgetChange, descriptions, playerBudget, cardIdDropped, ignoreCost, chosenRegion, isBonusRegion, cardType, supportOptions, supportBonusOptions, enemyId, budgetOptions);
                 if (playerBudget == -1)
                 {
                     DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
@@ -342,7 +342,7 @@ public class OptionsCardImp : MonoBehaviour
         return (dbRefPlayerStats, playerBudget, descriptions, enemyId);
     }
 
-    private async Task<(int playerBudget, bool ignoreCost, bool isBonusRegion, string enemyId, List<string>)> SupportAction(
+    private async Task<(bool,int playerBudget, bool ignoreCost, bool isBonusRegion, string enemyId, List<string>)> SupportAction(
           bool budgetChange, List<string> descriptions,
           int playerBudget,
           string cardId,
@@ -355,13 +355,19 @@ public class OptionsCardImp : MonoBehaviour
           string enemyId,
           Dictionary<int, OptionDataRandom> budgetOptionsDictionary)
     {
-        if (cardId == "OP011" || cardId == "OP013")
+        if (cardId == "OP011")
         {
             chosenRegion = await mapManager.SelectArea();
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
 
         var optionsToApply = isBonusRegion ? supportBonusOptionsDictionary : supportOptionsDictionary;
+
+        if (cardId == "OP013")
+        {
+            chosenRegion = await mapManager.SelectArea();
+            isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+        }
 
         if (cardId == "OP006")
         {
@@ -376,7 +382,7 @@ public class OptionsCardImp : MonoBehaviour
         {
             Debug.LogError("No options to apply.");
             errorPanelController.ShowError("general_error");
-            return (-1, false, false, null, descriptions);
+            return (budgetChange,-1, false, false, null, descriptions);
 
         }
 
@@ -395,18 +401,18 @@ public class OptionsCardImp : MonoBehaviour
                     {
                         Debug.LogError("Failed to select an enemy player.");
                         errorPanelController.ShowError("general_error");
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
                     chosenRegion = await cardUtilities.RandomizeRegion(enemyId, data.Number, mapManager);
                     if(chosenRegion == -1)
                     {
                         Debug.LogError("Failed to randomize region.");
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
                     bool errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
                     if(errorCheck)
                     {
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
                     RemoveTargetOption(ref budgetOptionsDictionary, "player");
                     break;
@@ -416,12 +422,12 @@ public class OptionsCardImp : MonoBehaviour
                     if (chosenRegion == -1)
                     {
                         Debug.LogError("Failed to randomize region.");
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
                     errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
                     if (errorCheck)
                     {
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
                     RemoveTargetOption(ref budgetOptionsDictionary, "enemy");
                     break;
@@ -436,13 +442,13 @@ public class OptionsCardImp : MonoBehaviour
                     {
                         Debug.LogError("No enemy player found in the area.");
                         errorPanelController.ShowError("general_error");
-                        return (-1, false, false, null, descriptions);
+                        return (budgetChange, -1, false, false, null, descriptions);
                     }
-
+                    Debug.Log("Zmieniam poparcie");
                     errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
                     if(errorCheck)
                     {
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
                     break;
 
@@ -456,7 +462,7 @@ public class OptionsCardImp : MonoBehaviour
 
                     if(errorCheck)
                     {
-                        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
 
                     if (cardId == "OP011")
@@ -472,7 +478,9 @@ public class OptionsCardImp : MonoBehaviour
                             }
                         }
                     }
-                    if (cardId == "OP013") { budgetChange = false; }
+                    if (cardId == "OP013") {
+                        Debug.Log("padło na gracza");
+                        budgetChange = false; }
                     break;
 
                 default:
@@ -482,7 +490,7 @@ public class OptionsCardImp : MonoBehaviour
             }
         }
 
-        return (playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+        return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
     }
 
 

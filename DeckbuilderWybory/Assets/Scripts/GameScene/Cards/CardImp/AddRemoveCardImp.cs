@@ -615,6 +615,8 @@ public class AddRemoveCardImp : MonoBehaviour
                                     return (-1, false, null);
                                 }
 
+                                Debug.Log("dobieram kartę");
+
                                 foreach (var cardData in cardsBonusOptionsDictionary.Values)
                                 {
 
