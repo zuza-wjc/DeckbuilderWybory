@@ -230,6 +230,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1787457844}
   - {fileID: 977250187}
   m_Father: {fileID: 1120315328}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1036,7 +1037,6 @@ RectTransform:
   - {fileID: 854182916}
   - {fileID: 1708845320}
   - {fileID: 1030819341}
-  - {fileID: 1787457844}
   - {fileID: 549035687}
   m_Father: {fileID: 1876437103}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1626,7 +1626,6 @@ MonoBehaviour:
   pasteButton: {fileID: 854182918}
   feedbackText: {fileID: 1030819342}
   dialogBox: {fileID: 549035686}
-  background: {fileID: 1787457843}
 --- !u!1 &1542821846
 GameObject:
   m_ObjectHideFlags: 0
@@ -2079,12 +2078,12 @@ GameObject:
   - component: {fileID: 1787457846}
   - component: {fileID: 1787457845}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: shade
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1787457844
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2097,12 +2096,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1120315328}
+  m_Father: {fileID: 549035687}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 1952, y: 910}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1787457845
 MonoBehaviour:
@@ -2117,7 +2116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.6}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.47058824}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
