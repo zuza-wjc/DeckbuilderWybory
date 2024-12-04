@@ -45,7 +45,7 @@ public static class ErrorMessages
         { "no_selection", "Nie wybrano ¿adnej karty." },
         { "not_first", "Karta ta mo¿e byæ zagrana tylko jako pierwsza w turze." },
         { "no_cards", "Brak dostêpnych kart." },
-        { "cards_lack", "Za ma³o kart na rêce aby zagraæ kartê." }
+        { "cards_lack", "Za ma³o kart dostêpnych aby zagraæ kartê." }
 
     };
 }

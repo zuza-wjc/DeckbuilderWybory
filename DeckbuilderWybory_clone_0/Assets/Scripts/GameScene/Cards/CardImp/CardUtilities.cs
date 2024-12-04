@@ -203,7 +203,7 @@ public class CardUtilities : MonoBehaviour
         int currentAreaSupport = await currentSupportTask;
         int availableSupport = maxAreaSupport - currentAreaSupport - support;
 
-        if (availableSupport <= 0)
+        if (availableSupport <= 0 && value > 0)
         {
             Debug.Log("Brak dostêpnego miejsca na poparcie w tym regionie.");
             errorPanelController.ShowError("no_support_available");
@@ -397,6 +397,11 @@ public class CardUtilities : MonoBehaviour
                 {
                     int updatedSupportValue = currentSupportValue + value;
 
+                    if (value < 0 && currentSupportValue <= 0)
+                    {
+                        continue;
+                    }
+
                     if (updatedSupportValue < 0) updatedSupportValue = 0;
 
                     int regionId = Convert.ToInt32(supportChildSnapshot.Key);
@@ -436,6 +441,7 @@ public class CardUtilities : MonoBehaviour
             return -1;
         }
     }
+
 
     public async Task CheckIfRegionsProtected(string playerId, int currentSupport, int value)
     {

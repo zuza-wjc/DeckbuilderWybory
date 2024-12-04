@@ -121,6 +121,9 @@ public class HistoryController : MonoBehaviour
     {
         GameObject newCardUI = Instantiate(cardPrefab, cardListContainer);
 
+
+        newCardUI.transform.SetSiblingIndex(0);
+
         Image cardImage = newCardUI.transform.Find("cardImage").GetComponent<Image>();
         Sprite cardSprite = cardSpriteManager?.GetCardSprite(cardId);
         if (cardSprite == null)
