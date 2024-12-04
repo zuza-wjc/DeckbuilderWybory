@@ -165,8 +165,13 @@ public class UniqueCardImp : MonoBehaviour
                 .Child("deck")
                 .Child(instanceId);
 
-            await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
-            await dbRefPlayerDeck.Child("played").SetValueAsync(true);
+            if (cardIdDropped != "UN032")
+            {
+
+                await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
+                await dbRefPlayerDeck.Child("played").SetValueAsync(true);
+            }
+            
 
             DataTransfer.IsFirstCardInTurn = false;
             await cardUtilities.CheckIfPlayed2Cards(playerId);
@@ -372,7 +377,16 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         checkError = await ProtectPlayer();
                         if(checkError) { return (-1, enemyId); }
-                        turnController.PassTurn();
+                        DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
+                        .Child("sessions")
+                        .Child(lobbyId)
+                        .Child("players")
+                        .Child(playerId)
+                        .Child("deck")
+                        .Child(instanceId);
+                        await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
+                        await dbRefPlayerDeck.Child("played").SetValueAsync(true);
+                        turnController.EndTurn();
                     }
                     else
                     {
@@ -863,8 +877,8 @@ public class UniqueCardImp : MonoBehaviour
 
         if (isBonus)
         {
-            enemySupport--;
-            playerSupport++;
+            enemySupport++;
+            playerSupport--;
         }
 
         bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(enemyId, chosenRegion, playerSupport - enemySupport);

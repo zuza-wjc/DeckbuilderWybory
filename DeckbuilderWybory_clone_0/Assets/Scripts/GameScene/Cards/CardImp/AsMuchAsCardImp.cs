@@ -638,7 +638,7 @@ public class AsMuchAsCardImp : MonoBehaviour
 
     private async Task<int> CalculateValueFromHand(string playerId, string cardType)
     {
-        int cardCount = -1;
+        int cardCount = 0;
 
         var dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
             .Child("sessions")

@@ -84,6 +84,13 @@ public class RandomCardImp : MonoBehaviour
 
             if (cardData.SupportChange)
             {
+                if (await cardUtilities.CheckSupportBlock(playerId))
+                {
+                    Debug.Log("support block");
+                    errorPanelController.ShowError("action_blocked");
+                    return;
+                }
+
                 (errorCheck, cardData.Desc) = await SupportAction(cardIdDropped, isBonusRegion, -1, cardType, cardData.SupportOptions, cardData.SupportBonusOptions, cardData.Desc);
                 if (errorCheck)
                 {

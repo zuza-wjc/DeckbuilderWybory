@@ -797,4 +797,42 @@ public class DeckController : MonoBehaviour
         return false;
     }
 
+    public async Task<int> CountCardsInDeck(string playerId)
+    {
+
+        var deckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("deck");
+
+        var snapshot = await deckRef.GetValueAsync();
+
+        if (!snapshot.Exists)
+        {
+            Debug.LogWarning($"Deck for player {playerId} does not exist.");
+            errorPanelController.ShowError("general_error");
+            return -1;
+        }
+
+        int cardsInDeck = 0;
+
+        foreach (var cardSnapshot in snapshot.Children)
+        {
+
+            if ((cardSnapshot.Child("onHand").Exists &&
+                 bool.TryParse(cardSnapshot.Child("onHand").Value.ToString(), out bool onHand) &&
+                 !onHand) &&
+                (cardSnapshot.Child("played").Exists &&
+                 bool.TryParse(cardSnapshot.Child("played").Value.ToString(), out bool played) &&
+                 !played))
+            {
+                cardsInDeck++;
+            }
+        }
+
+        return cardsInDeck;
+    }
+
 }

@@ -459,7 +459,7 @@ public class CardCardImp : MonoBehaviour
                     if (data.Source == "player-deck") { source = playerId; }
                     if (data.Target == "player") { target = playerId; }
 
-                    if(cardId == "CA070")
+                    if (cardId == "CA070")
                     {
                         string cardFromHandInstanceId = selectedCardIds[0].Key;
 
@@ -482,13 +482,13 @@ public class CardCardImp : MonoBehaviour
                         {
                             string cardFromDeckInstanceId = selectedCardIds[0].Key;
                             bool checkError = await deckController.ExchangeFromHandToDeck(source, cardFromHandInstanceId, cardFromDeckInstanceId);
-                            if(checkError) { return  (dbRefPlayerStats, -1, enemyId); }
+                            if (checkError) { return (dbRefPlayerStats, -1, enemyId); }
                         }
                         else
                         {
                             Debug.LogWarning("Nie wybrano żadnej karty z decku.");
                             errorPanelController.ShowError("no_selection");
-                            return(dbRefPlayerStats, -1, enemyId);
+                            return (dbRefPlayerStats, -1, enemyId);
                         }
 
 
@@ -496,14 +496,14 @@ public class CardCardImp : MonoBehaviour
                     else if (cardId == "CA077")
                     {
 
-                        int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
-                        if (cardsOnHand - 1 < data.CardNumber)
+                        int cardsInDeck = await deckController.CountCardsInDeck(playerId);
+                        if (cardsInDeck < data.CardNumber)
                         {
-                            Debug.Log("Za mało kart na ręce aby zagrać kartę");
+                            Debug.Log("Za mało kart w talii aby zagrać kartę");
                             errorPanelController.ShowError("cards_lack");
                             return (dbRefPlayerStats, -1, enemyId);
                         }
-                        else if (cardsOnHand == -1)
+                        else if (cardsInDeck == -1)
                         {
                             return (dbRefPlayerStats, -1, enemyId);
                         }
@@ -522,17 +522,17 @@ public class CardCardImp : MonoBehaviour
                             errorPanelController.ShowError("no_selection");
                             return (dbRefPlayerStats, -1, enemyId);
                         }
-
                     }
                     else if (cardId == "CA033")
                     {
-                        bool errorCheck = await deckController.GetRandomCardsFromHand(playerId, enemyId, data.CardNumber,selectedCardIds);
-                        if(errorCheck)
+                        bool errorCheck = await deckController.GetRandomCardsFromHand(playerId, enemyId, data.CardNumber, selectedCardIds);
+                        if (errorCheck)
                         {
                             return (dbRefPlayerStats, -1, enemyId);
                         }
 
-                    } else if (cardId == "CA067")
+                    }
+                    else if (cardId == "CA067")
                     {
                         enemyId = await RandomEnemy();
                         if (await cardUtilities.CheckIfProtected(enemyId, -1))
@@ -540,7 +540,8 @@ public class CardCardImp : MonoBehaviour
                             Debug.Log("Gracz jest chroniony nie można zagrać karty");
                             errorPanelController.ShowError("player_protected");
                             return (dbRefPlayerStats, -1, enemyId);
-                        } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                        }
+                        else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                         {
                             Debug.Log("Gracz jest chroniony nie można zagrać karty");
                             errorPanelController.ShowError("player_protected");
@@ -549,7 +550,7 @@ public class CardCardImp : MonoBehaviour
                         else
                         {
                             bool checkError = await deckController.GetCardFromHand(playerId, enemyId, selectedCardIds);
-                            if(checkError)
+                            if (checkError)
                             {
                                 return (dbRefPlayerStats, -1, enemyId);
                             }
@@ -571,26 +572,27 @@ public class CardCardImp : MonoBehaviour
                                 return (dbRefPlayerStats, -1, enemyId);
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         bool checkError = false;
                         for (int i = 0; i < data.CardNumber; i++)
                         {
                             checkError = await deckController.GetCardFromDeck(source, target);
-                            if(checkError)
+                            if (checkError)
                             {
                                 break;
                             }
                         }
 
-                        if(checkError)
+                        if (checkError)
                         {
                             return (dbRefPlayerStats, -1, enemyId);
                         }
 
-                        if(cardId == "CA030")
+                        if (cardId == "CA030")
                         {
-                            turnController.PassTurn();
+                            turnController.EndTurn();
                         }
 
                     }
@@ -634,6 +636,7 @@ public class CardCardImp : MonoBehaviour
                     {
                         return (dbRefPlayerStats, -1, enemyId);
                     }
+
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
 
                     if (data.Source == "player")
@@ -644,6 +647,17 @@ public class CardCardImp : MonoBehaviour
                     if (cardId == "CA031")
                     {
                         bool checkError = false;
+                        int cardsInDeck = await deckController.CountCardsInDeck(playerId);
+                        if (cardsInDeck < data.CardNumber)
+                        {
+                            Debug.Log("Za mało kart w talii aby zagrać kartę");
+                            errorPanelController.ShowError("cards_lack");
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
+                        else if (cardsInDeck == -1)
+                        {
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
 
                         foreach (var selectedCard in selectedCardIds)
                         {
@@ -1002,6 +1016,7 @@ public class CardCardImp : MonoBehaviour
 
         return false;
     }
+
 
 }
 

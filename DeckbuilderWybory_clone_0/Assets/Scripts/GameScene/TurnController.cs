@@ -78,15 +78,12 @@ public class TurnController : MonoBehaviour
 
     IEnumerator InitializeGameFlow()
     {
-        // Rozdaj pocz¹tkowe karty
         yield return DistributeInitialCards();
 
-        // Kontynuuj inicjalizacjê kolejnoœci tur
         yield return StartCoroutine(InitializeTurnOrderCoroutine());
 
         if (playerId != turnOrderList[0])
         {
-            // Upewnij siê, ¿e nazwa aktualnego gracza zosta³a pobrana przed wyœwietleniem
             yield return StartCoroutine(SetTurnPlayerName(turnOrderList[0]));
 
             Debug.Log("Tura gracza: " + turnOrderList[0]);
@@ -329,7 +326,6 @@ public class TurnController : MonoBehaviour
         cardsOnHandController.ForceUpdateUI();
     }
 
-
     public async Task DrawCardsUntilLimit(string playerId, int targetCardCount)
     {
         string lobbyId = DataTransfer.LobbyId;
@@ -445,7 +441,7 @@ public class TurnController : MonoBehaviour
         DataTransfer.IsFirstCardInTurn = true;
     }
 
-    async void EndTurn()
+    public async void EndTurn()
     {
         SetPassTurnPanelInactive();
         timer = 60f; // Zresetuj timer
