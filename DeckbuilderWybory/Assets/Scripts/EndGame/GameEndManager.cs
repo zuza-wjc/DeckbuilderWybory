@@ -11,8 +11,6 @@ using System;
 
 public class GameEndManager : MonoBehaviour
 {
-    public Button backToMainButton;
-
     private DatabaseReference dbRefLobby;
     private DatabaseReference dbRef;
     private string lobbyId;
@@ -31,12 +29,11 @@ public class GameEndManager : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
         dbRefLobby = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
-
-        backToMainButton.onClick.AddListener(EndGame);
     }
 
-    void EndGame()
+    public void EndGame()
     {
+        Debug.Log("Klikniety przycisk main menu");
         StartCoroutine(CheckLobby());
     }
 
@@ -118,14 +115,6 @@ public class GameEndManager : MonoBehaviour
                     Debug.LogError("Failed to remove session: " + task.Exception);
                 }
             });
-        }
-    }
-
-    void OnDestroy()
-    {
-        if (backToMainButton != null)
-        {
-            backToMainButton.onClick.RemoveListener(EndGame);
         }
     }
 }
