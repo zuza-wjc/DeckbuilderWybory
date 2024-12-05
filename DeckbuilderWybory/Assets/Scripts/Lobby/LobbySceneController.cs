@@ -67,7 +67,6 @@ public class LobbySceneController : MonoBehaviour
         dbRef.ChildChanged += HandleChildChanged;
 
         image = readyButton.GetComponent<Image>();
-        readyButton.onClick.AddListener(ToggleReady);
         copyButton.onClick.AddListener(CopyFromClipboard);
     }
 
@@ -233,7 +232,7 @@ public class LobbySceneController : MonoBehaviour
         GUIUtility.systemCopyBuffer = lobbyId;
     }
 
-    void ToggleReady()
+    public void ToggleReady()
     {
         readyState = !readyState;
 
@@ -350,11 +349,6 @@ public class LobbySceneController : MonoBehaviour
         if (dbRefLobby != null)
         {
             dbRefLobby.Child("isStarted").ValueChanged -= HandleIsStartedChanged;
-        }
-
-        if (readyButton != null)
-        {
-            readyButton.onClick.RemoveListener(ToggleReady);
         }
 
         if (copyButton != null)
