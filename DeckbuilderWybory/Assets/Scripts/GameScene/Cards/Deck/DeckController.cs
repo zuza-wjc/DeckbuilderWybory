@@ -270,7 +270,7 @@ public class DeckController : MonoBehaviour
         }
     }
 
-    public async Task<bool> RejectRandomCard(string source, string excludedInstanceId)
+    public async Task<bool> RejectRandomCardFromHand(string source, string excludedInstanceId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -296,7 +296,7 @@ public class DeckController : MonoBehaviour
             return true;
         }
 
-        List<string> availableCards = new List<string>();
+        List<string> availableCards = new();
         foreach (var child in deckSnapshot.Children)
         {
             string cardId = child.Key;
@@ -320,7 +320,7 @@ public class DeckController : MonoBehaviour
             return true;
         }
 
-        System.Random random = new System.Random();
+        System.Random random = new();
         string randomCardId = availableCards[random.Next(availableCards.Count)];
 
         DatabaseReference randomCardRef = playerDeckRef.Child(randomCardId);
@@ -333,6 +333,71 @@ public class DeckController : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogError($"Failed to remove random card {randomCardId} for player {source}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
+    }
+
+    public async Task<bool> RejectRandomCard(string source)
+    {
+        string lobbyId = DataTransfer.LobbyId;
+
+        if (string.IsNullOrEmpty(lobbyId) || string.IsNullOrEmpty(source))
+        {
+            Debug.LogError("Lobby ID or source is null or empty. Cannot reject a random card.");
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
+
+        DatabaseReference playerDeckRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(source)
+            .Child("deck");
+
+        var deckSnapshot = await playerDeckRef.GetValueAsync();
+        if (!deckSnapshot.Exists)
+        {
+            Debug.LogError($"Deck not found for player {source} in lobby {lobbyId}.");
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
+
+        List<string> availableCards = new();
+        foreach (var child in deckSnapshot.Children)
+        {
+            string cardId = child.Key;
+
+            bool? onHand = child.Child("onHand").Value as bool?;
+            bool? played = child.Child("played").Value as bool?;
+
+            if (onHand == false && played == false)
+            {
+                availableCards.Add(cardId);
+            }
+        }
+
+        if (availableCards.Count == 0)
+        {
+            Debug.LogWarning($"No cards available to reject for player {source}.");
+            errorPanelController.ShowError("no_cards");
+            return true;
+        }
+
+        System.Random random = new();
+        string randomCardId = availableCards[random.Next(availableCards.Count)];
+
+        DatabaseReference randomCardRef = playerDeckRef.Child(randomCardId);
+
+        try
+        {
+            await randomCardRef.RemoveValueAsync();
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to remove card {randomCardId} for player {source}: {ex.Message}");
             errorPanelController.ShowError("general_error");
             return true;
         }
@@ -359,7 +424,7 @@ public class DeckController : MonoBehaviour
             return;
         }
 
-        List<string> playerIds = new List<string>();
+        List<string> playerIds = new();
         foreach (var playerSnapshot in snapshot.Children)
         {
             playerIds.Add(playerSnapshot.Key);
@@ -371,8 +436,8 @@ public class DeckController : MonoBehaviour
             return;
         }
 
-        HashSet<string> exchangedCards = new HashSet<string>();
-        System.Random random = new System.Random();
+        HashSet<string> exchangedCards = new();
+        System.Random random = new();
 
         for (int i = 0; i < playerIds.Count; i++)
         {
@@ -389,7 +454,7 @@ public class DeckController : MonoBehaviour
                 continue;
             }
 
-            List<string> availableCards = new List<string>();
+            List<string> availableCards = new();
 
             foreach (var cardSnapshot in currentPlayerSnapshot.Children)
             {
@@ -799,6 +864,8 @@ public class DeckController : MonoBehaviour
 
     public async Task<int> CountCardsInDeck(string playerId)
     {
+
+        string lobbyId = DataTransfer.LobbyId;
 
         var deckRef = FirebaseInitializer.DatabaseReference
             .Child("sessions")

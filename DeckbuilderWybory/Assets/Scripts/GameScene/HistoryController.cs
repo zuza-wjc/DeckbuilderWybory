@@ -158,6 +158,7 @@ public class HistoryController : MonoBehaviour
 
     public async Task AddCardToHistory(string cardId, string playerId, string desc, string enemyId)
     {
+
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(desc))
         {
             Debug.LogWarning("Invalid input parameters.");
