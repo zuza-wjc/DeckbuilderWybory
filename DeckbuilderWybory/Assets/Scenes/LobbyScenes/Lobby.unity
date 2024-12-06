@@ -1718,7 +1718,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99ae23f8cb2a6cf4994d732af2c059c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonText: {fileID: 2114681013}
   readyButton: {fileID: 1641716298}
 --- !u!1 &1191905921
 GameObject:
@@ -2273,18 +2272,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1185869188}
-        m_TargetAssemblyTypeName: ToggleReadyButton, Assembly-CSharp
-        m_MethodName: ToggleText
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
       - m_Target: {fileID: 1061341941}
         m_TargetAssemblyTypeName: LobbySceneController, Assembly-CSharp
         m_MethodName: ToggleReady
@@ -3091,7 +3078,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: NIEGOTOWY
+  m_Text: GOTOWY
 --- !u!222 &2114681014
 CanvasRenderer:
   m_ObjectHideFlags: 0
