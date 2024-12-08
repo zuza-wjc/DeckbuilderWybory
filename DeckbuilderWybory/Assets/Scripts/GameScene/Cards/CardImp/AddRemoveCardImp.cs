@@ -473,7 +473,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if(cardId == "AD047")
                     {
-                       // await BudgetPenalty();
+                        await BudgetPenalty();
                         
                     } else if(cardId == "AD090")
                     {
@@ -692,9 +692,11 @@ public class AddRemoveCardImp : MonoBehaviour
                     {
                         return (-1, false, null);
                     }
+                    int supportValue = data.Number;
+                    supportValue = await cardUtilities.CheckBonusSupport(playerId, supportValue);
                     foreach (var regionId in areas)
                     {
-                        checkError = await cardUtilities.ChangeSupport(playerId, data.Number, regionId, cardId, mapManager);
+                        checkError = await cardUtilities.ChangeSupport(playerId, supportValue, regionId, cardId, mapManager);
                         if(checkError) { break; }
                     }
                     if (checkError)
@@ -994,6 +996,8 @@ public class AddRemoveCardImp : MonoBehaviour
                 continue;
             }
 
+            await cardUtilities.CheckIfBudgetPenalty(areaId);
+
             await cardUtilities.CheckBonusBudget(playerId, value);
             value = await cardUtilities.CheckBonusSupport(playerId, value);
 
@@ -1033,6 +1037,8 @@ public class AddRemoveCardImp : MonoBehaviour
             return true;
         }
 
+        var tasks = new List<Task>();
+
         foreach (var playerSnapshot in snapshot.Children)
         {
             string playerId = playerSnapshot.Key;
@@ -1048,36 +1054,7 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 if (int.TryParse(supportChildSnapshot.Key, out int areaId) && int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
                 {
-                    bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(playerId, areaId, value);
-                    bool isPlayerProtected = await cardUtilities.CheckIfProtected(playerId, value);
-                    bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerId, value);
-
-                    if (isRegionProtected || isPlayerProtected || isOneCardProtected)
-                    {
-                        continue;
-                    }
-
-                    await cardUtilities.CheckBonusBudget(playerId, value);
-                    value = await cardUtilities.CheckBonusSupport(playerId, value);
-
-                    int updatedSupportValue = currentSupportValue + value;
-                    updatedSupportValue = Math.Max(updatedSupportValue, 0);
-
-                    var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
-                    var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
-
-                    updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
-
-                    await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
-                    await dbRefAllPlayersStats
-                        .Child(playerId)
-                        .Child("stats")
-                        .Child("support")
-                        .Child(areaId.ToString())
-                        .SetValueAsync(updatedSupportValue);
-
-                    await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
-
+                    tasks.Add(HandleSupportAllUpdate(playerId, areaId, currentSupportValue, value));
                 }
                 else
                 {
@@ -1087,7 +1064,49 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
             }
         }
+
+        await Task.WhenAll(tasks);
         return false;
+    }
+
+    private async Task HandleSupportAllUpdate(string playerId, int areaId, int currentSupportValue, int value)
+    {
+        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(playerId, areaId, value);
+        bool isPlayerProtected = await cardUtilities.CheckIfProtected(playerId, value);
+        bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerId, value);
+
+        if (isRegionProtected || isPlayerProtected || isOneCardProtected)
+        {
+            return;
+        }
+
+        await cardUtilities.CheckIfBudgetPenalty(areaId);
+        await cardUtilities.CheckBonusBudget(playerId, value);
+        value = await cardUtilities.CheckBonusSupport(playerId, value);
+
+        int updatedSupportValue = currentSupportValue + value;
+        updatedSupportValue = Math.Max(updatedSupportValue, 0);
+
+        var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
+        var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
+
+        updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
+
+        await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
+
+        await dbRefAllPlayersStats
+            .Child(playerId)
+            .Child("stats")
+            .Child("support")
+            .Child(areaId.ToString())
+            .SetValueAsync(updatedSupportValue);
+
+        await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
     }
 
     private async Task<bool> ChangeAllStats(int value, string cardholderId, string statType)
@@ -1472,7 +1491,7 @@ public class AddRemoveCardImp : MonoBehaviour
         }
     }
 
-    /*private async Task BudgetPenalty()
+    private async Task BudgetPenalty()
     {
         DatabaseReference dbRefPlayers = FirebaseInitializer.DatabaseReference
             .Child("sessions")
@@ -1488,11 +1507,10 @@ public class AddRemoveCardImp : MonoBehaviour
         }
 
         int currentTurnNumber = -1;
-        int currentPlayerTurnsTaken = -1; // Liczba tur wykonanych przez zagrywającego
+        int currentPlayerTurnsTaken = -1;
         int maxTurnNumber = -1;
         string nextPlayerId = null;
 
-        // Znajdź aktualnego gracza i maksymalny numer tury
         foreach (var playerSnapshot in playersSnapshot.Children)
         {
             string id = playerSnapshot.Key;
@@ -1508,7 +1526,7 @@ public class AddRemoveCardImp : MonoBehaviour
                 if (id == playerId)
                 {
                     currentTurnNumber = turnNumber;
-                    currentPlayerTurnsTaken = turnsTaken; // Zapamiętaj liczbę tur wykonanych
+                    currentPlayerTurnsTaken = turnsTaken;
                 }
 
                 maxTurnNumber = Math.Max(maxTurnNumber, turnNumber);
@@ -1521,7 +1539,6 @@ public class AddRemoveCardImp : MonoBehaviour
             return;
         }
 
-        // Znajdź następnego gracza (cyklicznie)
         foreach (var playerSnapshot in playersSnapshot.Children)
         {
             string id = playerSnapshot.Key;
@@ -1547,7 +1564,6 @@ public class AddRemoveCardImp : MonoBehaviour
             return;
         }
 
-        // Dodaj karę budżetową do następnego gracza
         DatabaseReference dbRefNextPlayer = FirebaseInitializer.DatabaseReference
             .Child("sessions")
             .Child(lobbyId)
@@ -1557,9 +1573,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
         DataSnapshot budgetPenaltySnapshot = await dbRefNextPlayer.GetValueAsync();
 
+        Debug.Log($"Turns taken: {currentPlayerTurnsTaken}");
+
         var budgetPenaltyData = new Dictionary<string, object>
     {
-        { "currentPlayerTurnsTaken", currentPlayerTurnsTaken }, 
+        { "turnsTaken", currentPlayerTurnsTaken }, 
         { "playerId", playerId }
     };
 
@@ -1572,7 +1590,7 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             await dbRefNextPlayer.SetValueAsync(budgetPenaltyData);
         }
-    }*/
+    }
 
     private async Task<bool> MoreThan2Cards(string enemyId)
     {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Firebase.Database;
 using UnityEngine;
@@ -192,7 +193,6 @@ public class PlayerListManager : MonoBehaviour
         }
     }
 
-
     private void CreateButton(string otherPlayerName)
     {
         if (string.IsNullOrEmpty(otherPlayerName)) return;
@@ -272,6 +272,45 @@ public class PlayerListManager : MonoBehaviour
         finally
         {
             playerListPanel.SetActive(false);
+        }
+    }
+
+    public async Task<string> RandomizeEnemy()
+    {
+        try
+        {
+            var playersRef = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(DataTransfer.LobbyId)
+                .Child("players");
+
+            var snapshot = await playersRef.GetValueAsync();
+
+            if (!snapshot.Exists)
+            {
+                Debug.LogError("No players found in the current lobby.");
+                return null;
+            }
+
+            var allPlayerIds = snapshot.Children.Select(child => child.Key).ToList();
+
+            allPlayerIds.Remove(DataTransfer.PlayerId);
+
+            if (allPlayerIds.Count == 0)
+            {
+                Debug.LogError("No enemies available to randomize.");
+                return null;
+            }
+
+            var random = new System.Random();
+            var enemyId = allPlayerIds[random.Next(allPlayerIds.Count)];
+
+            return enemyId;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error in RandomizeEnemy: {ex.Message}");
+            return null;
         }
     }
 

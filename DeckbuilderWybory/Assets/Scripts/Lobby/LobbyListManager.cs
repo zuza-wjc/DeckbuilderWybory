@@ -236,6 +236,7 @@ public class LobbyListManager : MonoBehaviour
                 {
                     { "playerName", playerName },
                     { "ready", false },
+                    {"drawCardsLimit", 4 },
                     { "stats", new Dictionary<string, object>
                         {
                             { "inGame", false },

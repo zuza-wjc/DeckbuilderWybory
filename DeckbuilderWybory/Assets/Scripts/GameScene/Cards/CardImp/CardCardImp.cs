@@ -611,7 +611,7 @@ public class CardCardImp : MonoBehaviour
                         bool checkError = false;
                         for (int i = 0; i < cardsOnHand-1; i++)
                         {
-                           checkError= await deckController.RejectRandomCard(playerId,instanceId);
+                           checkError= await deckController.RejectRandomCardFromHand(playerId,instanceId);
                             if(checkError) { break; }
                         }
 
@@ -740,41 +740,85 @@ public class CardCardImp : MonoBehaviour
             }
             else if (data.Target == "enemy-deck")
             {
-                enemyId = await playerListManager.SelectEnemyPlayer();
-                if (string.IsNullOrEmpty(enemyId))
+                if (cardId == "CA087")
                 {
-                    Debug.LogError("Failed to select an enemy player.");
-                    errorPanelController.ShowError("general_error");
-                    return (dbRefPlayerStats, -1, enemyId);
-                }
-                if (await cardUtilities.CheckIfProtected(enemyId, -1))
-                {
-                    Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                    errorPanelController.ShowError("player_protected");
-                    return (dbRefPlayerStats, -1, enemyId);
-                }
-                else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
-                {
-                    Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                    errorPanelController.ShowError("player_protected");
-                    return (dbRefPlayerStats, -1, enemyId);
+                    enemyId = await playerListManager.RandomizeEnemy();
+                    if (string.IsNullOrEmpty(enemyId))
+                    {
+                        Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
+
+                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
+                        errorPanelController.ShowError("player_protected");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
+
+                    if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
+                        errorPanelController.ShowError("player_protected");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
+
+                    int playerCards = await deckController.CountCardsInDeck(playerId);
+                    if (playerCards == -1)
+                    {
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
+                    int enemyCards = await deckController.CountCardsInDeck(enemyId);
+                    if (enemyCards == -1)
+                    {
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
+                    if (enemyCards > playerCards && enemyCards > 0)
+                    {
+                        bool errorCheck = await deckController.RejectRandomCard(enemyId);
+                        if (errorCheck) { return (dbRefPlayerStats, -1, enemyId); }
+                    }
                 }
                 else
                 {
-                    int cardsOnHand = await cardUtilities.CountCardsOnHand(enemyId);
-                    if (cardsOnHand - 1 < data.CardNumber)
+
+                    enemyId = await playerListManager.SelectEnemyPlayer();
+                    if (string.IsNullOrEmpty(enemyId))
                     {
-                        Debug.Log("Za mało kart na ręce aby zagrać kartę");
-                        errorPanelController.ShowError("cards_lack");
+                        Debug.LogError("Failed to select an enemy player.");
+                        errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1, enemyId);
                     }
-                    else if (cardsOnHand == -1)
+                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
+                        Debug.Log("Gracz jest chroniony nie można zagrać karty");
+                        errorPanelController.ShowError("player_protected");
                         return (dbRefPlayerStats, -1, enemyId);
                     }
-                    selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
-                    bool errorCheck = await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
-                    if(errorCheck) { return (dbRefPlayerStats, -1, enemyId); }
+                    else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony nie można zagrać karty");
+                        errorPanelController.ShowError("player_protected");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
+                    else
+                    {
+                        int cardsOnHand = await cardUtilities.CountCardsOnHand(enemyId);
+                        if (cardsOnHand - 1 < data.CardNumber)
+                        {
+                            Debug.Log("Za mało kart na ręce aby zagrać kartę");
+                            errorPanelController.ShowError("cards_lack");
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
+                        else if (cardsOnHand == -1)
+                        {
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
+                        selectedCardIds = await cardSelectionUI.ShowCardSelection(enemyId, data.CardNumber, instanceId, true);
+                        bool errorCheck = await deckController.ReturnCardToDeck(enemyId, selectedCardIds[0].Key);
+                        if (errorCheck) { return (dbRefPlayerStats, -1, enemyId); }
+                    }
                 }
             }
         }
