@@ -86,7 +86,7 @@ public class TurnController : MonoBehaviour
         {
             yield return StartCoroutine(SetTurnPlayerName(turnOrderList[0]));
 
-            Debug.Log("Tura gracza: " + turnOrderList[0]);
+            //Debug.Log("Tura gracza: " + turnOrderList[0]);
         }
         else
         {
@@ -312,7 +312,7 @@ public class TurnController : MonoBehaviour
     
     public async Task DistributeInitialCards()
     {
-        Debug.Log("Rozpoczynam rozdawanie pocz¹tkowych kart.");
+       // Debug.Log("Rozpoczynam rozdawanie pocz¹tkowych kart.");
 
         if (string.IsNullOrEmpty(lobbyId))
         {
@@ -322,7 +322,7 @@ public class TurnController : MonoBehaviour
 
         await DrawCardsUntilLimit(playerId, 4); // Przydziel graczowi do 4 kart
 
-        Debug.Log("Zakoñczono rozdawanie pocz¹tkowych kart.");
+       // Debug.Log("Zakoñczono rozdawanie pocz¹tkowych kart.");
         cardsOnHandController.ForceUpdateUI();
     }
 
@@ -389,43 +389,43 @@ public class TurnController : MonoBehaviour
         }
     }
 
+    public async Task<int> GetCardLimit()
+    {
+        try
+        {
+            var cardLimitRef = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(lobbyId)
+                .Child("players")
+                .Child(playerId)
+                .Child("drawCardsLimit");
+
+            var snapshot = await cardLimitRef.GetValueAsync();
+
+            if (!snapshot.Exists)
+            {
+                Debug.LogError($"drawCardsLimit for player {DataTransfer.PlayerId} does not exist.");
+                return 4;
+            }
+
+            int currentLimit = int.Parse(snapshot.Value.ToString());
+
+            if (currentLimit != 4)
+            {
+                await cardLimitRef.SetValueAsync(4);
+            }
+
+            return currentLimit;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error in GetCardLimit: {ex.Message}");
+            return 4;
+        }
+    }
 
     async void StartTurn()
     {
-      /*var playerRef = dbRef.Child(playerId);
-        var blockTurnSnapshot = playerRef.Child("blockTurn");
-
-        blockTurnSnapshot.GetValueAsync().ContinueWith(task =>
-        {
-            if (task.IsCompleted)
-            {
-                var snapshot = task.Result;
-
-                if (snapshot.Exists && Convert.ToBoolean(snapshot.Value))
-                {
-                    playerRef.Child("blockTurn").RemoveValueAsync();
-                    PassTurn();
-
-                }
-                else
-                {
-                    timer = 10f;
-                    turnPlayerName.text = "Twoja tura!";
-                    passButton.interactable = true;
-                    dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(1);
-                    dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
-                    isMyTurn = true;
-                    DataTransfer.IsFirstCardInTurn = true;
-
-                    turnsTaken++;
-                    dbRef.Child(playerId).Child("stats").Child("turnsTaken").SetValueAsync(turnsTaken);
-                }
-            }
-            else
-            {
-                Debug.LogError($"Nie uda³o siê pobraæ danych dla gracza {playerId}.");
-            }
-        });*/
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
         if (turnsTaken > 0)
@@ -444,11 +444,12 @@ public class TurnController : MonoBehaviour
     public async void EndTurn()
     {
         SetPassTurnPanelInactive();
-        timer = 60f; // Zresetuj timer
-        await DrawCardsUntilLimit(playerId, 4);
+        timer = 60f;
+        int cardLimit = await GetCardLimit();
+        await DrawCardsUntilLimit(playerId, cardLimit);
         cardsOnHandController.ForceUpdateUI();
         firstPassButton.interactable = false;
-        isMyTurn = false; // Nie wyswietlaj timera
+        isMyTurn = false;
         await dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
 
         if (playerId == lastInTurnPlayerId)
@@ -458,7 +459,7 @@ public class TurnController : MonoBehaviour
             {
                 int updatedRounds = currentRounds - 1;
                 await dbRefLobby.Child("rounds").SetValueAsync(updatedRounds);
-                Debug.Log("Zaktualizowano liczbê rund: " + updatedRounds);
+               // Debug.Log("Zaktualizowano liczbê rund: " + updatedRounds);
             }
         }
     }

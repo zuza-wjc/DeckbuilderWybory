@@ -158,6 +158,7 @@ public class HistoryController : MonoBehaviour
 
     public async Task AddCardToHistory(string cardId, string playerId, string desc, string enemyId)
     {
+
         if (string.IsNullOrEmpty(cardId) || string.IsNullOrEmpty(playerId) || string.IsNullOrEmpty(desc))
         {
             Debug.LogWarning("Invalid input parameters.");
@@ -274,6 +275,8 @@ public class HistoryController : MonoBehaviour
 
         while (timeElapsed < duration)
         {
+            if (infoTextCanvasGroup == null)
+                return;
             infoTextCanvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timeElapsed / duration);
             timeElapsed += Time.deltaTime;
             await Task.Yield();
@@ -293,6 +296,8 @@ public class HistoryController : MonoBehaviour
 
         while (timeElapsed < duration)
         {
+            if (infoTextCanvasGroup == null)
+                return;
             infoTextCanvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timeElapsed / duration);
             timeElapsed += Time.deltaTime;
             await Task.Yield();

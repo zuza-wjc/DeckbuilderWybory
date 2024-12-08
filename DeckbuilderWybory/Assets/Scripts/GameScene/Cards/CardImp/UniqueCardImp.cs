@@ -457,27 +457,6 @@ public class UniqueCardImp : MonoBehaviour
                     if(errorCheck) { return (-1, enemyId); }
                     break;
 
-                case "UN048":
-                    enemyId = await playerListManager.SelectEnemyPlayer();
-                    if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
-                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
-                    {
-                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
-                    }
-
-                    if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
-                    {
-                        Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
-                    }
-
-                    await BlockTurn(enemyId);
-                    break;
-
                 case "UN050":
                     errorCheck = await DecreaseCost();
                     if(errorCheck)
@@ -557,6 +536,44 @@ public class UniqueCardImp : MonoBehaviour
                     if(errorCheck)
                     {
                         return (-1, enemyId);
+                    }
+                    break;
+
+                case "UN088":
+                    enemyId = await playerListManager.RandomizeEnemy();
+                    if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
+
+                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
+                        errorPanelController.ShowError("player_protected");
+                        return (-1, enemyId);
+                    }
+
+                    if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
+                    {
+                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
+                        errorPanelController.ShowError("player_protected");
+                        return (-1, enemyId);
+                    }
+
+                    int playerCards = await deckController.CountCardsInDeck(playerId);
+                    if (playerCards == -1)
+                    {
+                        return (-1, enemyId);
+                    }
+                    int enemyCards = await deckController.CountCardsInDeck(enemyId);
+                    if (enemyCards == -1)
+                    {
+                        return (-1, enemyId);
+                    }
+                    if(enemyCards < playerCards)
+                    {
+                        errorCheck = await ChangeDrawCardLimit(enemyId);
+                        if (errorCheck)
+                        {
+                            return (-1, enemyId);
+                        }
                     }
                     break;
 
@@ -729,6 +746,8 @@ public class UniqueCardImp : MonoBehaviour
             return true;
         }
 
+        await cardUtilities.CheckIfBudgetPenalty(areaId);
+
         await cardUtilities.CheckBonusBudget(playerId, value);
         value = await cardUtilities.CheckBonusSupport(playerId, value);
 
@@ -834,7 +853,7 @@ public class UniqueCardImp : MonoBehaviour
             return true;
         }
 
-
+        await cardUtilities.CheckIfBudgetPenalty(chosenRegion);
         return false;
     }
 
@@ -891,6 +910,8 @@ public class UniqueCardImp : MonoBehaviour
             errorPanelController.ShowError("player_protected");
             return true;
         }
+
+        await cardUtilities.CheckIfBudgetPenalty(chosenRegion);
 
         await cardUtilities.CheckBonusBudget(playerId, enemySupport - playerSupport);
 
@@ -1244,24 +1265,6 @@ public class UniqueCardImp : MonoBehaviour
         return false;
     }
 
-    private async Task BlockTurn(string enemyId)
-    {
-        string lobbyId = DataTransfer.LobbyId;
-
-        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(enemyId);
-
-        var blockTurnData = new Dictionary<string, object>
-    {
-        { "blockTurn", true }
-    };
-
-        await dbRefEnemy.UpdateChildrenAsync(blockTurnData);
-    }
-
     private async Task<bool> DecreaseCost()
     {
         int? turnsTaken = await GetTurnsTakenAsync(playerId);
@@ -1452,5 +1455,40 @@ public class UniqueCardImp : MonoBehaviour
         return false;
     }
 
+    private async Task<bool> ChangeDrawCardLimit(string enemyId)
+    {
+        try
+        {
+            var enemyRef = FirebaseInitializer.DatabaseReference
+                .Child("sessions")
+                .Child(DataTransfer.LobbyId)
+                .Child("players")
+                .Child(enemyId)
+                .Child("drawCardsLimit");
+
+            var snapshot = await enemyRef.GetValueAsync();
+
+            if (!snapshot.Exists)
+            {
+                Debug.LogError($"drawCardsLimit for enemyId {enemyId} does not exist.");
+                errorPanelController.ShowError("general_error");
+                return true;
+            }
+
+            int currentLimit = int.Parse(snapshot.Value.ToString());
+
+            int newLimit = Math.Max(currentLimit - 1, 0);
+
+            await enemyRef.SetValueAsync(newLimit);
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error in ChangeDrawCardLimit for enemyId {enemyId}: {ex.Message}");
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
+    }
 
 }
