@@ -424,39 +424,8 @@ public class TurnController : MonoBehaviour
         }
     }
 
-    private async Task<bool> CheckAndHandleBlockTurn(string playerId)
-    {
-        try
-        {
-            var playerRef = dbRef.Child(playerId).Child("blockTurn");
-            var blockTurnSnapshot = await playerRef.GetValueAsync();
-
-            if (blockTurnSnapshot.Exists && Convert.ToBoolean(blockTurnSnapshot.Value))
-            {
-                _ = playerRef.RemoveValueAsync();
-                return true;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Error during CheckAndHandleBlockTurn for player {playerId}: {ex.Message}");
-        }
-
-        return false;
-    }
-
-
     async void StartTurn()
     {
-        bool isBlocked = await CheckAndHandleBlockTurn(playerId);
-
-        if (isBlocked)
-        {
-            Debug.Log("Gracz jest zablokowany");
-            EndTurn();
-            return;
-        }
-
         timer = 60f;
         turnPlayerName.text = "Twoja tura!";
         if (turnsTaken > 0)

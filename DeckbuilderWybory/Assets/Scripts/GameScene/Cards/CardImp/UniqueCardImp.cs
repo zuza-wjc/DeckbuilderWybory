@@ -457,27 +457,6 @@ public class UniqueCardImp : MonoBehaviour
                     if(errorCheck) { return (-1, enemyId); }
                     break;
 
-                case "UN048":
-                    enemyId = await playerListManager.SelectEnemyPlayer();
-                    if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
-                    if (await cardUtilities.CheckIfProtected(enemyId, -1))
-                    {
-                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
-                    }
-
-                    if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
-                    {
-                        Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
-                    }
-
-                    await BlockTurn(enemyId);
-                    break;
-
                 case "UN050":
                     errorCheck = await DecreaseCost();
                     if(errorCheck)
@@ -1284,24 +1263,6 @@ public class UniqueCardImp : MonoBehaviour
         await dbRefIncreaseCost.SetValueAsync(increaseCostData);
 
         return false;
-    }
-
-    private async Task BlockTurn(string enemyId)
-    {
-        string lobbyId = DataTransfer.LobbyId;
-
-        DatabaseReference dbRefEnemy = FirebaseInitializer.DatabaseReference
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(enemyId);
-
-        var blockTurnData = new Dictionary<string, object>
-    {
-        { "blockTurn", true }
-    };
-
-        await dbRefEnemy.UpdateChildrenAsync(blockTurnData);
     }
 
     private async Task<bool> DecreaseCost()
