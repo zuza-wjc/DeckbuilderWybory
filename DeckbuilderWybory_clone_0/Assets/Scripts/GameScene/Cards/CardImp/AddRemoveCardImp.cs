@@ -1037,6 +1037,8 @@ public class AddRemoveCardImp : MonoBehaviour
             return true;
         }
 
+        var tasks = new List<Task>();
+
         foreach (var playerSnapshot in snapshot.Children)
         {
             string playerId = playerSnapshot.Key;
@@ -1052,38 +1054,7 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 if (int.TryParse(supportChildSnapshot.Key, out int areaId) && int.TryParse(supportChildSnapshot.Value.ToString(), out int currentSupportValue))
                 {
-                    bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(playerId, areaId, value);
-                    bool isPlayerProtected = await cardUtilities.CheckIfProtected(playerId, value);
-                    bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerId, value);
-
-                    if (isRegionProtected || isPlayerProtected || isOneCardProtected)
-                    {
-                        continue;
-                    }
-
-                    await cardUtilities.CheckIfBudgetPenalty(areaId);
-
-                    await cardUtilities.CheckBonusBudget(playerId, value);
-                    value = await cardUtilities.CheckBonusSupport(playerId, value);
-
-                    int updatedSupportValue = currentSupportValue + value;
-                    updatedSupportValue = Math.Max(updatedSupportValue, 0);
-
-                    var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
-                    var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
-
-                    updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
-
-                    await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
-                    await dbRefAllPlayersStats
-                        .Child(playerId)
-                        .Child("stats")
-                        .Child("support")
-                        .Child(areaId.ToString())
-                        .SetValueAsync(updatedSupportValue);
-
-                    await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
-
+                    tasks.Add(HandleSupportAllUpdate(playerId, areaId, currentSupportValue, value));
                 }
                 else
                 {
@@ -1093,7 +1064,49 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
             }
         }
+
+        await Task.WhenAll(tasks);
         return false;
+    }
+
+    private async Task HandleSupportAllUpdate(string playerId, int areaId, int currentSupportValue, int value)
+    {
+        DatabaseReference dbRefAllPlayersStats = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
+
+        bool isRegionProtected = await cardUtilities.CheckIfRegionProtected(playerId, areaId, value);
+        bool isPlayerProtected = await cardUtilities.CheckIfProtected(playerId, value);
+        bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(playerId, value);
+
+        if (isRegionProtected || isPlayerProtected || isOneCardProtected)
+        {
+            return;
+        }
+
+        await cardUtilities.CheckIfBudgetPenalty(areaId);
+        await cardUtilities.CheckBonusBudget(playerId, value);
+        value = await cardUtilities.CheckBonusSupport(playerId, value);
+
+        int updatedSupportValue = currentSupportValue + value;
+        updatedSupportValue = Math.Max(updatedSupportValue, 0);
+
+        var maxSupport = await mapManager.GetMaxSupportForRegion(areaId);
+        var currentAreaSupport = await mapManager.GetCurrentSupportForRegion(areaId, playerId);
+
+        updatedSupportValue = Math.Min(updatedSupportValue, maxSupport - currentAreaSupport);
+
+        await cardUtilities.CheckIfRegionsProtected(playerId, currentSupportValue, value);
+
+        await dbRefAllPlayersStats
+            .Child(playerId)
+            .Child("stats")
+            .Child("support")
+            .Child(areaId.ToString())
+            .SetValueAsync(updatedSupportValue);
+
+        await cardUtilities.CheckAndAddCopySupport(playerId, areaId, value, mapManager);
     }
 
     private async Task<bool> ChangeAllStats(int value, string cardholderId, string statType)

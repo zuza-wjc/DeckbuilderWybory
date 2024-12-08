@@ -424,11 +424,7 @@ public class DeckController : MonoBehaviour
             return;
         }
 
-        List<string> playerIds = new();
-        foreach (var playerSnapshot in snapshot.Children)
-        {
-            playerIds.Add(playerSnapshot.Key);
-        }
+        List<string> playerIds = snapshot.Children.Select(child => child.Key).ToList();
 
         if (playerIds.Count < 2)
         {
@@ -436,23 +432,40 @@ public class DeckController : MonoBehaviour
             return;
         }
 
+        var playerDeckSnapshots = new Dictionary<string, DataSnapshot>();
+        foreach (var playerID in playerIds)
+        {
+            var currentPlayerDeckRef = playersRef.Child(playerID).Child("deck");
+            var currentPlayerSnapshot = await currentPlayerDeckRef.GetValueAsync();
+
+            if (currentPlayerSnapshot.Exists)
+            {
+                playerDeckSnapshots[playerID] = currentPlayerSnapshot;
+            }
+            else
+            {
+                Debug.LogError($"No cards found for player {playerID} in lobby {lobbyId}.");
+            }
+        }
+
         HashSet<string> exchangedCards = new();
         System.Random random = new();
+
+        var tasks = new List<Task>();
 
         for (int i = 0; i < playerIds.Count; i++)
         {
             string currentPlayerId = playerIds[i];
             string nextPlayerId = playerIds[(i + 1) % playerIds.Count];
 
-            DatabaseReference currentPlayerDeckRef = playersRef.Child(currentPlayerId).Child("deck");
-            DatabaseReference nextPlayerDeckRef = playersRef.Child(nextPlayerId).Child("deck");
-
-            var currentPlayerSnapshot = await currentPlayerDeckRef.GetValueAsync();
-            if (!currentPlayerSnapshot.Exists)
+            if (!playerDeckSnapshots.ContainsKey(currentPlayerId) || !playerDeckSnapshots.ContainsKey(nextPlayerId))
             {
-                Debug.LogError($"No cards found for player {currentPlayerId} in lobby {lobbyId}.");
+                Debug.LogWarning($"Skipping exchange due to missing decks for players {currentPlayerId} or {nextPlayerId}.");
                 continue;
             }
+
+            var currentPlayerSnapshot = playerDeckSnapshots[currentPlayerId];
+            var nextPlayerSnapshot = playerDeckSnapshots[nextPlayerId];
 
             List<string> availableCards = new();
 
@@ -482,30 +495,34 @@ public class DeckController : MonoBehaviour
             string selectedInstanceId = availableCards[random.Next(availableCards.Count)];
             string selectedCardId = (string)currentPlayerSnapshot.Child(selectedInstanceId).Child("cardId").Value;
 
-            var nextPlayerSnapshot = await nextPlayerDeckRef.GetValueAsync();
-            if (!nextPlayerSnapshot.Exists)
-            {
-                Debug.LogError($"No cards found for player {nextPlayerId} in lobby {lobbyId}.");
-                continue;
-            }
-
             exchangedCards.Add(selectedInstanceId);
 
-            try
-            {
-                await nextPlayerDeckRef.Child(selectedInstanceId).SetValueAsync(new Dictionary<string, object>
-            {
-                { "onHand", true },
-                { "played", false },
-                { "cardId", selectedCardId }
-            });
+            tasks.Add(ExchangeCardBetweenPlayers(currentPlayerId, nextPlayerId, selectedInstanceId, selectedCardId));
+        }
 
-                await currentPlayerDeckRef.Child(selectedInstanceId).RemoveValueAsync();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Error during card exchange between {currentPlayerId} and {nextPlayerId}: {ex.Message}");
-            }
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task ExchangeCardBetweenPlayers(string currentPlayerId, string nextPlayerId, string selectedInstanceId, string selectedCardId)
+    {
+        DatabaseReference playersRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(DataTransfer.LobbyId).Child("players");
+        DatabaseReference currentPlayerDeckRef = playersRef.Child(currentPlayerId).Child("deck");
+        DatabaseReference nextPlayerDeckRef = playersRef.Child(nextPlayerId).Child("deck");
+
+        try
+        {
+            await nextPlayerDeckRef.Child(selectedInstanceId).SetValueAsync(new Dictionary<string, object>
+        {
+            { "onHand", true },
+            { "played", false },
+            { "cardId", selectedCardId }
+        });
+
+            await currentPlayerDeckRef.Child(selectedInstanceId).RemoveValueAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error during card exchange between {currentPlayerId} and {nextPlayerId}: {ex.Message}");
         }
     }
 
