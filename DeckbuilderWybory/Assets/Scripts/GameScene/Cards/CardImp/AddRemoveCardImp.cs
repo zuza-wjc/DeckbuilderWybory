@@ -661,22 +661,31 @@ public class AddRemoveCardImp : MonoBehaviour
             }
             else if (data.Target == "player-region")
             {
-                if (chosenRegion < 0)
+                if (data.TargetNumber == 8)
                 {
-                    chosenRegion = await mapManager.SelectArea();
+                   bool errorCheck = await ChangeSupportForAllRegions(data.Number);
+                    if (errorCheck) { return (-1, false, null); }
                 }
-                bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
-                if (errorCheck) { return (-1, false, null); }
-
-                if (cardId== "AD075")
+                else
                 {
-                    isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
-                    if(isBonusRegion)
+
+                    if (chosenRegion < 0)
                     {
-                        bool checkError = await IgnoreCost();
-                        if(checkError)
+                        chosenRegion = await mapManager.SelectArea();
+                    }
+                    bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                    if (errorCheck) { return (-1, false, null); }
+
+                    if (cardId == "AD075")
+                    {
+                        isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+                        if (isBonusRegion)
                         {
-                            return (1, false, null);
+                            bool checkError = await IgnoreCost();
+                            if (checkError)
+                            {
+                                return (1, false, null);
+                            }
                         }
                     }
                 }
@@ -1066,6 +1075,69 @@ public class AddRemoveCardImp : MonoBehaviour
         }
 
         await Task.WhenAll(tasks);
+        return false;
+    }
+
+    private async Task<bool> ChangeSupportForAllRegions(int value)
+    {
+
+        DatabaseReference dbRefSupport = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players")
+            .Child(playerId)
+            .Child("stats")
+            .Child("support");
+
+        var snapshot = await dbRefSupport.GetValueAsync();
+        if (!snapshot.Exists)
+        {
+            Debug.LogError("No support data found for the player.");
+            errorPanelController.ShowError("general_error");
+            return true;
+        }
+
+        value = await cardUtilities.CheckBonusSupport(playerId, value);
+
+        foreach (var regionData in snapshot.Children)
+        {
+            if (!int.TryParse(regionData.Key, out int areaId))
+            {
+                Debug.LogError($"Invalid region ID: {regionData.Key}. Skipping this region.");
+                continue;
+            }
+
+            var regionSupportSnapshot = regionData;
+            if (!int.TryParse(regionSupportSnapshot.Value.ToString(), out int currentSupport))
+            {
+                Debug.LogError($"Failed to parse support value for region {areaId}. Skipping this region.");
+                continue;
+            }
+
+            var maxSupportTask = mapManager.GetMaxSupportForRegion(areaId);
+            var currentSupportTask = mapManager.GetCurrentSupportForRegion(areaId, playerId);
+            await Task.WhenAll(maxSupportTask, currentSupportTask);
+
+            int maxAreaSupport = await maxSupportTask;
+            int currentAreaSupport = await currentSupportTask;
+            int availableSupport = maxAreaSupport - currentAreaSupport - currentSupport;
+
+            if (availableSupport <= 0 && value > 0)
+            {
+                continue;
+            }
+
+            int supportToAdd = Math.Min(value, availableSupport);
+
+            await cardUtilities.CheckIfBudgetPenalty(areaId);
+            await cardUtilities.CheckBonusBudget(playerId, supportToAdd);
+
+            currentSupport = Math.Max(0, currentSupport + supportToAdd);
+            await dbRefSupport.Child(areaId.ToString()).SetValueAsync(currentSupport);
+
+            await cardUtilities.CheckAndAddCopySupport(playerId, areaId, supportToAdd, mapManager);
+        }
+
         return false;
     }
 

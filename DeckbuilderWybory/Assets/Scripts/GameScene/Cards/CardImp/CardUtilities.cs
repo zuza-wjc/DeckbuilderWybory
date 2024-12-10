@@ -709,7 +709,6 @@ public class CardUtilities : MonoBehaviour
         }
     }
 
-
     public async Task<bool> CheckBlockedCard(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
