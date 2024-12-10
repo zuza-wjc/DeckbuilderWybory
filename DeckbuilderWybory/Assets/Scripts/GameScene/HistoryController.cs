@@ -106,10 +106,11 @@ public class HistoryController : MonoBehaviour
             {
                 string cardId = cardSnapshot.Child("cardId").Value as string;
                 string playerName = cardSnapshot.Child("playerName").Value as string;
+                string enemyName = cardSnapshot.Child("enemyName").Value as string;
 
                 if (!string.IsNullOrEmpty(cardId) && !string.IsNullOrEmpty(playerName))
                 {
-                    AddCardToUI(cardId, playerName);
+                    AddCardToUI(cardId, playerName, enemyName);
                 }
             }
         }
@@ -117,7 +118,7 @@ public class HistoryController : MonoBehaviour
         closeButton.gameObject.SetActive(true);
     }
 
-    private void AddCardToUI(string cardId, string playerName)
+    private void AddCardToUI(string cardId, string playerName, string enemyName)
     {
         GameObject newCardUI = Instantiate(cardPrefab, cardListContainer);
 
@@ -136,6 +137,29 @@ public class HistoryController : MonoBehaviour
         if (playerNameText != null)
         {
             playerNameText.text = playerName;
+        }
+
+        string templateText = "zagrana na\n{0}";
+
+        Text enemyNameText = newCardUI.transform.Find("enemyNameText").GetComponent<Text>();
+
+        if (enemyName != null)
+        {
+            string finalText = string.Format(templateText, enemyName);
+
+            if (enemyNameText != null)
+            {
+                enemyNameText.text = finalText;
+                enemyNameText.enabled = true;
+            }
+        }
+        else
+        {
+            if (enemyNameText != null)
+            {
+                enemyNameText.text = "";
+                enemyNameText.enabled = false;
+            }
         }
     }
 
@@ -214,6 +238,9 @@ public class HistoryController : MonoBehaviour
             if (!string.IsNullOrEmpty(enemyName) && desc.Contains("rywala"))
             {
                 desc = desc.Replace("rywala", $"rywala {enemyName}");
+            } else
+            {
+                enemyName = null;
             }
 
             desc = desc.Replace("Gracz", $"Gracz {playerName}");
@@ -235,6 +262,7 @@ public class HistoryController : MonoBehaviour
         {
             { "cardId", cardId },
             { "playerName", playerName },
+            { "enemyName", enemyName },
             { "description", desc }
         };
 
