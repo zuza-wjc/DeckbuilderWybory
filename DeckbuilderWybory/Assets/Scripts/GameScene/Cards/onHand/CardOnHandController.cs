@@ -18,6 +18,12 @@ public class CardOnHandController : MonoBehaviour
     string lobbyId;
     string playerId;
 
+    public GameObject sellPanel;
+    public Button trashButton;
+    public Button yesSellButton;
+    public Button noSellButton;
+    public Text sellText;
+
     private Dictionary<string, GameObject> cardObjects = new();
 
     private void Awake()
@@ -116,6 +122,12 @@ public class CardOnHandController : MonoBehaviour
             draggableItem.image = newCard.GetComponent<Image>();
             draggableItem.instanceId = instanceId;
             draggableItem.cardId = cardId;
+
+            draggableItem.sellPanel = sellPanel;
+            draggableItem.trashButton = trashButton;
+            draggableItem.yesSellButton = yesSellButton;
+            draggableItem.noSellButton = noSellButton;
+            draggableItem.sellText = sellText;
         }
 
         cardObjects[instanceId] = newCard;
