@@ -30,9 +30,6 @@ public class CreateLobbyManager : MonoBehaviour
     bool isPublic = true; 
     int lobbySize = 2;
 
-    private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
-
-
     void Start()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -140,8 +137,7 @@ public class CreateLobbyManager : MonoBehaviour
         string playerId = System.Guid.NewGuid().ToString();
 
         var random = new System.Random();
-        int index = random.Next(8);
-        string playerName = availableNames[index];
+        string playerName = DataTransfer.PlayerName;
 
         string lobbyName = lobbyNameInput.text;
         bool isUnique = await IsLobbyNameUnique(lobbyName);
@@ -161,7 +157,7 @@ public class CreateLobbyManager : MonoBehaviour
         await CheckAndSetMapData(lobbyId);
 
         int isStarted = 0;
-        int money = 0;
+        int money = 50;
         int readyPlayers = 0;
 
         int[] support = new int[6];
@@ -198,7 +194,6 @@ public class CreateLobbyManager : MonoBehaviour
         DataTransfer.LobbySize = lobbySize;
         DataTransfer.IsStarted = isStarted;
         DataTransfer.PlayerId = playerId;
-        DataTransfer.PlayerName = playerName;
 
         SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
     }
@@ -284,19 +279,15 @@ public class CreateLobbyManager : MonoBehaviour
 
     async Task CheckAndSetMapData(string lobbyId)
     {
-        // Przygotowanie listy typów regionów
         List<string> regionTypes = new List<string> { "Ambasada", "Metropolia", "Środowisko", "Przemysł" };
         List<string> typesCopy = new List<string>(regionTypes);
         System.Random rng = new System.Random();
 
-        // Losowanie i przetasowanie typów regionów
         regionTypes = regionTypes.Concat(typesCopy.OrderBy(x => rng.Next())).ToList();
-        regionTypes.RemoveRange(regionTypes.Count - 2, 2); // Usuń dwa ostatnie elementy, jeśli jest to wymagane
+        regionTypes.RemoveRange(regionTypes.Count - 2, 2);
 
-        // Losowe przetasowanie regionów
         regionTypes = regionTypes.OrderBy(x => rng.Next()).ToList();
 
-        // Stworzenie mapy z sześcioma regionami
         Dictionary<string, Dictionary<string, object>> mapData = new Dictionary<string, Dictionary<string, object>>
     {
         { "region1", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[0] } } },
@@ -307,7 +298,6 @@ public class CreateLobbyManager : MonoBehaviour
         { "region6", new Dictionary<string, object> { { "maxSupport", rng.Next(15, 20) }, { "type", regionTypes[5] } } }
     };
 
-        // Zapisanie mapy do bazy danych Firebase, tworząc nową sesję
         await dbRef.Child(lobbyId).Child("map").SetValueAsync(mapData).ContinueWith(mapTask =>
         {
             if (mapTask.IsCompleted && !mapTask.IsFaulted)
