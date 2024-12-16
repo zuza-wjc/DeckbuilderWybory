@@ -15,7 +15,7 @@ public class JoinLobbyByCode : MonoBehaviour
 {
     public InputField lobbyCodeInputField;
     public Button joinButton;
-    public Button pasteButton; //przycisk do wklejania kodu
+    public Button pasteButton;
     public Text feedbackText;
 
     public GameObject dialogBox;
@@ -25,8 +25,6 @@ public class JoinLobbyByCode : MonoBehaviour
     string playerId;
     string lobbyName;
     string lobbyId;
-    private List<string> availableNames = new List<string>() { "Katarzyna", "Wojciech", "Jakub", "Przemysław", "Gabriela", "Barbara", "Mateusz", "Aleksandra" };
-    private List<string> gracze = new List<string>();
 
     void Start()
     {
@@ -114,56 +112,26 @@ public class JoinLobbyByCode : MonoBehaviour
     }
 
 
-    public async Task AssignName(string playerId, string lobbyId)
+    public async Task AssignPlayer(string playerId, string lobbyId)
     {
-        gracze.Clear();
-
+        string playerName = DataTransfer.PlayerName;
         var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
-        var lobbyData = lobbyInfo.Value as Dictionary<string, object>;
-
-        foreach (var name in lobbyData)
-        {
-            if (name.Key == "players")
-            {
-                var players = name.Value as Dictionary<string, object>;
-
-                foreach (var player in players)
-                {
-                    var gracz = player.Value as Dictionary<string, object>;
-                    if (gracz.ContainsKey("playerName"))
-                    {
-                        gracze.Add(gracz["playerName"].ToString());
-                    }
-                }
-            }
-        }
 
         var random = new System.Random();
 
-        List<string> namesToAssign = new List<string>(availableNames);
-        foreach (var name in gracze)
-        {
-            namesToAssign.Remove(name);
-        }
+        int[] support = new int[6];
 
-        if (namesToAssign.Count > 0)
-        {
-            int index = random.Next(namesToAssign.Count);
-            string playerName = namesToAssign[index];
-            availableNames.Remove(playerName);
+        support = await AllocateSupportAsync(lobbyId, random);
 
-            int[] support = new int[6];
-
-            support = await AllocateSupportAsync(lobbyId, random);
-
-            Dictionary<string, object> playerData = new Dictionary<string, object>
+        Dictionary<string, object> playerData = new Dictionary<string, object>
             {
                 { "playerName", playerName },
                 { "ready", false },
+                {"drawCardsLimit", 4 },
                 { "stats", new Dictionary<string, object>
                     {
                         { "inGame", false },
-                        { "money", 0 },
+                        { "money", 50 },
                         { "income", 10 },
                         { "support", support },
                         { "playerTurn", 2 },
@@ -172,14 +140,7 @@ public class JoinLobbyByCode : MonoBehaviour
                 }
             };
 
-            await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
-
-            DataTransfer.PlayerName = playerName;
-        }
-        else
-        {
-            Debug.LogError("Brak dostępnych imion.");
-        }
+        await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
     }
 
     public async Task<int[]> AllocateSupportAsync(string lobbyId, System.Random random)
@@ -187,12 +148,10 @@ public class JoinLobbyByCode : MonoBehaviour
         int[] support = new int[6];
         int totalSupport = 8;
 
-        // Pobranie danych sesji (mapy)
         var sessionDataSnapshot = await dbRef.Child(lobbyId).Child("map").GetValueAsync();
         var sessionData = sessionDataSnapshot.Value as Dictionary<string, object>;
         Dictionary<int, int> maxSupport = new Dictionary<int, int>();
 
-        // Pobranie danych maxSupport z mapy
         foreach (var regionData in sessionData)
         {
             int regionId = int.Parse(regionData.Key.Replace("region", "")) - 1;
@@ -202,12 +161,10 @@ public class JoinLobbyByCode : MonoBehaviour
             maxSupport[regionId] = regionMaxSupport;
         }
 
-        // Pobranie danych o wsparciu graczy (jeśli istnieją)
         var supportDataSnapshot = await dbRef.Child(lobbyId).Child("players").Child("support").GetValueAsync();
         var supportData = supportDataSnapshot.Value as Dictionary<string, object>;
         int[] currentSupport = new int[6];
 
-        // Sprawdzamy, czy są dane o wsparciu graczy, jeśli nie, to ustawiamy wszystkie wartości na 0
         if (supportData != null)
         {
             foreach (var areaData in supportData)
@@ -217,7 +174,6 @@ public class JoinLobbyByCode : MonoBehaviour
             }
         }
 
-        // Wybór losowej liczby regionów (od 2 do 3)
         int regionsCount = random.Next(2, 4);
         List<int> chosenRegions = new List<int>();
         while (chosenRegions.Count < regionsCount)
@@ -229,13 +185,11 @@ public class JoinLobbyByCode : MonoBehaviour
             }
         }
 
-        // Przydzielanie wsparcia do wybranych regionów
         for (int i = 0; i < regionsCount - 1; i++)
         {
             int maxPoints = totalSupport - (regionsCount - i - 1) * 2;
             int points;
 
-            // Sprawdzamy, czy można przydzielić punkty bez przekroczenia limitu
             do
             {
                 points = random.Next(2, maxPoints + 1);
@@ -245,7 +199,6 @@ public class JoinLobbyByCode : MonoBehaviour
             totalSupport -= points;
         }
 
-        // Przydzielanie pozostałego wsparcia do ostatniego regionu
         int lastRegion = chosenRegions.Last();
         if (totalSupport <= maxSupport[lastRegion] - currentSupport[lastRegion])
         {
@@ -256,7 +209,6 @@ public class JoinLobbyByCode : MonoBehaviour
             throw new InvalidOperationException("Nie można przydzielić wsparcia bez przekroczenia limitu.");
         }
 
-        // Zwracamy przydzielone wsparcie
         return support;
     }
 
@@ -265,7 +217,7 @@ public class JoinLobbyByCode : MonoBehaviour
     {
         playerId = System.Guid.NewGuid().ToString();
 
-        await AssignName(playerId, lobbyId);
+        await AssignPlayer(playerId, lobbyId);
 
         return playerId;
     }
@@ -285,7 +237,7 @@ public class JoinLobbyByCode : MonoBehaviour
     {
         feedbackText.text = message;
         feedbackText.gameObject.SetActive(true);
-        await Task.Delay(3000); // Odczekaj 3 sekundy
+        await Task.Delay(3000);
         feedbackText.gameObject.SetActive(false);
     }
 

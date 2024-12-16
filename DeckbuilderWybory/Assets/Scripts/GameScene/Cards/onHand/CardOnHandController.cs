@@ -13,11 +13,16 @@ public class CardOnHandController : MonoBehaviour
     public Image panelImage;
     public Button closeButton;
     public CardSpriteManager cardSpriteManager;
-    public ScrollViewController controller;
 
     DatabaseReference dbRef;
     string lobbyId;
     string playerId;
+
+    public GameObject sellPanel;
+    public Button trashButton;
+    public Button yesSellButton;
+    public Button noSellButton;
+    public Text sellText;
 
     private Dictionary<string, GameObject> cardObjects = new();
 
@@ -117,10 +122,15 @@ public class CardOnHandController : MonoBehaviour
             draggableItem.image = newCard.GetComponent<Image>();
             draggableItem.instanceId = instanceId;
             draggableItem.cardId = cardId;
+
+            draggableItem.sellPanel = sellPanel;
+            draggableItem.trashButton = trashButton;
+            draggableItem.yesSellButton = yesSellButton;
+            draggableItem.noSellButton = noSellButton;
+            draggableItem.sellText = sellText;
         }
 
         cardObjects[instanceId] = newCard;
-        controller.UpdateElementCount();
     }
 
     private void ListenForCardOnHandChange(string instanceId)
@@ -242,7 +252,6 @@ public class CardOnHandController : MonoBehaviour
             }
         };
 
-        controller.UpdateElementCount();
     }
 
     public void ForceUpdateUI()
@@ -253,6 +262,5 @@ public class CardOnHandController : MonoBehaviour
         }
 
         StartCoroutine(LoadCardsOnHand());
-        controller.UpdateElementCount();
     }
 }

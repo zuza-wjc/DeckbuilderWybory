@@ -245,8 +245,6 @@ public class CardSelectionUI : MonoBehaviour
         cardSelectionPanel.SetActive(true);
         submitButton.gameObject.SetActive(true);
 
-        infoText.text = "KARTY GRACZA";
-
         submitButton.onClick.RemoveAllListeners();
 
         bool anyCardAdded = await LoadCardsFromDatabase(playerId, false, false, (instanceId, cardId) =>
@@ -256,11 +254,13 @@ public class CardSelectionUI : MonoBehaviour
 
         if (!anyCardAdded)
         {
-            Debug.LogWarning("No cards available to view.");
-            HideCardSelectionPanel();
+            infoText.text = "BRAK KART W TALII";
             return;
         }
+
+        infoText.text = "KARTY GRACZA";
     }
+
 
     public async Task<(string keepCard, string destroyCard)> ShowCardSelectionForPlayerAndEnemy(string playerId, string playerCard, string enemyId, string enemyCard)
     {
