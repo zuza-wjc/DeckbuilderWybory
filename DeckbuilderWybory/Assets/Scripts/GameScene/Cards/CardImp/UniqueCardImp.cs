@@ -235,37 +235,93 @@ public class UniqueCardImp : MonoBehaviour
             switch (cardId)
             {
                 case "UN018":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await CheckBlockAndLog()) return (-1, enemyId);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     chosenRegion = await mapManager.SelectArea();
                     isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await ProcessEnemySupport(chosenRegion, enemyId, isBonusRegion);
                     if (errorCheck) return (-1, enemyId);
                     break;
 
                 case "UN089":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await CheckBlockAndLog()) break;
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     chosenRegion = await mapManager.SelectArea();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await ExchangeSupportMaxMin(playerId, chosenRegion);
                     if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN025":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await CheckBlockAndLog()) break;
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     chosenRegion = await mapManager.SelectArea();
                     isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await ExchangeSupport(chosenRegion, enemyId, isBonusRegion);
                     if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN039":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     int cardsOnHand = await cardUtilities.CountCardsOnHand(playerId);
                     if (cardsOnHand - 1 < 1)
                     {
@@ -277,7 +333,17 @@ public class UniqueCardImp : MonoBehaviour
                     {
                         return (-1, enemyId);
                     }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     List<KeyValuePair<string, string>> selectedCards = await cardSelectionUI.ShowCardSelection(playerId, 1, instanceId, true);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (selectedCards.Count > 0)
                     {
                         string selectedInstanceId = selectedCards[0].Key;
@@ -294,6 +360,11 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN055":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (!(await cardUtilities.CheckBudgetBlock(playerId)))
                     {
                         playerBudget += playerIncome;
@@ -308,22 +379,40 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN086":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckSupportBlock(playerId))
                     {
                         Debug.Log("Support block");
                         errorPanelController.ShowError("action_blocked");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIncomeBlock(playerId))
                     {
                         Debug.Log("Income block");
                         errorPanelController.ShowError("action_blocked");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     chosenRegion = await mapManager.SelectArea();
                     isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     checkError = await ChangeIncomePerCard(chosenRegion, isBonusRegion, instanceId);
                     if(checkError)
                     {
@@ -332,8 +421,18 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN019":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     chosenRegion = await mapManager.SelectArea();
                     isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await ProtectRegion(chosenRegion);
                     if(errorCheck)
                     {
@@ -346,8 +445,18 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN021":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     checkError = await CopySupport(enemyId);
                     if(checkError)
                     {
@@ -356,8 +465,18 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN022":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     checkError = await CopyBudget(enemyId);
                     if (checkError)
                     {
@@ -366,8 +485,18 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN024":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await BlockCard(enemyId);
                     if(errorCheck) { return (-1, enemyId); }
                     break;
@@ -375,6 +504,11 @@ public class UniqueCardImp : MonoBehaviour
                 case "UN032":
                     if (DataTransfer.IsFirstCardInTurn)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (-1, enemyId);
+                        }
                         checkError = await ProtectPlayer();
                         if(checkError) { return (-1, enemyId); }
                         DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
@@ -397,31 +531,57 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN078":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await IncreaseCost(enemyId);
                     if (errorCheck) return (-1, enemyId);
                     break;
 
                 case "UN080":
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await BlockSupportAction(enemyId);
                     if(errorCheck)
                     {
@@ -435,29 +595,50 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN079":
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await IncreaseCostAllTurn(enemyId);
                     if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN050":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await DecreaseCost();
                     if(errorCheck)
                     {
@@ -466,7 +647,12 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN052":
-                   errorCheck = await ProtectPlayer();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
+                    errorCheck = await ProtectPlayer();
                     if(errorCheck)
                     {
                         return (-1, enemyId);
@@ -474,56 +660,99 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN082":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await BlockBudgetAction(enemyId);
                     if (errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN083":
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await BlockIncomeAction(enemyId);
                     if (errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN074":
-                   errorCheck = await ProtectPlayerOneCard();
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
+                    errorCheck = await ProtectPlayerOneCard();
                     if(errorCheck) { return (-1, enemyId); }
                     break;
 
                 case "UN076":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await LimitCards();
                     if(errorCheck)
                     {
@@ -532,6 +761,11 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN084":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     errorCheck = await BonusSupport();
                     if(errorCheck)
                     {
@@ -540,26 +774,48 @@ public class UniqueCardImp : MonoBehaviour
                     break;
 
                 case "UN088":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     enemyId = await playerListManager.RandomizeEnemy();
                     if (string.IsNullOrEmpty(enemyId)) return HandleNoEnemyFound();
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
                         Debug.Log("Gracz jest chroniony, nie można zagrać karty");
                         errorPanelController.ShowError("player_protected");
                         return (-1, enemyId);
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, enemyId);
+                    }
                     int playerCards = await deckController.CountCardsInDeck(playerId);
                     if (playerCards == -1)
                     {
+                        return (-1, enemyId);
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
                         return (-1, enemyId);
                     }
                     int enemyCards = await deckController.CountCardsInDeck(enemyId);
@@ -569,6 +825,11 @@ public class UniqueCardImp : MonoBehaviour
                     }
                     if(enemyCards < playerCards)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (-1, enemyId);
+                        }
                         errorCheck = await ChangeDrawCardLimit(enemyId);
                         if (errorCheck)
                         {

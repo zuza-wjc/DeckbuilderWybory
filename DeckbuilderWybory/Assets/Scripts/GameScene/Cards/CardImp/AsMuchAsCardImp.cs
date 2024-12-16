@@ -364,7 +364,17 @@ public class AsMuchAsCardImp : MonoBehaviour
 
             if (data.Target == "player")
             {
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (dbRefPlayerStats, false);
+                }
                 if (!(await cardUtilities.CheckIncomeBlock(playerId))) {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, false);
+                    }
                     int howMany = await CalculateValueFromHand(playerId, cardType);
                     if(howMany == -1)
                     {
@@ -423,6 +433,11 @@ public class AsMuchAsCardImp : MonoBehaviour
 
                 if (data.Target == "player")
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, false, -1, enemyId);
+                    }
                     if (!(await cardUtilities.CheckBudgetBlock(playerId)))
                     {
                         playerBudget += data.Number;
@@ -470,6 +485,11 @@ public class AsMuchAsCardImp : MonoBehaviour
                 {
                     if (string.IsNullOrEmpty(enemyId))
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, false, -1, enemyId);
+                        }
                         enemyId = await playerListManager.SelectEnemyPlayer();
                         if (string.IsNullOrEmpty(enemyId))
                         {
@@ -478,13 +498,22 @@ public class AsMuchAsCardImp : MonoBehaviour
                             return (dbRefPlayerStats, false, -1, enemyId);
                         }
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, false, -1, enemyId);
+                    }
                     int howMany = await CalculateValueFromHand(playerId, cardType);
                     if(howMany == -1)
                     {
                         return (dbRefPlayerStats, false, -1, enemyId);
                     }
                     int changeBudget = howMany * data.NumberPerCard;
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, false, -1, enemyId);
+                    }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, changeBudget, "money", playerBudget);
                     if(playerBudget == -1)
                     {
@@ -536,13 +565,26 @@ public class AsMuchAsCardImp : MonoBehaviour
             {
                 if (chosenRegion < 0)
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (false, false);
+                    }
                     chosenRegion = await mapManager.SelectArea();
                 }
 
                 isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
-
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (false, false);
+                }
                 int supportValue = await CalculateValueFromHand(playerId, cardType);
-
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (false, false);
+                }
                 await cardUtilities.ChangeSupport(playerId, supportValue, chosenRegion, cardId, mapManager);
             }
         }

@@ -444,6 +444,7 @@ public class TurnController : MonoBehaviour
         isMyTurn = true;
         DataTransfer.IsFirstCardInTurn = true;
         yesSellButton.interactable = true;
+        DataTransfer.IsPlayerTurn = true;
     }
 
     public async void EndTurn()
@@ -456,6 +457,7 @@ public class TurnController : MonoBehaviour
         yesSellButton.interactable = false;
         isMyTurn = false;
         await dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
+        DataTransfer.IsPlayerTurn = false;
 
         if (playerId == lastInTurnPlayerId)
         {
@@ -464,7 +466,6 @@ public class TurnController : MonoBehaviour
             {
                 int updatedRounds = currentRounds - 1;
                 await dbRefLobby.Child("rounds").SetValueAsync(updatedRounds);
-               // Debug.Log("Zaktualizowano liczb� rund: " + updatedRounds);
             }
         }
     }
