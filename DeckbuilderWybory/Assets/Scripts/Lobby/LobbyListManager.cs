@@ -46,8 +46,8 @@ public class LobbyListManager : MonoBehaviour
             return;
         }
 
-        var isPublicValue = snapshot.Child("isPublic").GetValue(true);
-        bool isPublic = isPublicValue != null ? bool.Parse(isPublicValue.ToString()) : false;
+        bool isPublic = false;
+        isPublic = bool.Parse(snapshot.Child("isPublic").GetValue(true).ToString());
 
         var lobbyNameValue = snapshot.Child("lobbyName").GetValue(true);
         string lobbyName = lobbyNameValue != null ? lobbyNameValue.ToString() : "Unknown";
@@ -79,6 +79,9 @@ public class LobbyListManager : MonoBehaviour
         int lobbySize = int.Parse(args.Snapshot.Child("lobbySize").GetValue(true).ToString());
         int playerCount = (int)args.Snapshot.Child("players").ChildrenCount;
 
+        bool isPublicValue = bool.Parse(args.Snapshot.Child("isPublic").GetValue(true).ToString());
+
+        // Sprawdź, czy liczba graczy jest mniejsza od rozmiaru lobby
         if (playerCount >= lobbySize)
         {
             string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
@@ -101,7 +104,7 @@ public class LobbyListManager : MonoBehaviour
                     break;
                 }
             }
-            if (!buttonExists)
+            if (!buttonExists && isPublicValue)
             {
                 CreateButton(lobbyName, lobbyId, playerCount, lobbySize);
             }
