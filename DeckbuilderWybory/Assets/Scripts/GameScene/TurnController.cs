@@ -17,7 +17,6 @@ public class TurnController : MonoBehaviour
     public Text roundText;
     public Button firstPassButton;
     public Button passButton;
-    public GameObject passTurnPanel;
 
     public Button yesSellButton;
 
@@ -449,7 +448,6 @@ public class TurnController : MonoBehaviour
 
     public async void EndTurn()
     {
-        SetPassTurnPanelInactive();
         timer = 60f;
         int cardLimit = await GetCardLimit();
         await DrawCardsUntilLimit(playerId, cardLimit);
@@ -477,18 +475,6 @@ public class TurnController : MonoBehaviour
         {
             Debug.Log("Skipped turn");
             EndTurn();
-        }
-    }
-
-    public void SetPassTurnPanelInactive()
-    {
-        if (passTurnPanel != null)
-        {
-            passTurnPanel.SetActive(false);
-        }
-        else
-        {
-            Debug.LogWarning("PassTurnPanel nie jest przypisany!");
         }
     }
 
