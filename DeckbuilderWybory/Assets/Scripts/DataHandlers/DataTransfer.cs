@@ -8,4 +8,6 @@ public static class DataTransfer
     public static string PlayerId { get; set; }
     public static string PlayerName { get; set; }
     public static bool IsFirstCardInTurn { get; set; }
+
+    public static bool IsPlayerTurn {  get; set; }
 }

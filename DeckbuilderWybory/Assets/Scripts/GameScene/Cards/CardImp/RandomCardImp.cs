@@ -262,11 +262,21 @@ public class RandomCardImp : MonoBehaviour
         {
             if (data.Target == "enemy")
             {
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (descriptions, -1, enemyId);
+                }
                 if (!(await cardUtilities.CheckBudgetBlock(playerId)))
                 {
 
                     if (string.IsNullOrEmpty(enemyId))
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (descriptions, -1, enemyId);
+                        }
                         enemyId = await playerListManager.SelectEnemyPlayer();
                         if (string.IsNullOrEmpty(enemyId))
                         {
@@ -274,6 +284,11 @@ public class RandomCardImp : MonoBehaviour
                             errorPanelController.ShowError("general_error");
                             return (descriptions, -1, enemyId);
                         }
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (descriptions, -1, enemyId);
                     }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
 
@@ -310,6 +325,12 @@ public class RandomCardImp : MonoBehaviour
 
     private async Task<(bool errorCheck, List<string>)> SupportAction(string cardId, bool isBonusRegion, int chosenRegion, string cardType, Dictionary<int, OptionData> supportOptions, Dictionary<int, OptionData> supportBonusOptions, List<string> descriptions)
     {
+        if (!DataTransfer.IsPlayerTurn)
+        {
+            errorPanelController.ShowError("turn_over");
+            return (true, descriptions);
+        }
+    
         chosenRegion = await mapManager.SelectArea();
         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
 
@@ -320,6 +341,11 @@ public class RandomCardImp : MonoBehaviour
         {
             if (data.Target == "player-region")
             {
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (true, descriptions);
+                }
                 bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
                 return (errorCheck, descriptions);
             }

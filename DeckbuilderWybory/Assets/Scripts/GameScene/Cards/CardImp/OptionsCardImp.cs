@@ -308,7 +308,12 @@ public class OptionsCardImp : MonoBehaviour
         {
             if (data.Target == "player")
             {
-                if(playerBudget + data.Number < 0)
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (dbRefPlayerStats, -1, descriptions, enemyId);
+                }
+                if (playerBudget + data.Number < 0)
                 {
                     Debug.LogWarning("Brak wystarczającego budżetu aby zagrać kartę.");
                     errorPanelController.ShowError("no_budget");
@@ -322,6 +327,11 @@ public class OptionsCardImp : MonoBehaviour
             {
                 if (string.IsNullOrEmpty(enemyId))
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, descriptions, enemyId);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId))
                     {
@@ -329,6 +339,11 @@ public class OptionsCardImp : MonoBehaviour
                         errorPanelController.ShowError("general_error");
                         return (dbRefPlayerStats, -1, descriptions, enemyId);
                     }
+                }
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (dbRefPlayerStats, -1, descriptions, enemyId);
                 }
                 playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
                 if(playerBudget == -1)
@@ -357,6 +372,11 @@ public class OptionsCardImp : MonoBehaviour
     {
         if (cardId == "OP011")
         {
+            if (!DataTransfer.IsPlayerTurn)
+            {
+                errorPanelController.ShowError("turn_over");
+                return  (budgetChange, -1, false, false, null, descriptions);
+            }
             chosenRegion = await mapManager.SelectArea();
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
@@ -365,12 +385,22 @@ public class OptionsCardImp : MonoBehaviour
 
         if (cardId == "OP013")
         {
+            if (!DataTransfer.IsPlayerTurn)
+            {
+                errorPanelController.ShowError("turn_over");
+                return  (budgetChange, -1, false, false, null, descriptions);
+            }
             chosenRegion = await mapManager.SelectArea();
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
-
+        if (!DataTransfer.IsPlayerTurn)
+        {
+            errorPanelController.ShowError("turn_over");
+            return (budgetChange, -1, false, false, null, descriptions);
+        }
         if (cardId == "OP006")
         {
+
             descriptions = CheckBudget(ref optionsToApply, playerBudget, descriptions);
         }
         else
@@ -396,6 +426,11 @@ public class OptionsCardImp : MonoBehaviour
             switch (data.Target)
             {
                 case "enemy-random":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
+                    }
                     enemyId = await playerListManager.SelectEnemyPlayer();
                     if (string.IsNullOrEmpty(enemyId))
                     {
@@ -403,11 +438,21 @@ public class OptionsCardImp : MonoBehaviour
                         errorPanelController.ShowError("general_error");
                         return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
                     }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
+                    }
                     chosenRegion = await cardUtilities.RandomizeRegion(enemyId, data.Number, mapManager);
                     if(chosenRegion == -1)
                     {
                         Debug.LogError("Failed to randomize region.");
                         return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
                     }
                     bool errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
                     if(errorCheck)
@@ -418,11 +463,21 @@ public class OptionsCardImp : MonoBehaviour
                     break;
 
                 case "player-random":
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
+                    }
                     chosenRegion = await cardUtilities.RandomizeRegion(playerId, data.Number, mapManager);
                     if (chosenRegion == -1)
                     {
                         Debug.LogError("Failed to randomize region.");
                         return (budgetChange, playerBudget, ignoreCost, isBonusRegion, enemyId, descriptions);
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
                     }
                     errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
                     if (errorCheck)
@@ -435,7 +490,17 @@ public class OptionsCardImp : MonoBehaviour
                 case "enemy-region":
                     if (chosenRegion < 0)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (budgetChange, -1, false, false, null, descriptions);
+                        }
                         chosenRegion = await mapManager.SelectArea();
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
                     }
                     enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
                     if (string.IsNullOrEmpty(enemyId))
@@ -444,7 +509,11 @@ public class OptionsCardImp : MonoBehaviour
                         errorPanelController.ShowError("general_error");
                         return (budgetChange, -1, false, false, null, descriptions);
                     }
-                    Debug.Log("Zmieniam poparcie");
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
+                    }
                     errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
                     if(errorCheck)
                     {
@@ -455,10 +524,19 @@ public class OptionsCardImp : MonoBehaviour
                 case "player-region":
                     if (chosenRegion < 0)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (budgetChange, -1, false, false, null, descriptions);
+                        }
                         chosenRegion = await mapManager.SelectArea();
                     }
-
-                     errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
+                    }
+                    errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
 
                     if(errorCheck)
                     {
@@ -467,7 +545,11 @@ public class OptionsCardImp : MonoBehaviour
 
                     if (cardId == "OP011")
                     {
-
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (budgetChange, -1, false, false, null, descriptions);
+                        }
                         ignoreCost = UnityEngine.Random.Range(0, 2) == 0;
                         if (ignoreCost)
                         {
@@ -478,9 +560,12 @@ public class OptionsCardImp : MonoBehaviour
                             }
                         }
                     }
-                    if (cardId == "OP013") {
-                        Debug.Log("padło na gracza");
-                        budgetChange = false; }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (budgetChange, -1, false, false, null, descriptions);
+                    }
+                    if (cardId == "OP013") { budgetChange = false; }
                     break;
 
                 default:
