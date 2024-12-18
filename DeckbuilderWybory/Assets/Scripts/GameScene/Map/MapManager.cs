@@ -11,6 +11,10 @@ public class MapManager : MonoBehaviour
     DatabaseReference dbRef;
 
     string lobbyId;
+    private readonly int lobbySize = DataTransfer.LobbySize;
+    string playerId;
+    string playerName;
+    string playerSupport;
     public GameObject mapPanel;
 
     string[] mapType = new string[] {"0","0","0","0","0","0"};
@@ -30,6 +34,11 @@ public class MapManager : MonoBehaviour
     public Button region4Button;
     public Button region5Button;
     public Button region6Button;
+
+    public GameObject[] segmentPrefab; // Prefab dla każdego segmentu
+    public Transform[] chartContainer; // Kontener na segmenty (np. Panel)
+    public Color[] segmentColors;
+    public float[] valuesChart = new float[] {0,0,0,0,0,0,0,0 };
 
     private Action<int> TaskOnClickCompleted;
 
@@ -114,6 +123,7 @@ public class MapManager : MonoBehaviour
                         if (int.TryParse(regionSupport.Value.ToString(), out int supportValue))
                         {
                             regionValues[index] += supportValue;
+
                         }
                         index++;
                     }
@@ -125,12 +135,99 @@ public class MapManager : MonoBehaviour
             }
 
             UpdateMap(regionValues, maxRegion1, maxRegion2, maxRegion3, maxRegion4, maxRegion5, maxRegion6);
+
+            DataForChart(0,maxRegion1);
+            DataForChart(1,maxRegion2);
+            DataForChart(2,maxRegion3);
+            DataForChart(3,maxRegion4);
+            DataForChart(4,maxRegion5);
+            DataForChart(5,maxRegion6);
+            //CreateChart(valuesChart,maxRegion1,0);
+
+
+
         }
         catch (Exception ex)
         {
             Debug.LogError($"Error calculating region values: {ex.Message}");
         }
     }
+//wartosci wszystkich graczy w regionie
+    async Task DataForChart(int regionNumber,int maxRegion)
+    {
+
+        string regionNumberDb=regionNumber.ToString();
+
+        valuesChart = new float[valuesChart.Length];
+
+        var snapshot = await GetSnapshot("players");
+
+            //DataSnapshot snapshot = snapshotTask.Result;
+            int playerNumber =0;
+            // Pobierz playerName i playerId dla ka dego innego gracza ni  ty
+            foreach (var childSnapshot in snapshot.Children)
+            {
+                playerId = childSnapshot.Key;
+                playerName = childSnapshot.Child("playerName").Value.ToString();
+
+                playerSupport = snapshot.Child(playerId).Child("stats").Child("support").Child(regionNumberDb).Value.ToString();
+                float.TryParse(playerSupport, out valuesChart[playerNumber]);
+                //values chart to jest wszystkich graczy w regionie
+
+                playerNumber++;
+
+            }
+
+            //float total = 18f;
+            CreateChart(valuesChart,maxRegion,regionNumber);//, total);
+//stworzenie chart na region
+
+
+    }
+
+
+     public async Task CreateChart(float[] values, int total, int regionNumber)
+     {
+
+         foreach (Transform child in chartContainer[regionNumber])
+         {
+             Destroy(child.gameObject);
+         }
+
+         // Tworzenie segmentów
+         float currentFill = 0f;
+         //float[] total = regionMaxFloat[];
+         int lobbySize = DataTransfer.LobbySize;
+
+         for (int i = 0; i < lobbySize; i++)
+         {
+
+             // Oblicz proporcję wartości
+             float fillAmount = values[i] / total;
+             Debug.Log("Region "+ regionNumber+": "+fillAmount);
+
+             // Stwórz nowy segment
+             GameObject newSegment = Instantiate(segmentPrefab[regionNumber], chartContainer[regionNumber]);
+             Image segmentImage = newSegment.GetComponent<Image>();
+
+             // Ustaw kolor segmentu
+             if (i < segmentColors.Length)
+             {
+                 segmentImage.color = segmentColors[i];
+             }
+
+             // Ustaw zakres wypełnienia
+             segmentImage.fillAmount = fillAmount;
+
+             // Obróć segment, aby zaczynał się tam, gdzie poprzedni się skończył
+             newSegment.transform.rotation = Quaternion.Euler(0f, 0f, -currentFill * 360f);
+
+
+             // Aktualizuj aktualny fill
+             currentFill += fillAmount;
+         }
+     }
+
 
     public async Task<int> GetCurrentSupportForRegion(int areaId, string excludedPlayerId)
     {
