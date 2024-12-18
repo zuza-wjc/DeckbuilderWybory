@@ -21,7 +21,11 @@ public class StatsCard : MonoBehaviour
     public Sprite przemyslSprite;
     public Sprite podstawaSprite;
 
-    public void SetPlayerData(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupport, int turnNumber, string deckType)
+    public int PlayerSupportValue { get; private set; }
+    public int PlayerMoneyValue { get; private set; }
+    public int RegionsNumberValue { get; private set; }
+
+    public void SetPlayerData(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupport, int turnNumber, string deckType, int regionsNumber)
     {
         playerNameText.text = playerName;
         playerSupportText.text = playerSupport + "%";
@@ -31,6 +35,10 @@ public class StatsCard : MonoBehaviour
         playerRegionSupportText.text = regionSupport;
         playerTurnNumberText.text = turnNumber.ToString();
         deckTypeText.text = deckType;
+
+        PlayerSupportValue = int.TryParse(playerSupport, NumberStyles.Integer, CultureInfo.InvariantCulture, out int supportValue) ? supportValue : 0;
+        PlayerMoneyValue = int.TryParse(playerMoney, NumberStyles.Integer, CultureInfo.InvariantCulture, out int moneyValue) ? moneyValue : 0;
+        RegionsNumberValue = regionsNumber;
 
         SetDeckTypeImage(deckType);
     }
