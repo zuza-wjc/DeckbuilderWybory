@@ -14,6 +14,8 @@ public class PlayerListManager : MonoBehaviour
     public GameObject buttonTemplate;
     public GameObject scrollViewContent;
 
+    public Color[] playerColors;
+
     private Action<string> TaskOnClickCompleted;
 
     public void Initialize(string lobbyId, string playerId)
@@ -90,10 +92,13 @@ public class PlayerListManager : MonoBehaviour
                 var playersSnapshot = snapshot.Child("players");
                 if (!playersSnapshot.Exists) return true;
 
-                playerNameToIdMap.Clear(); // Wyczyœæ mapê przed dodaniem nowych graczy
+                playerNameToIdMap.Clear(); // Wyczyï¿½ï¿½ mapï¿½ przed dodaniem nowych graczy
+
+                int colorId=-1;
 
                 foreach (var childSnapshot in playersSnapshot.Children)
                 {
+                    colorId++;
                     string otherPlayerId = childSnapshot.Key;
 
                     if (otherPlayerId == playerId) continue;
@@ -102,12 +107,12 @@ public class PlayerListManager : MonoBehaviour
                     if (string.IsNullOrEmpty(otherPlayerName)) continue;
 
                     playerNameToIdMap[otherPlayerName] = otherPlayerId;
-                    CreateButton(otherPlayerName);
+                    CreateButton(otherPlayerName,colorId);
                 }
 
                 if (playerNameToIdMap.Count > 0)
                 {
-                    UpdatePlayerListPanel(); // Poka¿ panel, jeœli s¹ gracze
+                    UpdatePlayerListPanel(); // Pokaï¿½ panel, jeï¿½li sï¿½ gracze
                     return false;
                 } else
                 {
@@ -149,10 +154,14 @@ public class PlayerListManager : MonoBehaviour
                 var playersSnapshot = snapshot.Child("players");
                 if (!playersSnapshot.Exists) return true;
 
-                playerNameToIdMap.Clear(); // Wyczyœæ mapê przed dodaniem nowych danych
+                playerNameToIdMap.Clear(); // Wyczyï¿½ï¿½ mapï¿½ przed dodaniem nowych danych
+
+                int colorId=-1;
 
                 foreach (var childSnapshot in playersSnapshot.Children)
                 {
+                    colorId++;
+
                     string otherPlayerId = childSnapshot.Key;
                     if (otherPlayerId == playerId) continue;
 
@@ -166,13 +175,13 @@ public class PlayerListManager : MonoBehaviour
                     if (areaSupport.Exists && int.TryParse(areaSupport.Value?.ToString(), out int supportValue) && supportValue > 0)
                     {
                         playerNameToIdMap[otherPlayerName] = otherPlayerId;
-                        CreateButton(otherPlayerName);
+                        CreateButton(otherPlayerName,colorId);
                     }
                 }
 
                 if (playerNameToIdMap.Count > 0)
                 {
-                    UpdatePlayerListPanel(); // Poka¿ panel, jeœli s¹ gracze
+                    UpdatePlayerListPanel(); // Pokaï¿½ panel, jeï¿½li sï¿½ gracze
                     return false;
                 } else
                 {
@@ -193,7 +202,7 @@ public class PlayerListManager : MonoBehaviour
         }
     }
 
-    private void CreateButton(string otherPlayerName)
+    private void CreateButton(string otherPlayerName, int colorId)
     {
         if (string.IsNullOrEmpty(otherPlayerName)) return;
 
@@ -206,6 +215,12 @@ public class PlayerListManager : MonoBehaviour
             if (textComponent != null)
             {
                 textComponent.text = otherPlayerName;
+            }
+
+            var colorComponent = button.GetComponent<UnityEngine.UI.Image>();
+            if (colorComponent != null)
+            {
+                colorComponent.color = playerColors[colorId];
             }
 
             var buttonComponent = button.GetComponent<UnityEngine.UI.Button>();
