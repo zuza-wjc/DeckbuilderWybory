@@ -175,7 +175,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "rounds", 10 },
             { "players", new Dictionary<string, object> {
                 { playerId, new Dictionary<string, object> {
-                    { "playerName", playerName },
+                    { "playerName", "" },
                     {"drawCardsLimit", 4 },
                     { "ready", false },
                     { "stats", new Dictionary<string, object> {

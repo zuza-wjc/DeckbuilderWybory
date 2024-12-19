@@ -140,7 +140,7 @@ public class JoinLobbyByCode : MonoBehaviour
 
                 Dictionary<string, object> playerData = new Dictionary<string, object>
                 {
-                    { "playerName", DataTransfer.PlayerName },
+                    { "playerName", "" },
                     { "ready", false },
                     { "drawCardsLimit", 4 },
                     { "stats", new Dictionary<string, object>
