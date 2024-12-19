@@ -1122,6 +1122,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollViewContent: {fileID: 1147306807}
   buttonTemplate: {fileID: 2009362045460389596, guid: 71988950a51e1774fb116c86fdaf3e62, type: 3}
+  dialogBox: {fileID: 549035686}
 --- !u!1 &1123709606
 GameObject:
   m_ObjectHideFlags: 0

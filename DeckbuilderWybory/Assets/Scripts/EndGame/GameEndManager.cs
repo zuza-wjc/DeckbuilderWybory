@@ -1,13 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Firebase;
 using Firebase.Database;
-using UnityEngine.UI;
-using System.Globalization;
 using Firebase.Extensions;
-using System;
+using System.Threading.Tasks;
 
 public class GameEndManager : MonoBehaviour
 {
@@ -16,7 +13,7 @@ public class GameEndManager : MonoBehaviour
     private string lobbyId;
     private string playerId;
 
-    IEnumerator Start()
+    void Start()
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
@@ -24,7 +21,7 @@ public class GameEndManager : MonoBehaviour
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
             Debug.LogError("Firebase is not initialized properly!");
-            yield break;
+            return;
         }
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
@@ -33,88 +30,94 @@ public class GameEndManager : MonoBehaviour
 
     public void EndGame()
     {
-        Debug.Log("Klikniety przycisk main menu");
-        StartCoroutine(CheckLobby());
+        _ = CheckLobby();
     }
 
-    IEnumerator CheckLobby()
+    private async Task CheckLobby()
     {
-        // SprawdŸ, czy lobby istnieje
-        var lobbyTask = dbRefLobby.GetValueAsync();
-        yield return new WaitUntil(() => lobbyTask.IsCompleted);
-
-        if (lobbyTask.IsFaulted || lobbyTask.Result == null || !lobbyTask.Result.Exists)
+        try
         {
-            Debug.LogWarning("Lobby does not exist. Returning to Main Menu.");
-            ChangeToScene(); // Jeœli lobby nie istnieje, przejdŸ do g³ównego menu
-            yield break;
-        }
-
-        // Jeœli lobby istnieje, kontynuuj normaln¹ logikê
-        yield return StartCoroutine(CheckAndHandleEndGame());
-    }
-
-
-    IEnumerator CheckAndHandleEndGame()
-    {
-        bool otherPlayersInGame = false;
-
-        var task = dbRef.GetValueAsync();
-        yield return new WaitUntil(() => task.IsCompleted);
-
-        if (task.IsFaulted || task.Result == null)
-        {
-            Debug.LogError("Error retrieving player data or no players found.");
-            ChangeToScene();
-            yield break;
-        }
-
-        DataSnapshot snapshot = task.Result;
-        foreach (var child in snapshot.Children)
-        {
-            string currentPlayerId = child.Key;
-            if (currentPlayerId != playerId)
+            var lobbySnapshot = await dbRefLobby.GetValueAsync();
+            if (lobbySnapshot == null || !lobbySnapshot.Exists)
             {
-                bool inGame = child.Child("stats").Child("inGame").Value as bool? ?? false;
-                if (inGame)
-                {
-                    otherPlayersInGame = true;
-                    break;
-                }
+                Debug.LogWarning("Lobby does not exist. Returning to Main Menu.");
+                ChangeToScene();
+                return;
             }
+
+            await CheckAndHandleEndGame();
         }
-
-        dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
-
-        if (!otherPlayersInGame)
+        catch (System.Exception ex)
         {
-            yield return StartCoroutine(RemoveSession());
+            Debug.LogError($"Error checking lobby: {ex.Message}");
+            ChangeToScene();
         }
-
-        ChangeToScene();
     }
 
-    void ChangeToScene()
+    private async Task CheckAndHandleEndGame()
+    {
+        try
+        {
+            // Ustaw swojego gracza na "nie w grze"
+            await dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
+
+            // Wykonaj transakcjê na wêŸle ca³ego lobby
+            await dbRefLobby.RunTransaction(mutableData =>
+            {
+                var players = mutableData.Child("players").Children;
+
+                bool otherPlayersInGame = false;
+
+                foreach (var child in players)
+                {
+                    string currentPlayerId = child.Key;
+                    if (currentPlayerId != playerId)
+                    {
+                        bool inGame = child.Child("stats").Child("inGame").Value as bool? ?? false;
+                        if (inGame)
+                        {
+                            otherPlayersInGame = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Jeœli nikt nie jest w grze, usuñ ca³e lobby
+                if (!otherPlayersInGame)
+                {
+                    mutableData.Value = null; // Usuwa ca³y wêze³ lobby
+                }
+
+                return TransactionResult.Success(mutableData); // Zwróæ wynik transakcji
+            });
+
+            ChangeToScene();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error handling end game: {ex.Message}");
+            ChangeToScene();
+        }
+    }
+
+    private void ChangeToScene()
     {
         SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
     }
 
-    IEnumerator RemoveSession()
+    private async Task RemoveSession()
     {
-        yield return new WaitForSeconds(0.1f);
-
-        if (dbRefLobby != null)
+        try
         {
-            dbRefLobby.RemoveValueAsync().ContinueWith(task => {
-                if (task.IsCompleted)
-                {
-                    Debug.Log("Session removed successfully.");
-                }
-                else
-                {
-                    Debug.LogError("Failed to remove session: " + task.Exception);
-                }
-            });
+            if (dbRefLobby != null)
+            {
+                await dbRefLobby.RemoveValueAsync();
+                Debug.Log("Session removed successfully.");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to remove session: {ex.Message}");
         }
     }
 }
