@@ -28,19 +28,19 @@ public class LobbySceneController : MonoBehaviour
     DatabaseReference dbRefLobby;
     string lobbyId;
     string playerId;
-    string playerName;
 
     bool readyState = false;
     int readyPlayers = 0;
     int isStarted = 0;
     int lobbySize = 0;
 
+    public GameObject nameInputPanel;
+
     async void Start()
     {
         string lobbyName = DataTransfer.LobbyName;
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
-        playerName = DataTransfer.PlayerName;
 
         lobbyNameText.text = lobbyName;
         lobbyCodeText.text = "KOD: " + lobbyId;
@@ -103,17 +103,58 @@ public class LobbySceneController : MonoBehaviour
         }
     }
 
-    void HandleChildAdded(object sender, ChildChangedEventArgs args)
+    async void HandleChildAdded(object sender, ChildChangedEventArgs args)
     {
+
         if (args.DatabaseError != null)
         {
             Debug.LogError(args.DatabaseError.Message);
             return;
         }
 
-        string playerName = args.Snapshot.Child("playerName").Value.ToString();
-        bool isReady = (bool)args.Snapshot.Child("ready").Value;
-        CreateText(playerName, isReady);
+        string playerName = args.Snapshot.Child("playerName").Value?.ToString();
+
+        if (string.IsNullOrEmpty(playerName))
+        {
+            if(playerId == args.Snapshot.Key)
+            {
+                nameInputPanel.SetActive(true);
+            }
+            await WaitForPlayerNameAsync(args.Snapshot.Key);
+        }
+        else
+        {
+            bool isReady = args.Snapshot.Child("ready").Value != null && (bool)args.Snapshot.Child("ready").Value;
+            CreateText(playerName, isReady);
+        }
+
+     }
+
+    async Task WaitForPlayerNameAsync(string playerId)
+    {
+        bool nameIsSet = false;
+
+        while (!nameIsSet)
+        {
+            var snapshot = await dbRef.Child(playerId).GetValueAsync();
+
+            if (snapshot.Exists && snapshot.Child("playerName").Value != null)
+            {
+                string playerName = snapshot.Child("playerName").Value.ToString();
+
+                if (!string.IsNullOrEmpty(playerName))
+                {
+                    nameIsSet = true;
+
+                    bool isReady = snapshot.Child("ready").Value != null && (bool)snapshot.Child("ready").Value;
+                    CreateText(playerName, isReady);
+
+                    nameInputPanel.SetActive(false);
+                }
+            }
+
+            await Task.Delay(500);
+        }
     }
 
     void HandleChildRemoved(object sender, ChildChangedEventArgs args)
@@ -142,10 +183,22 @@ public class LobbySceneController : MonoBehaviour
             {
                 string playerChanged = args.Snapshot.Key;
 
-                if (playerId != playerChanged)
+                if (playerId == playerChanged)
                 {
+                    string playerNameChange = args.Snapshot.Child("playerName").Value?.ToString();
                     bool isReady = (bool)child.Value;
-                    string playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
+                    UpdateText(playerNameChange, isReady);
+                }
+                else
+                {
+                    string playerNameChange = args.Snapshot.Child("playerName").Value?.ToString();
+
+                    if (string.IsNullOrEmpty(playerNameChange))
+                    {
+                        await WaitForPlayerNameAsync(playerChanged);
+                        playerNameChange = args.Snapshot.Child("playerName").Value.ToString();
+                    }
+                    bool isReady = (bool)child.Value;
 
                     UpdateText(playerNameChange, isReady);
                 }
@@ -154,6 +207,8 @@ public class LobbySceneController : MonoBehaviour
 
         await StartingGameAsync();
     }
+
+
 
     async Task StartingGameAsync()
     {
@@ -171,7 +226,6 @@ public class LobbySceneController : MonoBehaviour
             Text childText = child.GetComponentInChildren<Text>();
             if (childText != null && childText.text.Contains(playerName))
             {
-                Debug.Log("Obiekt z t¹ nazw¹ gracza ju¿ istnieje: " + playerName);
                 return;
             }
         }
@@ -191,15 +245,19 @@ public class LobbySceneController : MonoBehaviour
 
         foreach (Text text in texts)
         {
-            if (text != null && text.text.Contains(playerName))
+            if (text != null && (text.text == playerName + "    GOTOWY" || text.text == playerName + "    NIEGOTOWY"))
             {
                 text.text = readyStatus ? playerName + "    GOTOWY" : playerName + "    NIEGOTOWY";
                 return;
             }
         }
 
-        CreateText(playerName, readyStatus);
+        if(playerName != "")
+        {
+            CreateText(playerName, readyStatus);
+        }
     }
+
 
     void RemoveText(string playerName)
     {
@@ -242,7 +300,7 @@ public class LobbySceneController : MonoBehaviour
 
         await dbRef.Child(playerId).Child("ready").SetValueAsync(readyState);
 
-        UpdateText(playerName, readyState);
+        UpdateText(DataTransfer.PlayerName, readyState);
         UpdateReadyButton();
 
         await Task.Delay(500); // Poczekaj pol sekundy
