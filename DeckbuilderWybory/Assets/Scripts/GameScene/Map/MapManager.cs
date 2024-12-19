@@ -204,7 +204,7 @@ public class MapManager : MonoBehaviour
 
              // Oblicz proporcję wartości
              float fillAmount = values[i] / total;
-             Debug.Log("Region "+ regionNumber+": "+fillAmount);
+            // Debug.Log("Region "+ regionNumber+": "+fillAmount);
 
              // Stwórz nowy segment
              GameObject newSegment = Instantiate(segmentPrefab[regionNumber], chartContainer[regionNumber]);
