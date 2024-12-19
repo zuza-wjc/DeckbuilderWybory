@@ -13,8 +13,6 @@ public class GameExitDatabaseChange : MonoBehaviour
 
     public Button backButton;
     public GameObject exitPanel;
-    public Button yesButton;
-    public Button noButton;
 
     void Start()
     {
@@ -35,18 +33,16 @@ public class GameExitDatabaseChange : MonoBehaviour
     void ShowExitPanel()
     {
         exitPanel.SetActive(true);
-        yesButton.onClick.AddListener(ToggleInGame);
-        noButton.onClick.AddListener(CloseExitPanel);
     }
 
-    void ToggleInGame()
+    public void ToggleInGame()
     {
         dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
         SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
         exitPanel.SetActive(false);
     }
 
-    void CloseExitPanel()
+    public void CloseExitPanel()
     {
         exitPanel.SetActive(false);
     }
@@ -56,16 +52,6 @@ public class GameExitDatabaseChange : MonoBehaviour
         if (backButton != null)
         {
             backButton.onClick.RemoveListener(ShowExitPanel);
-        }
-
-        if (yesButton != null)
-        {
-            yesButton.onClick.RemoveListener(ToggleInGame);
-        }
-
-        if (noButton != null)
-        {
-            noButton.onClick.RemoveListener(CloseExitPanel);
         }
     }
 }

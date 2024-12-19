@@ -9,7 +9,9 @@ public class GameExitListener : MonoBehaviour
 {
     DatabaseReference dbRef;
     DatabaseReference dbRefPlayers;
+
     string lobbyId;
+    string playerId;
 
     void Start()
     {
@@ -20,6 +22,7 @@ public class GameExitListener : MonoBehaviour
         }
 
         lobbyId = DataTransfer.LobbyId;
+        playerId = DataTransfer.PlayerId;
 
         if (string.IsNullOrEmpty(lobbyId))
         {
@@ -57,12 +60,10 @@ public class GameExitListener : MonoBehaviour
             bool inGameState = (bool)args.Snapshot.Child("stats").Child("inGame").Value;
             if (!inGameState)
             {             
-                if (dbRefPlayers != null)
+                if (args.Snapshot.Key != playerId && dbRefPlayers != null)
                 {
-                    dbRefPlayers.ChildChanged -= HandleInGameChanged;
+                    SceneManager.LoadScene("End Game", LoadSceneMode.Single);
                 }
-
-                SceneManager.LoadScene("End Game", LoadSceneMode.Single);
             }
         }
     }

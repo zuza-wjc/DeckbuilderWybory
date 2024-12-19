@@ -392,6 +392,4 @@ public class LobbyListManager : MonoBehaviour
         dbRef.ChildRemoved -= HandleChildRemoved;
         dbRef.ChildChanged -= HandleChildChanged;
     }
-
-
 }
