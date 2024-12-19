@@ -136,12 +136,12 @@ public class MapManager : MonoBehaviour
 
             UpdateMap(regionValues, maxRegion1, maxRegion2, maxRegion3, maxRegion4, maxRegion5, maxRegion6);
 
-            DataForChart(0,maxRegion1);
-            DataForChart(1,maxRegion2);
-            DataForChart(2,maxRegion3);
-            DataForChart(3,maxRegion4);
-            DataForChart(4,maxRegion5);
-            DataForChart(5,maxRegion6);
+            await DataForChart(0,maxRegion1);
+            await DataForChart(1,maxRegion2);
+            await DataForChart(2,maxRegion3);
+            await DataForChart(3,maxRegion4);
+            await DataForChart(4,maxRegion5);
+            await DataForChart(5,maxRegion6);
             //CreateChart(valuesChart,maxRegion1,0);
 
 
@@ -179,7 +179,7 @@ public class MapManager : MonoBehaviour
             }
 
             //float total = 18f;
-            CreateChart(valuesChart,maxRegion,regionNumber);//, total);
+            await CreateChart(valuesChart,maxRegion,regionNumber);//, total);
 //stworzenie chart na region
 
 
@@ -204,7 +204,7 @@ public class MapManager : MonoBehaviour
 
              // Oblicz proporcję wartości
              float fillAmount = values[i] / total;
-            // Debug.Log("Region "+ regionNumber+": "+fillAmount);
+             //Debug.Log("Region "+ regionNumber+": "+fillAmount);
 
              // Stwórz nowy segment
              GameObject newSegment = Instantiate(segmentPrefab[regionNumber], chartContainer[regionNumber]);
