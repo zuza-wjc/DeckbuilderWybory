@@ -837,7 +837,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1075485974
 Transform:
   m_ObjectHideFlags: 0
@@ -1333,7 +1333,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1517841526
 Transform:
   m_ObjectHideFlags: 0
@@ -1645,7 +1645,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1689445728}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2144552066}
+        m_TargetAssemblyTypeName: ChangeScene, Assembly-CSharp
+        m_MethodName: ChangeToScene
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1694008783
 GameObject:
   m_ObjectHideFlags: 0
@@ -2473,7 +2485,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00012207031, y: -0.000061035156}
+  m_AnchoredPosition: {x: 0, y: -0.00012207031}
   m_SizeDelta: {x: 55.59375, y: -26.22815}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2098735597
@@ -2500,7 +2512,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2144552065
 Transform:
   m_ObjectHideFlags: 0
