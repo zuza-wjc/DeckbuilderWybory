@@ -32,7 +32,27 @@ public class AddCardsPanelController : MonoBehaviour
     int cardsCount = 0;
     int maxDeckNumber = 0;
     string cardId;
+    string type;
     string cardName;
+
+    [System.Serializable]
+    public class CardData
+    {
+        public int cardsCount;
+        public string cardId;
+        public string type;
+        public string cardName;
+
+        public CardData(int cardsCount, string cardId, string type, string cardName)
+        {
+            this.cardsCount = cardsCount;
+            this.cardId = cardId;
+            this.type = type;
+            this.cardName = cardName;
+        }
+    }
+
+    public List<CardData> cardList = new List<CardData>();
 
     void Start()
     {
@@ -43,6 +63,7 @@ public class AddCardsPanelController : MonoBehaviour
     {
         this.maxDeckNumber = maxDeckNumber;
         this.cardId = cardId;
+        this.type = type;
         this.cardName = cardName;
         addCardPanel.SetActive(true);
 
@@ -113,14 +134,71 @@ public class AddCardsPanelController : MonoBehaviour
             minusButtonImage.sprite = minusButtonInactiveSprite;
         }
     }
+    private GameObject FindCardIconByName(string cardName)
+    {
+        // Przeszukaj wszystkie obiekty w panelu, aby znaleŸæ te z odpowiednim tekstem
+        foreach (Transform child in panelParent)
+        {
+            Text cardText = child.GetComponentInChildren<Text>();
+            if (cardText != null && cardText.text == cardName)
+            {
+                return child.gameObject; // Zwróæ obiekt karty, jeœli znaleziono dopasowanie
+            }
+        }
+        return null; // Jeœli nie znaleziono
+    }
     public void AcceptCard()
+    {
+        // SprawdŸ, czy karta o danym ID ju¿ istnieje
+        CardData existingCard = cardList.Find(card => card.cardId == cardId);
+
+        if (existingCard != null && cardsCount!= 0)
+        {
+            // Jeœli karta istnieje, zaktualizuj jej iloœæ
+            existingCard.cardsCount = cardsCount; // Przyk³ad: aktualizacja ilosci
+            Debug.Log($"Karta o ID {cardId} ju¿ istnieje. Zaktualizowano iloœæ na {existingCard.cardsCount}.");
+
+            // ZnajdŸ obiekt w UI, który zawiera odpowiedni tekst karty
+            GameObject cardIcon = FindCardIconByName(cardName);
+            if (cardIcon != null)
+            {
+                // Zaktualizuj iloœæ na tym obiekcie
+                Text cardQuantityText = cardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
+                if (cardQuantityText != null)
+                {
+                    cardQuantityText.text = existingCard.cardsCount.ToString();
+                    Debug.Log($"Zaktualizowano iloœæ karty {cardName} na {existingCard.cardsCount}.");
+                }
+                else
+                {
+                    Debug.LogWarning("Brak komponentu Text w CardQuantityText!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Nie znaleziono ikony karty o nazwie {cardName}.");
+            }
+        }
+        else if (cardsCount == 0)
+        {
+            DeleteCardFromList();
+        }
+        else
+        {
+            // Jeœli karta nie istnieje, dodaj now¹
+            CardData newCard = new CardData(cardsCount, cardId, type, cardName);
+            cardList.Add(newCard);
+            Debug.Log($"Nowa karta zosta³a zapisana: {cardName} ({cardsCount} szt.), ID: {cardId}, Typ: {type}");
+            ShowCardOnList();
+        }
+        
+        addCardPanel.SetActive(false);
+    }
+    public void ShowCardOnList()
     {
         if (cardIconPrefab != null && panelParent != null)
         {
-            // Instantiate the CardIcon prefab
             GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
-
-            // Find the Text component inside the prefab and set its value to the currentCardId
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
             Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
             if (cardText != null)
@@ -139,17 +217,38 @@ public class AddCardsPanelController : MonoBehaviour
             {
                 Debug.LogWarning("Prefab does not have a CardQuantityText component!");
             }
-            cardsCount = 0;
-            maxDeckNumber = 0;
 
+            //cardListController.SaveCard(cardId, type, cardsCount, cardName);
             Debug.Log($"Card {cardName} added to the deck with quantity {cardsCount}.");
         }
         else
         {
             Debug.LogError("CardIcon prefab or panelParent is not assigned!");
         }
+        cardsCount = 0;
 
-        addCardPanel.SetActive(false);
+    }
+    public void DeleteCardFromList()
+    {
+        // Usuñ kartê z listy
+        CardData existingCard = cardList.Find(card => card.cardId == cardId);
+        if (existingCard != null)
+        {
+            cardList.Remove(existingCard);
+            Debug.Log($"Karta o ID {cardId} zosta³a usuniêta z listy.");
+        }
+
+        // Usuñ obiekt karty z UI
+        GameObject cardIcon = FindCardIconByName(cardName);
+        if (cardIcon != null)
+        {
+            Destroy(cardIcon);
+            Debug.Log($"Karta o nazwie {cardName} zosta³a usuniêta z UI.");
+        }
+        else
+        {
+            Debug.LogWarning($"Nie znaleziono ikony karty o nazwie {cardName}.");
+        }
     }
 
 
