@@ -63,28 +63,50 @@ public class CardButtonController : MonoBehaviour
 
     async void FetchCardData(string cardId)
     {
-        string path = $"id/addRemove/{cardId}";
         try
         {
-            // Await the asynchronous Firebase call and get the data
-            DataSnapshot snapshot = await dbRef.Child(path).GetValueAsync();
+            // Pobierz wszystkie dostêpne grupy w "cards/id"
+            DataSnapshot snapshot = await dbRef.Child("id").GetValueAsync();
 
             if (snapshot.Exists)
             {
-                string type = snapshot.Child("type").Value.ToString();
-                string cardName = snapshot.Child("name").Value.ToString();
-                int maxDeckNumber = int.Parse(snapshot.Child("maxDeckNumber").Value.ToString());
+                foreach (DataSnapshot groupSnapshot in snapshot.Children)
+                {
+                    if (groupSnapshot.HasChild(cardId))
+                    {
+                        string path = $"id/{groupSnapshot.Key}/{cardId}";
+                        DataSnapshot cardDataSnapshot = await dbRef.Child(path).GetValueAsync();
 
-                Debug.Log($"ID Karty: {cardId}");
-                Debug.Log($"Typ: {type}");
-                Debug.Log($"Nazwa: {cardName}");
-                Debug.Log($"Max Deck Number: {maxDeckNumber}");
+                        if (cardDataSnapshot.Exists)
+                        {
+                            string type = cardDataSnapshot.Child("type").Value.ToString();
+                            string cardName = cardDataSnapshot.Child("name").Value.ToString();
+                            int maxDeckNumber = int.Parse(cardDataSnapshot.Child("maxDeckNumber").Value.ToString());
 
-                addCardPanelController.ShowPanel(cardId, type, maxDeckNumber, cardName);
+                            Debug.Log($"ID Karty: {cardId}");
+                            Debug.Log($"Typ: {type}");
+                            Debug.Log($"Nazwa: {cardName}");
+                            Debug.Log($"Max Deck Number: {maxDeckNumber}");
+
+                            addCardPanelController.ShowPanel(cardId, type, maxDeckNumber, cardName);
+                            return;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Nie znaleziono danych karty w œcie¿ce: {path}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Karta {cardId} nie jest potomkiem grupy {groupSnapshot.Key}");
+                    }
+                }
+
+                Debug.LogWarning($"Nie znaleziono karty o ID: {cardId}");
             }
             else
             {
-                Debug.LogWarning($"Nie znaleziono karty o ID: {cardId}");
+                Debug.LogWarning("Brak danych w bazie.");
             }
         }
         catch (Exception ex)
@@ -92,6 +114,8 @@ public class CardButtonController : MonoBehaviour
             Debug.LogError($"B³¹d podczas pobierania danych: {ex.Message}");
         }
     }
+
+
 
 
 }

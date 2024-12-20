@@ -16,6 +16,7 @@ public class AddCardsPanelController : MonoBehaviour
     public Button minusButton;
     public Button acceptButton;
     public Button saveDeckButton;
+    public Button okButton;
 
     private Image addButtonImage;
     private Image minusButtonImage;
@@ -26,17 +27,21 @@ public class AddCardsPanelController : MonoBehaviour
 
     public CardButtonController cardButtonController;
     public GameObject addCardPanel;
+    public GameObject tooMuchCardsPanel;
     public GameObject cardIconPrefab;
 
     public Transform panelParent;
 
     public Text deckNameText;
+    public Text deckQuantityText;
 
     int cardsCount = 0;
     int maxDeckNumber = 0;
     string cardId;
     string type;
     string cardName;
+
+    int listCardsCount = 0;
 
     [System.Serializable]
     public class CardData
@@ -60,6 +65,7 @@ public class AddCardsPanelController : MonoBehaviour
     void Start()
     {
         addCardPanel.SetActive(false);
+        tooMuchCardsPanel.SetActive(false);
         LoadDeckList();
         
     }
@@ -79,11 +85,16 @@ public class AddCardsPanelController : MonoBehaviour
                 {
                     cardList = cardListWrapper.cards; // Przypisz listê kart z JSON
                     Debug.Log("Deck loaded from PlayerPrefs.");
+                    // Zresetuj listCardsCount przed przetwarzaniem kart
+                    listCardsCount = 0;
                     // Utwórz obiekty dla ka¿dej karty w cardList
                     foreach (var card in cardList)
                     {
+                        listCardsCount += card.cardsCount; // Zwiêksz listCardsCount o iloœæ kart
                         CreateCardIcon(card);
                     }
+                    // Zmieñ tekst `deckNameText`, aby wyœwietla³ np. nazwê talii i liczbê kart
+                    deckQuantityText.text = $"{listCardsCount}/30";
                 }
                 else
                 {
@@ -253,14 +264,32 @@ public class AddCardsPanelController : MonoBehaviour
     }
     public void AcceptCard()
     {
+        
+        
+
         // SprawdŸ, czy karta o danym ID ju¿ istnieje
         CardData existingCard = cardList.Find(card => card.cardId == cardId);
 
-        if (existingCard != null && cardsCount!= 0)
+        if (existingCard != null && cardsCount != 0)
         {
+            if (listCardsCount == 30)
+            {
+                Debug.LogWarning("Nie mo¿na dodaæ wiêcej kart. Osi¹gniêto maksymalny limit 30 kart w talii.");
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return; // Przerwij dzia³anie metody
+            }
+
             // Jeœli karta istnieje, zaktualizuj jej iloœæ
-            existingCard.cardsCount = cardsCount; // Przyk³ad: aktualizacja ilosci
+            int previousCount = existingCard.cardsCount;
+
+
+            existingCard.cardsCount = cardsCount;
             Debug.Log($"Karta o ID {cardId} ju¿ istnieje. Zaktualizowano iloœæ na {existingCard.cardsCount}.");
+
+            // Aktualizuj `listCardsCount` ró¿nic¹ iloœci
+            listCardsCount += (cardsCount - previousCount);
+            deckQuantityText.text = $"{listCardsCount}/30";
 
             // ZnajdŸ obiekt w UI, który zawiera odpowiedni tekst karty
             GameObject cardIcon = FindCardIconByName(cardName);
@@ -289,15 +318,30 @@ public class AddCardsPanelController : MonoBehaviour
         }
         else
         {
+            // Upewnij siê, ¿e dodanie nowej karty nie przekroczy limitu
+            if (listCardsCount + cardsCount > 30)
+            {
+                Debug.LogWarning("Nie mo¿na dodaæ tej iloœci kart. Przekroczy³oby to maksymalny limit 30 kart w talii.");
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return;
+            }
+
             // Jeœli karta nie istnieje, dodaj now¹
             CardData newCard = new CardData(cardsCount, cardId, type, cardName);
             cardList.Add(newCard);
+
+            // Dodaj iloœæ nowej karty do `listCardsCount`
+            listCardsCount += cardsCount;
+            deckQuantityText.text = $"{listCardsCount}/30";
+
             Debug.Log($"Nowa karta zosta³a zapisana: {cardName} ({cardsCount} szt.), ID: {cardId}, Typ: {type}");
             ShowCardOnList();
         }
-        
+
         addCardPanel.SetActive(false);
     }
+
     public void ShowCardOnList()
     {
         if (cardIconPrefab != null && panelParent != null)
@@ -338,6 +382,11 @@ public class AddCardsPanelController : MonoBehaviour
         CardData existingCard = cardList.Find(card => card.cardId == cardId);
         if (existingCard != null)
         {
+            // Odejmij liczbê usuniêtych kart od listCardsCount
+            listCardsCount -= existingCard.cardsCount;
+            // Zaktualizuj tekst wyœwietlaj¹cy iloœæ kart w talii
+            deckQuantityText.text = $"{listCardsCount}/30";
+
             cardList.Remove(existingCard);
             Debug.Log($"Karta o ID {cardId} zosta³a usuniêta z listy.");
         }
@@ -353,6 +402,10 @@ public class AddCardsPanelController : MonoBehaviour
         {
             Debug.LogWarning($"Nie znaleziono ikony karty o nazwie {cardName}.");
         }
+    }
+    public void ClosePanelTooMuch()
+    {
+        tooMuchCardsPanel.SetActive(false);
     }
 
 
