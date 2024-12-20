@@ -14,6 +14,7 @@ public class AddCardsPanelController : MonoBehaviour
     public Text lobbySizeText;
     public Button plusButton;
     public Button minusButton;
+    public Button acceptButton;
 
     private Image addButtonImage;
     private Image minusButtonImage;
@@ -24,24 +25,38 @@ public class AddCardsPanelController : MonoBehaviour
 
     public CardButtonController cardButtonController;
     public GameObject addCardPanel;
+    public GameObject cardIconPrefab;
+
+    public Transform panelParent;
 
     int cardsCount = 0;
+    int maxDeckNumber = 0;
+    string cardId;
+    string cardName;
 
     void Start()
     {
-        // Ukrycie panelu, jeœli jest aktywne na starcie
         addCardPanel.SetActive(false);
     }
 
-    public void ShowPanel(string cardId, string type, int maxDeckNumber)
+    public void ShowPanel(string cardId, string type, int maxDeckNumber, string cardName)
     {
+        this.maxDeckNumber = maxDeckNumber;
+        this.cardId = cardId;
+        this.cardName = cardName;
         addCardPanel.SetActive(true);
 
         addButtonImage = plusButton.GetComponentInChildren<Image>();
         minusButtonImage = minusButton.GetComponentInChildren<Image>();
 
+        // Usuñ istniej¹ce listenery przed dodaniem nowych
+        plusButton.onClick.RemoveAllListeners();
+        minusButton.onClick.RemoveAllListeners();
+        acceptButton.onClick.RemoveAllListeners();
+
         plusButton.onClick.AddListener(IncreaseLobbySize);
         minusButton.onClick.AddListener(DecreaseLobbySize);
+        acceptButton.onClick.AddListener(AcceptCard);
 
         UpdateLobbySizeText();
 
@@ -52,7 +67,7 @@ public class AddCardsPanelController : MonoBehaviour
 
     public void IncreaseLobbySize()
     {
-        if (cardsCount < 2)
+        if (cardsCount < maxDeckNumber)
         {
             cardsCount++;
             UpdateLobbySizeText();
@@ -72,7 +87,7 @@ public class AddCardsPanelController : MonoBehaviour
     {
         lobbySizeText.text = cardsCount.ToString();
 
-        plusButton.interactable = cardsCount < 2;
+        plusButton.interactable = cardsCount < maxDeckNumber;
         minusButton.interactable = cardsCount > 0;
 
         UpdateButtonSprites();
@@ -98,6 +113,45 @@ public class AddCardsPanelController : MonoBehaviour
             minusButtonImage.sprite = minusButtonInactiveSprite;
         }
     }
+    public void AcceptCard()
+    {
+        if (cardIconPrefab != null && panelParent != null)
+        {
+            // Instantiate the CardIcon prefab
+            GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
+
+            // Find the Text component inside the prefab and set its value to the currentCardId
+            Text cardText = newCardIcon.GetComponentInChildren<Text>();
+            Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
+            if (cardText != null)
+            {
+                cardText.text = cardName;
+            }
+            else
+            {
+                Debug.LogWarning("Prefab does not have a Text component!");
+            }
+            if (cardQuantityText != null)
+            {
+                cardQuantityText.text = cardsCount.ToString();
+            }
+            else
+            {
+                Debug.LogWarning("Prefab does not have a CardQuantityText component!");
+            }
+            cardsCount = 0;
+            maxDeckNumber = 0;
+
+            Debug.Log($"Card {cardName} added to the deck with quantity {cardsCount}.");
+        }
+        else
+        {
+            Debug.LogError("CardIcon prefab or panelParent is not assigned!");
+        }
+
+        addCardPanel.SetActive(false);
+    }
+
 
     void OnDestroy()
     {

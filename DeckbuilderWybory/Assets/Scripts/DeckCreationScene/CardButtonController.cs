@@ -13,11 +13,11 @@ using Firebase.Extensions;
 public class CardButtonController : MonoBehaviour
 {
     public Button[] cardButtons;
-    public GameObject addCardPanel;
     public AddCardsPanelController addCardPanelController;
 
     public string cardId { get; private set; }
     public string type { get; private set; }
+    public string cardName { get; private set; }
     public int maxDeckNumber { get; private set; }
 
     DatabaseReference dbRef;  // Zmienna, która przechowuje referencjê do bazy danych Firebase
@@ -47,16 +47,6 @@ public class CardButtonController : MonoBehaviour
         {
             Debug.LogError("Brak przypisanych przycisków do CardButtonControler!");
         }
-
-        // Upewnij siê, ¿e panel jest pocz¹tkowo nieaktywny
-        if (addCardPanel != null)
-        {
-            addCardPanel.SetActive(false);
-        }
-        else
-        {
-            Debug.LogError("AddCardPanel nie zosta³ przypisany w inspectorze!");
-        }
     }
 
     // Metoda obs³uguj¹ca klikniêcie przycisku
@@ -73,8 +63,6 @@ public class CardButtonController : MonoBehaviour
 
     async void FetchCardData(string cardId)
     {
-        Debug.Log("Fetching data asynchronously...");
-
         string path = $"id/addRemove/{cardId}";
         try
         {
@@ -84,13 +72,15 @@ public class CardButtonController : MonoBehaviour
             if (snapshot.Exists)
             {
                 string type = snapshot.Child("type").Value.ToString();
+                string cardName = snapshot.Child("name").Value.ToString();
                 int maxDeckNumber = int.Parse(snapshot.Child("maxDeckNumber").Value.ToString());
 
                 Debug.Log($"ID Karty: {cardId}");
                 Debug.Log($"Typ: {type}");
+                Debug.Log($"Nazwa: {cardName}");
                 Debug.Log($"Max Deck Number: {maxDeckNumber}");
 
-                addCardPanelController.ShowPanel(cardId, type, maxDeckNumber);
+                addCardPanelController.ShowPanel(cardId, type, maxDeckNumber, cardName);
             }
             else
             {
