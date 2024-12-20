@@ -22,10 +22,21 @@ public class AddCardsPanelController : MonoBehaviour
     public Sprite minusButtonInactiveSprite;
     public Sprite addButtonInactiveSprite;
 
+    public CardButtonController cardButtonController;
+    public GameObject addCardPanel;
+
     int cardsCount = 0;
 
     void Start()
     {
+        // Ukrycie panelu, jeúli jest aktywne na starcie
+        addCardPanel.SetActive(false);
+    }
+
+    public void ShowPanel(string cardId, string type, int maxDeckNumber)
+    {
+        addCardPanel.SetActive(true);
+
         addButtonImage = plusButton.GetComponentInChildren<Image>();
         minusButtonImage = minusButton.GetComponentInChildren<Image>();
 
@@ -33,6 +44,10 @@ public class AddCardsPanelController : MonoBehaviour
         minusButton.onClick.AddListener(DecreaseLobbySize);
 
         UpdateLobbySizeText();
+
+        // Znajdü CardButtonController w scenie
+        cardButtonController = FindObjectOfType<CardButtonController>();
+        Debug.Log($"Dane karty: ID={cardId}, Typ={type}, MaxDeck={maxDeckNumber}");
     }
 
     public void IncreaseLobbySize()
