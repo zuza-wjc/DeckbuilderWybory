@@ -15,6 +15,7 @@ public class AddCardsPanelController : MonoBehaviour
     public Button plusButton;
     public Button minusButton;
     public Button acceptButton;
+    public Button saveDeckButton;
 
     private Image addButtonImage;
     private Image minusButtonImage;
@@ -28,6 +29,8 @@ public class AddCardsPanelController : MonoBehaviour
     public GameObject cardIconPrefab;
 
     public Transform panelParent;
+
+    public Text deckNameText;
 
     int cardsCount = 0;
     int maxDeckNumber = 0;
@@ -57,6 +60,107 @@ public class AddCardsPanelController : MonoBehaviour
     void Start()
     {
         addCardPanel.SetActive(false);
+        LoadDeckList();
+        
+    }
+    public void LoadDeckList()
+    {
+        // SprawdŸ, czy DeckNameText jest ustawione i ma wartoœæ
+        if (deckNameText != null && !string.IsNullOrEmpty(deckNameText.text))
+        {
+            string deckName = deckNameText.text;
+            string json = PlayerPrefs.GetString(deckName, ""); // Pobierz zapisany JSON z PlayerPrefs
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                // Jeœli JSON istnieje, zdeserializuj go do listy kart
+                CardListWrapper cardListWrapper = JsonUtility.FromJson<CardListWrapper>(json);
+                if (cardListWrapper != null)
+                {
+                    cardList = cardListWrapper.cards; // Przypisz listê kart z JSON
+                    Debug.Log("Deck loaded from PlayerPrefs.");
+                    // Utwórz obiekty dla ka¿dej karty w cardList
+                    foreach (var card in cardList)
+                    {
+                        CreateCardIcon(card);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Failed to deserialize deck from PlayerPrefs.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("No deck found in PlayerPrefs for the given name.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Deck name is not set or is empty.");
+        }
+    }
+    private void CreateCardIcon(CardData card)
+    {
+        if (cardIconPrefab != null && panelParent != null)
+        {
+            // Tworzenie nowej ikony karty
+            GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
+
+            // Ustawianie tekstu karty
+            Text cardText = newCardIcon.GetComponentInChildren<Text>();
+            Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
+
+            if (cardText != null)
+            {
+                cardText.text = card.cardName; // Ustaw nazwê karty
+            }
+            else
+            {
+                Debug.LogWarning("Prefab does not have a Text component!");
+            }
+
+            if (cardQuantityText != null)
+            {
+                cardQuantityText.text = card.cardsCount.ToString(); // Ustaw iloœæ karty
+            }
+            else
+            {
+                Debug.LogWarning("Prefab does not have a CardQuantityText component!");
+            }
+
+            Debug.Log($"Card {card.cardName} added to the deck with quantity {card.cardsCount}.");
+        }
+        else
+        {
+            Debug.LogError("CardIcon prefab or panelParent is not assigned!");
+        }
+    }
+
+    public void SaveDeck()
+    {
+        foreach (var card in cardList)
+        {
+            Debug.Log($"Karta: {card.cardName}, ID: {card.cardId}, Typ: {card.type}, Iloœæ: {card.cardsCount}");
+        }
+        string json = JsonUtility.ToJson(new CardListWrapper { cards = cardList });
+
+        // Zapisanie do PlayerPrefs, u¿ywaj¹c nazwy z DeckNameText
+        if (deckNameText != null && !string.IsNullOrEmpty(deckNameText.text))
+        {
+            PlayerPrefs.SetString(deckNameText.text, json); // Zapisz z dynamiczn¹ nazw¹
+            PlayerPrefs.Save(); // Upewnij siê, ¿e zmiany zostan¹ zapisane
+            Debug.Log($"Deck saved to PlayerPrefs with name {deckNameText.text}.");
+        }
+        else
+        {
+            Debug.LogWarning("Deck name is not set or is empty.");
+        }
+    }
+    [System.Serializable]
+    public class CardListWrapper
+    {
+        public List<CardData> cards;
     }
 
     public void ShowPanel(string cardId, string type, int maxDeckNumber, string cardName)
