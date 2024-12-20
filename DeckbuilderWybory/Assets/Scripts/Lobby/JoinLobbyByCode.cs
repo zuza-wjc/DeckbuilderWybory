@@ -25,6 +25,7 @@ public class JoinLobbyByCode : MonoBehaviour
     string playerId;
     string lobbyName;
     string lobbyId;
+    bool isFull;
 
     void Start()
     {
@@ -36,16 +37,13 @@ public class JoinLobbyByCode : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions");
 
-        // Dodanie listenera do przycisku
         joinButton.onClick.AddListener(JoinLobby);
-
         pasteButton.onClick.AddListener(PasteFromClipboard);
     }
 
     public void openDialogBox()
     {
         dialogBox.SetActive(true);
-        Debug.Log("here");
     }
 
     public void closeDialogBox()
@@ -60,6 +58,7 @@ public class JoinLobbyByCode : MonoBehaviour
 
     async void JoinLobby()
     {
+        isFull = false;
         lobbyId = lobbyCodeInputField.text;
 
         if (string.IsNullOrEmpty(lobbyId))
@@ -69,81 +68,115 @@ public class JoinLobbyByCode : MonoBehaviour
             return;
         }
 
-        Debug.Log("Checking if lobby exists and is full...");
-        var lobbyStatus = await CheckLobbyAsync();
-        if (lobbyStatus.exists)
+        Debug.Log("Checking and joining lobby...");
+        bool joinedSuccessfully = false;
+
+        try
         {
-            if (!lobbyStatus.isFull)
+            joinedSuccessfully = await AddPlayer(lobbyId);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"An error occurred while joining the lobby: {ex.Message}");
+            ShowErrorMessage("BŁĘDNY KOD");
+        }
+
+        if (joinedSuccessfully)
+        {
+            Debug.Log("Successfully joined lobby!");
+
+            var random = new System.Random();
+            await AllocateSupportAsync(lobbyId, random);
+
+            ChangeScene();
+        }
+        else
+        {
+            if (isFull)
             {
-                Debug.Log("Lobby exists and is not full. Adding player...");
-                await AddPlayerAsync(lobbyId);
-                ChangeScene();
+                openDialogBox();
             }
             else
             {
-                Debug.LogError("Lobby is full! Showing dialog box.");
-                openDialogBox();
+                ShowErrorMessage("BŁĘDNY KOD");
             }
         }
-        else
-        {
-            ShowErrorMessage("KOD NIEPOPRAWNY");
-            Debug.LogError("Lobby not found!");
-        }
     }
 
-    async Task<(bool exists, bool isFull)> CheckLobbyAsync()
+    public async Task<bool> AddPlayer(string lobbyId)
     {
-        var snapshot = await dbRef.Child(lobbyId).GetValueAsync();
-        if (snapshot.Exists)
+        playerId = System.Guid.NewGuid().ToString();
+        bool success = false;
+
+        try
         {
-            Debug.Log("Lobby exists.");
-            int playerCount = (int)snapshot.Child("players").ChildrenCount;
-            int lobbySize = int.Parse(snapshot.Child("lobbySize").GetValue(true).ToString());
-            lobbyName = snapshot.Child("lobbyName").GetValue(true).ToString();
-            bool isFull = playerCount >= lobbySize;
-            return (true, isFull);
-        }
-        else
-        {
-            Debug.Log("Lobby not found.");
-            return (false, false);
-        }
-    }
-
-
-    public async Task AssignPlayer(string playerId, string lobbyId)
-    {
-        string playerName = DataTransfer.PlayerName;
-        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
-
-        var random = new System.Random();
-
-        int[] support = new int[6];
-
-        support = await AllocateSupportAsync(lobbyId, random);
-
-        Dictionary<string, object> playerData = new Dictionary<string, object>
+            await dbRef.Child(lobbyId).RunTransaction((MutableData mutableData) =>
             {
-                { "playerName", playerName },
-                { "ready", false },
-                {"drawCardsLimit", 4 },
-                { "stats", new Dictionary<string, object>
-                    {
-                        { "inGame", false },
-                        { "money", 50 },
-                        { "income", 10 },
-                        { "support", support },
-                        { "playerTurn", 2 },
-                        { "turnsTaken", 0 }
-                    }
-                }
-            };
+                var lobbyData = mutableData.Value as Dictionary<string, object>;
 
-        await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+                if (lobbyData == null)
+                {
+                    Debug.LogError("Lobby does not exist!");
+                    success = false;
+                    return TransactionResult.Abort();
+                }
+
+                var playersNode = mutableData.Child("players");
+                long playerCount = playersNode.ChildrenCount;
+                int maxPlayers = 0;
+
+                if (lobbyData.ContainsKey("lobbySize"))
+                {
+                    maxPlayers = Convert.ToInt32(lobbyData["lobbySize"]);
+                }
+
+                if (playerCount >= maxPlayers)
+                {
+                    Debug.Log("Lobby is full!");
+                    isFull = true;
+                    success = false;
+                    return TransactionResult.Abort();
+                }
+
+                Dictionary<string, object> playerData = new Dictionary<string, object>
+                {
+                    { "playerName", "" },
+                    { "ready", false },
+                    { "drawCardsLimit", 4 },
+                    { "stats", new Dictionary<string, object>
+                        {
+                            { "inGame", false },
+                            { "money", 50 },
+                            { "income", 10 },
+                            { "support", new int[6] },
+                            { "playerTurn", 2 },
+                            { "turnsTaken", 0 }
+                        }
+                    }
+                };
+
+                playersNode.Child(playerId).Value = playerData;
+
+                success = true;
+                return TransactionResult.Success(mutableData);
+            });
+        }
+        catch (FirebaseException ex)
+        {
+            Debug.Log(ex);
+            success = false;
+        }
+        catch (Exception ex)
+        {
+            Debug.Log(ex);
+            success = false;
+        }
+
+        return success;
     }
 
-    public async Task<int[]> AllocateSupportAsync(string lobbyId, System.Random random)
+
+    public async Task AllocateSupportAsync(string lobbyId, System.Random random)
     {
         int[] support = new int[6];
         int totalSupport = 8;
@@ -209,17 +242,15 @@ public class JoinLobbyByCode : MonoBehaviour
             throw new InvalidOperationException("Nie można przydzielić wsparcia bez przekroczenia limitu.");
         }
 
-        return support;
-    }
-
-
-    public async Task<string> AddPlayerAsync(string lobbyId)
-    {
-        playerId = System.Guid.NewGuid().ToString();
-
-        await AssignPlayer(playerId, lobbyId);
-
-        return playerId;
+        try
+        {
+            await dbRef.Child(lobbyId).Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(support);
+            Debug.Log("Support data has been successfully saved to Firebase!");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to save support data: {ex.Message}");
+        }
     }
 
     public void ChangeScene()

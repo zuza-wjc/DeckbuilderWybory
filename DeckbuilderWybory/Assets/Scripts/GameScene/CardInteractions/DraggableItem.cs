@@ -73,7 +73,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         {
             currentCardId = draggableItem.cardId;
         }
-        Debug.LogError(currentCardId);
+        //Debug.LogError(currentCardId);
 
 
         trashButton.onClick.RemoveAllListeners();

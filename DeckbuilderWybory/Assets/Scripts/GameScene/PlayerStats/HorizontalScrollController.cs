@@ -3,6 +3,7 @@ using UnityEngine;
 using Firebase.Database;
 using Firebase.Extensions;
 using Firebase;
+using System.Linq;
 
 public class HorizontalScrollController : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class HorizontalScrollController : MonoBehaviour
     string lobbyId;
     string playerId;
     int lobbySize;
+
+    private Dictionary<string, StatsCard> statsCards = new Dictionary<string, StatsCard>();
 
     void Start()
     {
@@ -27,7 +30,23 @@ public class HorizontalScrollController : MonoBehaviour
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
 
+        dbRef.Child("players").ChildChanged += HandleChildChanged;
+
         FetchDataFromDatabase();
+    }
+
+    void HandleChildChanged(object sender, ChildChangedEventArgs args)
+    {
+        if (args.DatabaseError != null)
+        {
+            Debug.LogError(args.DatabaseError.Message);
+            return;
+        }
+
+        if (args.Snapshot.Exists)
+        {
+            UpdatePlayerData(args.Snapshot);
+        }
     }
 
     void FetchDataFromDatabase()
@@ -45,122 +64,18 @@ public class HorizontalScrollController : MonoBehaviour
 
                 if (snapshot.Exists)
                 {
-                    List<(string, string, string, string, int, string, int, string)> playersData = new List<(string, string, string, string, int, string, int, string)>();
-                    (string, string, string, string, int, string, int, string)? currentPlayerData = null;
+                    statsCards.Clear();
+                    foreach (Transform child in content)
+                    {
+                        Destroy(child.gameObject);
+                    }
 
                     foreach (var childSnapshot in snapshot.Child("players").Children)
                     {
-                        string currentPlayerId = childSnapshot.Key;
-
-                        string playerName = childSnapshot.Child("playerName").Value?.ToString() ?? "Unknown";
-
-                        if (currentPlayerId == playerId)
-                        {
-                            playerName = $"Ty - {playerName}";
-                        }
-
-                        string playerMoney = childSnapshot.Child("stats").Child("money").Value?.ToString() ?? "0";
-                        string playerIncome = childSnapshot.Child("stats").Child("income").Value?.ToString() ?? "0";
-                        int turnNumber = int.Parse(childSnapshot.Child("myTurnNumber").Value?.ToString());
-                        string deckType = childSnapshot.Child("stats").Child("deckType").Value?.ToString() ?? "";
-
-                        if(deckType == "srodowisko")
-                        {
-                            deckType = "ŒRODOWISKO";
-                        }
-                        if (deckType == "ambasada")
-                        {
-                            deckType = "AMBASADA";
-                        }
-                        if (deckType == "przemysl")
-                        {
-                            deckType = "PRZEMYS£";
-                        }
-                        if (deckType == "metropolia")
-                        {
-                            deckType = "METROPOLIA";
-                        }
-
-                        DataSnapshot supportSnapshot = childSnapshot.Child("stats").Child("support");
-                        int supportSum = 0;
-
-                        if (supportSnapshot.Exists)
-                        {
-                            foreach (var supportChild in supportSnapshot.Children)
-                            {
-                                if (int.TryParse(supportChild.Value.ToString(), out int value))
-                                {
-                                    supportSum += value;
-                                }
-                            }
-                        }
-
-                        string playerSupport = supportSum.ToString();
-
-                        DataSnapshot deckSnapshot = childSnapshot.Child("deck");
-                        int playerCardNumber = 0;
-
-                        if (deckSnapshot.Exists)
-                        {
-                            foreach (var cardSnapshot in deckSnapshot.Children)
-                            {
-                                bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && isOnHand;
-                                bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && isPlayed;
-
-                                if (!onHand && !played)
-                                {
-                                    playerCardNumber++;
-                                }
-                            }
-                        }
-
-                        DataSnapshot regionsSnapshot = childSnapshot.Child("stats").Child("support");
-                        string regionSupportText = "";
-
-                        if (regionsSnapshot.Exists)
-                        {
-                            List<string> regionSupports = new List<string>();
-                            for (int i = 0; i < regionsSnapshot.ChildrenCount; i++)
-                            {
-                                var regionSnapshot = regionsSnapshot.Child(i.ToString());
-                                int regionSupport = int.TryParse(regionSnapshot.Value?.ToString(), out int value) ? value : 0;
-
-                                if (regionSupport > 0)
-                                {
-                                    regionSupports.Add($"{i + 1}:{regionSupport}%");
-                                }
-                            }
-
-                            regionSupportText = string.Join(" ", regionSupports);
-                        }
-
-                        if (currentPlayerId == playerId)
-                        {
-                            currentPlayerData = (playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType);
-                        }
-                        else
-                        {
-                            playersData.Add((playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType));
-                        }
+                        UpdatePlayerData(childSnapshot);
                     }
 
-                    if (currentPlayerData.HasValue)
-                    {
-                        playersData.Insert(0, currentPlayerData.Value);
-                    }
-
-                    if (int.TryParse(snapshot.Child("lobbySize").Value.ToString(), out lobbySize))
-                    {
-                        for (int i = 0; i < playersData.Count && i < lobbySize; i++)
-                        {
-                            var playerData = playersData[i];
-                            AddStats(playerData.Item1, playerData.Item2, playerData.Item3, playerData.Item4, playerData.Item5, playerData.Item6, playerData.Item7, playerData.Item8);
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogError("Failed to parse lobbySize.");
-                    }
+                    SortStatsCards();
                 }
                 else
                 {
@@ -170,25 +85,124 @@ public class HorizontalScrollController : MonoBehaviour
         });
     }
 
-
-    void AddStats(string playerName, string playerSupport, string playerMoney, string playerIncome, int playerCardNumber, string regionSupportText, int turnNumber, string deckType)
+    void UpdatePlayerData(DataSnapshot playerSnapshot)
     {
-        if (statsCardPrefab == null || content == null)
+        string currentPlayerId = playerSnapshot.Key;
+
+        string playerName = playerSnapshot.Child("playerName").Value?.ToString() ?? "Unknown";
+        if (currentPlayerId == playerId)
         {
-            Debug.LogError("StatsCard prefab or Content is not assigned!");
-            return;
+            playerName = $"Ty - {playerName}";
         }
 
-        GameObject newCard = Instantiate(statsCardPrefab, content);
-        StatsCard statsCard = newCard.GetComponent<StatsCard>();
+        string playerMoney = playerSnapshot.Child("stats").Child("money").Value?.ToString() ?? "0";
+        string playerIncome = playerSnapshot.Child("stats").Child("income").Value?.ToString() ?? "0";
+        int turnNumber = int.Parse(playerSnapshot.Child("myTurnNumber").Value?.ToString());
+        string deckType = playerSnapshot.Child("stats").Child("deckType").Value?.ToString() ?? "";
 
-        if (statsCard != null)
+        deckType = deckType switch
         {
-            statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType);
+            "srodowisko" => "ŒRODOWISKO",
+            "ambasada" => "AMBASADA",
+            "przemysl" => "PRZEMYS£",
+            "metropolia" => "METROPOLIA",
+            _ => deckType
+        };
+
+        DataSnapshot supportSnapshot = playerSnapshot.Child("stats").Child("support");
+        int supportSum = 0;
+        if (supportSnapshot.Exists)
+        {
+            foreach (var supportChild in supportSnapshot.Children)
+            {
+                if (int.TryParse(supportChild.Value.ToString(), out int value))
+                {
+                    supportSum += value;
+                }
+            }
+        }
+
+        string playerSupport = supportSum.ToString();
+
+        DataSnapshot deckSnapshot = playerSnapshot.Child("deck");
+        int playerCardNumber = 0;
+        if (deckSnapshot.Exists)
+        {
+            foreach (var cardSnapshot in deckSnapshot.Children)
+            {
+                bool onHand = bool.TryParse(cardSnapshot.Child("onHand").Value?.ToString(), out bool isOnHand) && isOnHand;
+                bool played = bool.TryParse(cardSnapshot.Child("played").Value?.ToString(), out bool isPlayed) && isPlayed;
+
+                if (!onHand && !played)
+                {
+                    playerCardNumber++;
+                }
+            }
+        }
+
+        DataSnapshot regionsSnapshot = playerSnapshot.Child("stats").Child("support");
+        string regionSupportText = "";
+        int regionsNumber = 0;
+
+        if (regionsSnapshot.Exists)
+        {
+            List<string> regionSupports = new List<string>();
+            for (int i = 0; i < regionsSnapshot.ChildrenCount; i++)
+            {
+                var regionSnapshot = regionsSnapshot.Child(i.ToString());
+                int regionSupport = int.TryParse(regionSnapshot.Value?.ToString(), out int value) ? value : 0;
+
+                if (regionSupport > 0)
+                {
+                    regionSupports.Add($"{i + 1}:{regionSupport}%");
+                    regionsNumber += 1;
+                }
+            }
+
+            regionSupportText = string.Join(" ", regionSupports);
+        }
+
+        if (statsCards.ContainsKey(currentPlayerId))
+        {
+            statsCards[currentPlayerId].SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType, regionsNumber);
         }
         else
         {
-            Debug.LogError("StatsCard component is missing from the prefab!");
+            GameObject newCard = Instantiate(statsCardPrefab, content);
+            StatsCard statsCard = newCard.GetComponent<StatsCard>();
+
+            if (statsCard != null)
+            {
+                statsCard.SetPlayerData(playerName, playerSupport, playerMoney, playerIncome, playerCardNumber, regionSupportText, turnNumber, deckType, regionsNumber);
+                statsCards[currentPlayerId] = statsCard;
+            }
+            else
+            {
+                Debug.LogError("StatsCard component is missing from the prefab!");
+            }
+        }
+        SortStatsCards();
+    }
+
+    void SortStatsCards()
+    {
+        var sortedCards = statsCards.Values
+            .OrderByDescending(card => card.PlayerSupportValue)
+            .ThenByDescending(card => card.RegionsNumberValue)
+            .ThenByDescending(card => card.PlayerMoneyValue)
+            .ToList();
+
+        for (int i = 0; i < sortedCards.Count; i++)
+        {
+            sortedCards[i].transform.SetSiblingIndex(i);
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (dbRef != null)
+        {
+            dbRef.Child("players").ChildChanged -= HandleChildChanged;
         }
     }
 }

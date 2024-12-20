@@ -12,9 +12,10 @@ public class LobbyListManager : MonoBehaviour
 {
     public GameObject scrollViewContent;
     public GameObject buttonTemplate;
+    public GameObject dialogBox;
 
+    string playerId;
     DatabaseReference dbRef;
-
 
     void Start()
     {
@@ -65,7 +66,6 @@ public class LobbyListManager : MonoBehaviour
             }
         }
     }
-
 
     void HandleChildChanged(object sender, ChildChangedEventArgs args)
     {
@@ -151,7 +151,6 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
-
     void DestroyButton(string lobbyName)
     {
         if (scrollViewContent == null)
@@ -179,38 +178,78 @@ public class LobbyListManager : MonoBehaviour
     }
 
 
-    public async Task AssignPlayer(string playerId, string lobbyId)
+    public async Task<bool> AddPlayer(string lobbyId)
     {
-        string playerName = DataTransfer.PlayerName;
-        var lobbyInfo = await dbRef.Child(lobbyId).GetValueAsync();
+        playerId = System.Guid.NewGuid().ToString();
+        bool success = false;
 
-        var random = new System.Random();
-
-        int[] support = new int[6];
-
-        support = await AllocateSupportAsync(lobbyId, random);
-
-        Dictionary<string, object> playerData = new Dictionary<string, object>
+        try
+        {
+            await dbRef.Child(lobbyId).RunTransaction((MutableData mutableData) =>
             {
-                { "playerName", playerName },
-                { "ready", false },
-                {"drawCardsLimit", 4 },
-                { "stats", new Dictionary<string, object>
-                    {
-                        { "inGame", false },
-                        { "money", 50 },
-                        { "income", 10 },
-                        { "support", support },
-                        { "playerTurn", 2 },
-                        { "turnsTaken", 0 }
-                    }
-                }
-            };
+                var lobbyData = mutableData.Value as Dictionary<string, object>;
 
-        await dbRef.Child(lobbyId).Child("players").Child(playerId).SetValueAsync(playerData);
+                if (lobbyData == null)
+                {
+                    Debug.LogError("Lobby does not exist!");
+                    success = false;
+                    return TransactionResult.Abort();
+                }
+
+                var playersNode = mutableData.Child("players");
+                long playerCount = playersNode.ChildrenCount;
+                int maxPlayers = 0;
+
+                if (lobbyData.ContainsKey("lobbySize"))
+                {
+                    maxPlayers = Convert.ToInt32(lobbyData["lobbySize"]);
+                }
+
+                if (playerCount >= maxPlayers)
+                {
+                    Debug.Log("Lobby is full!");
+                    success = false;
+                    return TransactionResult.Abort();
+                }
+
+                Dictionary<string, object> playerData = new Dictionary<string, object>
+                {
+                    { "playerName", "" },
+                    { "ready", false },
+                    { "drawCardsLimit", 4 },
+                    { "stats", new Dictionary<string, object>
+                        {
+                            { "inGame", false },
+                            { "money", 50 },
+                            { "income", 10 },
+                            { "support", new int[6] },
+                            { "playerTurn", 2 },
+                            { "turnsTaken", 0 }
+                        }
+                    }
+                };
+
+                playersNode.Child(playerId).Value = playerData;
+
+                success = true;
+                return TransactionResult.Success(mutableData);
+            });
+        }
+        catch (FirebaseException ex)
+        {
+            Debug.Log(ex);
+            success = false;
+        }
+        catch (Exception ex)
+        {
+            Debug.Log(ex);
+            success = false;
+        }
+
+        return success;
     }
 
-    public async Task<int[]> AllocateSupportAsync(string lobbyId, System.Random random)
+    public async Task AllocateSupportAsync(string lobbyId, System.Random random)
     {
         int[] support = new int[6];
         int totalSupport = 8;
@@ -276,28 +315,75 @@ public class LobbyListManager : MonoBehaviour
             throw new InvalidOperationException("Nie można przydzielić wsparcia bez przekroczenia limitu.");
         }
 
-        return support;
-    }
-
-    public async Task<string> AddPlayerAsync(string lobbyId)
-    {
-        string playerId = System.Guid.NewGuid().ToString();
-
-        await AssignPlayer(playerId, lobbyId);
-
-        return playerId;
+        try
+        {
+            await dbRef.Child(lobbyId).Child("players").Child(playerId).Child("stats").Child("support").SetValueAsync(support);
+            Debug.Log("Support data has been successfully saved to Firebase!");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to save support data: {ex.Message}");
+        }
     }
 
     async Task TaskOnClick(string lobbyName, string lobbyId, int lobbySize)
     {
-        string playerId = await AddPlayerAsync(lobbyId);
+        SetButtonsInteractable(false);
 
-        SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+        Debug.Log("Checking and joining lobby...");
+        bool joinedSuccessfully = false;
 
-        DataTransfer.LobbyName = lobbyName;
-        DataTransfer.LobbyId = lobbyId;
-        DataTransfer.LobbySize = lobbySize;
-        DataTransfer.PlayerId = playerId;
+        try
+        {
+            joinedSuccessfully = await AddPlayer(lobbyId);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"An error occurred while joining the lobby: {ex.Message}");
+        }
+
+        if (joinedSuccessfully)
+        {
+            Debug.Log("Successfully joined lobby!");
+
+            var random = new System.Random();
+            await AllocateSupportAsync(lobbyId, random);
+
+            DataTransfer.LobbyName = lobbyName;
+            DataTransfer.LobbyId = lobbyId;
+            DataTransfer.LobbySize = lobbySize;
+            DataTransfer.PlayerId = playerId;
+
+            SceneManager.LoadScene("Lobby", LoadSceneMode.Single);
+        }
+        else
+        {
+            openDialogBox();
+        }
+
+        SetButtonsInteractable(true);
+    }
+
+    void SetButtonsInteractable(bool interactable)
+    {
+        foreach (Transform child in scrollViewContent.transform)
+        {
+            Button button = child.GetComponent<Button>();
+            if (button != null)
+            {
+                button.interactable = interactable;
+            }
+        }
+    }
+
+    public void openDialogBox()
+    {
+        dialogBox.SetActive(true);
+    }
+
+    public void closeDialogBox()
+    {
+        dialogBox.SetActive(false);
     }
 
     void OnDestroy()
@@ -306,6 +392,4 @@ public class LobbyListManager : MonoBehaviour
         dbRef.ChildRemoved -= HandleChildRemoved;
         dbRef.ChildChanged -= HandleChildChanged;
     }
-
-
 }
