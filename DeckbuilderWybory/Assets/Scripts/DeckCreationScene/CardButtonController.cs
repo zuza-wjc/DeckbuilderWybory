@@ -83,11 +83,6 @@ public class CardButtonController : MonoBehaviour
                             string cardName = cardDataSnapshot.Child("name").Value.ToString();
                             int maxDeckNumber = int.Parse(cardDataSnapshot.Child("maxDeckNumber").Value.ToString());
 
-                            Debug.Log($"ID Karty: {cardId}");
-                            Debug.Log($"Typ: {type}");
-                            Debug.Log($"Nazwa: {cardName}");
-                            Debug.Log($"Max Deck Number: {maxDeckNumber}");
-
                             addCardPanelController.ShowPanel(cardId, type, maxDeckNumber, cardName);
                             return;
                         }

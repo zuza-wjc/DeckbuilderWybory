@@ -25,6 +25,12 @@ public class AddCardsPanelController : MonoBehaviour
     public Sprite minusButtonInactiveSprite;
     public Sprite addButtonInactiveSprite;
 
+    public Sprite podstawaListCardSprite;
+    public Sprite ambasadaListCardSprite;
+    public Sprite przemyslListCardSprite;
+    public Sprite metropoliaListCardSprite;
+    public Sprite srodowiskoListCardSprite;
+
     public CardButtonController cardButtonController;
     public GameObject addCardPanel;
     public GameObject tooMuchCardsPanel;
@@ -145,6 +151,7 @@ public class AddCardsPanelController : MonoBehaviour
             // Ustawianie tekstu karty
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
             Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
+            Image cardImage = newCardIcon.GetComponentInChildren<Image>(); // Dodajemy Image, aby zmieniæ sprite
 
             if (cardText != null)
             {
@@ -162,6 +169,41 @@ public class AddCardsPanelController : MonoBehaviour
             else
             {
                 Debug.LogWarning("Prefab does not have a CardQuantityText component!");
+            }
+
+            // Zmieniamy sprite w zale¿noœci od typu karty
+            if (cardImage != null)
+            {
+                switch (card.type)
+                {
+                    case "Podstawa":
+                        cardImage.sprite = podstawaListCardSprite;
+                        Debug.Log($"Sprite for card {card.cardName} changed to 'Podstawa'.");
+                        break;
+                    case "Ambasada":
+                        cardImage.sprite = ambasadaListCardSprite;
+                        Debug.Log($"Sprite for card {card.cardName} changed to 'Ambasada'.");
+                        break;
+                    case "Przemys³":
+                        cardImage.sprite = przemyslListCardSprite;
+                        Debug.Log($"Sprite for card {card.cardName} changed to 'Przemys³'.");
+                        break;
+                    case "Metropolia":
+                        cardImage.sprite = metropoliaListCardSprite;
+                        Debug.Log($"Sprite for card {card.cardName} changed to 'Metropolia'.");
+                        break;
+                    case "Œrodowisko":
+                        cardImage.sprite = srodowiskoListCardSprite;
+                        Debug.Log($"Sprite for card {card.cardName} changed to 'Œrodowisko'.");
+                        break;
+                    default:
+                        Debug.LogWarning($"Unknown card type: {card.type}. No sprite change.");
+                        break;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Prefab does not have an Image component to change the sprite!");
             }
 
             Debug.Log($"Card {card.cardName} added to the deck with quantity {card.cardsCount}.");
@@ -372,35 +414,73 @@ public class AddCardsPanelController : MonoBehaviour
     {
         if (cardIconPrefab != null && panelParent != null)
         {
+            // Tworzenie nowej ikony karty
             GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
             Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
+            Image cardImage = newCardIcon.GetComponentInChildren<Image>(); // Dodajemy Image, aby zmieniæ sprite
+
             if (cardText != null)
             {
-                cardText.text = cardName;
+                cardText.text = cardName; // Ustaw nazwê karty
             }
             else
             {
                 Debug.LogWarning("Prefab does not have a Text component!");
             }
+
             if (cardQuantityText != null)
             {
-                cardQuantityText.text = cardsCount.ToString();
+                cardQuantityText.text = cardsCount.ToString(); // Ustaw iloœæ karty
             }
             else
             {
                 Debug.LogWarning("Prefab does not have a CardQuantityText component!");
             }
 
-            //cardListController.SaveCard(cardId, type, cardsCount, cardName);
+            // Zmieniamy sprite w zale¿noœci od typu karty
+            if (cardImage != null)
+            {
+                switch (type)
+                {
+                    case "Podstawa":
+                        cardImage.sprite = podstawaListCardSprite;
+                        Debug.Log($"Sprite for card {cardName} changed to 'Podstawa'.");
+                        break;
+                    case "Ambasada":
+                        cardImage.sprite = ambasadaListCardSprite;
+                        Debug.Log($"Sprite for card {cardName} changed to 'Ambasada'.");
+                        break;
+                    case "Przemys³":
+                        cardImage.sprite = przemyslListCardSprite;
+                        Debug.Log($"Sprite for card {cardName} changed to 'Przemys³'.");
+                        break;
+                    case "Metropolia":
+                        cardImage.sprite = metropoliaListCardSprite;
+                        Debug.Log($"Sprite for card {cardName} changed to 'Metropolia'.");
+                        break;
+                    case "Œrodowisko":
+                        cardImage.sprite = srodowiskoListCardSprite;
+                        Debug.Log($"Sprite for card {cardName} changed to 'Œrodowisko'.");
+                        break;
+                    default:
+                        Debug.LogWarning($"Unknown card type: {type}. No sprite change.");
+                        break;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Prefab does not have an Image component to change the sprite!");
+            }
+
+            // Logowanie dodania karty do listy
             Debug.Log($"Card {cardName} added to the deck with quantity {cardsCount}.");
         }
         else
         {
             Debug.LogError("CardIcon prefab or panelParent is not assigned!");
         }
-        cardsCount = 0;
-
+        cardsCount = 0; // Resetowanie liczby kart
     }
     public void DeleteCardFromList()
     {

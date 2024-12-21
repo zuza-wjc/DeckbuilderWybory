@@ -1642,6 +1642,11 @@ MonoBehaviour:
   minusButtonActiveSprite: {fileID: 21300000, guid: 89cb1b400849c6e4485c7f2e36474e97, type: 3}
   minusButtonInactiveSprite: {fileID: 21300000, guid: 558bd6ded23af7148a7812d1bcecfd54, type: 3}
   addButtonInactiveSprite: {fileID: 21300000, guid: fb5807ffd76110d4e9c9f7f6e476d57c, type: 3}
+  podstawaListCardSprite: {fileID: 21300000, guid: e7e12dc6a8bf81e4a8ebdba5abfc3672, type: 3}
+  ambasadaListCardSprite: {fileID: 21300000, guid: 3dea54bf906f0d24bbdef915d1bc070c, type: 3}
+  przemyslListCardSprite: {fileID: 21300000, guid: afcac41002993524197852cf3053f50a, type: 3}
+  metropoliaListCardSprite: {fileID: 21300000, guid: 961f9943735f9b94f9aa8067bf2fefb8, type: 3}
+  srodowiskoListCardSprite: {fileID: 21300000, guid: 95f0eb8487544f44984197ce8ecbf39f, type: 3}
   cardButtonController: {fileID: 818951447}
   addCardPanel: {fileID: 976913445}
   tooMuchCardsPanel: {fileID: 493774882}
@@ -1650,6 +1655,7 @@ MonoBehaviour:
   deckNameText: {fileID: 1686203898}
   deckQuantityText: {fileID: 1217470910}
   cardList: []
+  Deck1Label: {fileID: 0}
 --- !u!224 &439547176 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5038254049942006975, guid: 726f3add9a0193b48bfe59c2318f2008, type: 3}
