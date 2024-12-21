@@ -48,6 +48,9 @@ public class AddCardsPanelController : MonoBehaviour
     string cardName;
 
     int listCardsCount = 0;
+    int podstawaCardsCount = 0;
+    int specjalneCardsCount = 0;
+    string deckCardsType;
 
     [System.Serializable]
     public class CardData
@@ -125,6 +128,9 @@ public class AddCardsPanelController : MonoBehaviour
                     }
                     // Zmieñ tekst `deckNameText`, aby wyœwietla³ np. nazwê talii i liczbê kart
                     deckQuantityText.text = $"{listCardsCount}/30";
+                    Debug.Log($"TYP DECKU: {deckCardsType}");
+                    Debug.Log($"podstawaCardsCount: {podstawaCardsCount}");
+                    Debug.Log($"specjalneCardsCount: {specjalneCardsCount}");
                 }
                 else
                 {
@@ -178,35 +184,40 @@ public class AddCardsPanelController : MonoBehaviour
                 {
                     case "Podstawa":
                         cardImage.sprite = podstawaListCardSprite;
-                        Debug.Log($"Sprite for card {card.cardName} changed to 'Podstawa'.");
+                        //zwieksz licznik kart podstawa o cards count karty
+                        podstawaCardsCount += card.cardsCount;
                         break;
                     case "Ambasada":
                         cardImage.sprite = ambasadaListCardSprite;
-                        Debug.Log($"Sprite for card {card.cardName} changed to 'Ambasada'.");
+                        specjalneCardsCount += card.cardsCount;
+                        deckCardsType = "Ambasada";
                         break;
                     case "Przemys³":
                         cardImage.sprite = przemyslListCardSprite;
-                        Debug.Log($"Sprite for card {card.cardName} changed to 'Przemys³'.");
+                        specjalneCardsCount += card.cardsCount;
+                        deckCardsType = "Przemys³";
                         break;
                     case "Metropolia":
                         cardImage.sprite = metropoliaListCardSprite;
-                        Debug.Log($"Sprite for card {card.cardName} changed to 'Metropolia'.");
+                        specjalneCardsCount += card.cardsCount;
+                        deckCardsType = "Metropolia";
                         break;
                     case "Œrodowisko":
                         cardImage.sprite = srodowiskoListCardSprite;
-                        Debug.Log($"Sprite for card {card.cardName} changed to 'Œrodowisko'.");
+                        specjalneCardsCount += card.cardsCount;
+                        deckCardsType = "Œrodowisko";
                         break;
                     default:
                         Debug.LogWarning($"Unknown card type: {card.type}. No sprite change.");
                         break;
                 }
+                
             }
             else
             {
                 Debug.LogWarning("Prefab does not have an Image component to change the sprite!");
             }
 
-            Debug.Log($"Card {card.cardName} added to the deck with quantity {card.cardsCount}.");
         }
         else
         {
@@ -266,7 +277,7 @@ public class AddCardsPanelController : MonoBehaviour
 
         // ZnajdŸ CardButtonController w scenie
         cardButtonController = FindObjectOfType<CardButtonController>();
-        Debug.Log($"Dane karty: ID={cardId}, Typ={type}, MaxDeck={maxDeckNumber}");
+        //Debug.Log($"Dane karty: ID={cardId}, Typ={type}, MaxDeck={maxDeckNumber}");
     }
 
     public void IncreaseLobbySize()
@@ -337,7 +348,8 @@ public class AddCardsPanelController : MonoBehaviour
 
         // SprawdŸ, czy karta o danym ID ju¿ istnieje
         CardData existingCard = cardList.Find(card => card.cardId == cardId);
-
+        
+        // Jeœli karta istnieje, zaktualizuj jej iloœæ
         if (existingCard != null && cardsCount != 0)
         {
             if (listCardsCount == 30)
@@ -347,8 +359,22 @@ public class AddCardsPanelController : MonoBehaviour
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
+            if (type == "Podstawa" && podstawaCardsCount >= 20)
+            {
+                Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'podstawa'. Osi¹gniêto maksymalny limit 20 kart.");
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return; // Przerwij dzia³anie metody
+            }
+            if ((type!= "Podstawa" && type != deckCardsType) || specjalneCardsCount >= 10)
+            {
+                Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.");
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return; // Przerwij dzia³anie metody
+            }
 
-            // Jeœli karta istnieje, zaktualizuj jej iloœæ
+
             int previousCount = existingCard.cardsCount;
 
 
@@ -394,9 +420,21 @@ public class AddCardsPanelController : MonoBehaviour
                 tooMuchCardsPanel.SetActive(true);
                 return;
             }
+            if (type == "Podstawa" && podstawaCardsCount + cardsCount >= 21)
+            {
+                Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'podstawa'. Osi¹gniêto maksymalny limit 20 kart.");
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return; // Przerwij dzia³anie metody
+            }
 
             // Jeœli karta nie istnieje, dodaj now¹
             CardData newCard = new CardData(cardsCount, cardId, type, cardName);
+            if(type == "Podstawa")
+            {
+                podstawaCardsCount += cardsCount;
+                Debug.Log($"podstawaCardsCount: {podstawaCardsCount}");
+            }
             cardList.Add(newCard);
 
             // Dodaj iloœæ nowej karty do `listCardsCount`
@@ -490,6 +528,11 @@ public class AddCardsPanelController : MonoBehaviour
         {
             // Odejmij liczbê usuniêtych kart od listCardsCount
             listCardsCount -= existingCard.cardsCount;
+            if (type == "Podstawa")
+            {
+                podstawaCardsCount -= existingCard.cardsCount;
+                Debug.Log($"podstawaCardsCount: {podstawaCardsCount}");
+            }
             // Zaktualizuj tekst wyœwietlaj¹cy iloœæ kart w talii
             deckQuantityText.text = $"{listCardsCount}/30";
 
