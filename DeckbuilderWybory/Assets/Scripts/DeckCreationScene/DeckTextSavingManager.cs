@@ -11,31 +11,33 @@ using System;
 
 public class DeckTextSavingManager : MonoBehaviour
 {
-    private Text Deck1Label;
+    // Prywatna zmienna DeckLabel
+    [SerializeField]
+    private Text DeckLabel;  // Teraz DeckLabel jest prywatne, przypisane w inspektorze Unity
 
-    void Start()
+    // Metoda wywo³ywana przy klikniêciu przycisku
+    public void SaveDeckName(Button clickedButton)
     {
-        // Automatyczne znajdowanie obiektu typu Text w scenie
-        Deck1Label = FindObjectOfType<Text>();
-
-        if (Deck1Label == null)
+        if (clickedButton != null)
         {
-            Debug.LogWarning("Nie znaleziono obiektu Text w scenie!");
-        }
-    }
+            // Pobieramy komponent Text z dziecka przycisku
+            Text buttonText = clickedButton.GetComponentInChildren<Text>();
 
-    public void SaveDeckName()
-    {
-        if (Deck1Label != null)
-        {
-            // Pobierz tekst z obiektu Deck1Label i zapisz go w DataManager
-            DataManager.Instance.deckName = Deck1Label.text;
-            Debug.Log("Zapisano deckName: " + DataManager.Instance.deckName);
-            SceneManager.LoadScene("Deck Creation"); // Zmiana sceny
+            if (buttonText != null)
+            {
+                // Zapisujemy tekst do DataManager
+                DataManager.Instance.deckName = buttonText.text;
+                Debug.Log("Saved deckName: " + DataManager.Instance.deckName);
+                SceneManager.LoadScene("Deck Creation"); // Zmiana sceny 
+            }
+            else
+            {
+                Debug.LogWarning("No Text component found in the clicked button's child!");
+            }
         }
         else
         {
-            Debug.LogWarning("Deck1Label nie jest przypisany lub nie istnieje!");
+            Debug.LogWarning("Clicked button is null!");
         }
     }
 }

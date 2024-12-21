@@ -322,7 +322,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 217267539}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1632932643}
+        m_TargetAssemblyTypeName: DeckTextSavingManager, Assembly-CSharp
+        m_MethodName: SaveDeckName
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 217267541}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Button, UnityEngine.UI
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &369041002
 GameObject:
   m_ObjectHideFlags: 0
@@ -1614,6 +1626,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad49babb7113c7b4cb5f7d32b2857984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DeckLabel: {fileID: 0}
 --- !u!1 &1689445725
 GameObject:
   m_ObjectHideFlags: 0
@@ -1738,10 +1751,10 @@ MonoBehaviour:
       - m_Target: {fileID: 1632932643}
         m_TargetAssemblyTypeName: DeckTextSavingManager, Assembly-CSharp
         m_MethodName: SaveDeckName
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1689445730}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Button, UnityEngine.UI
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -1960,7 +1973,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1700052903}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1632932643}
+        m_TargetAssemblyTypeName: DeckTextSavingManager, Assembly-CSharp
+        m_MethodName: SaveDeckName
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1700052905}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Button, UnityEngine.UI
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1703948265
 GameObject:
   m_ObjectHideFlags: 0
@@ -2081,7 +2106,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1703948267}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1632932643}
+        m_TargetAssemblyTypeName: DeckTextSavingManager, Assembly-CSharp
+        m_MethodName: SaveDeckName
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1703948269}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.UI.Button, UnityEngine.UI
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1762494004
 GameObject:
   m_ObjectHideFlags: 0
