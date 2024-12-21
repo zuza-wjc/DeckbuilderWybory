@@ -62,12 +62,36 @@ public class AddCardsPanelController : MonoBehaviour
 
     public List<CardData> cardList = new List<CardData>();
 
+    public Text Deck1Label;
+
     void Start()
     {
-        addCardPanel.SetActive(false);
-        tooMuchCardsPanel.SetActive(false);
+        StartCoroutine(InitializeDeckName());
+    }
+
+    private IEnumerator InitializeDeckName()
+    {
+        // Wait for the next frame to make sure everything is initialized
+        yield return null;
+
+        if (DataManager.Instance != null)
+        {
+            if (!string.IsNullOrEmpty(DataManager.Instance.deckName))
+            {
+                deckNameText.text = DataManager.Instance.deckName;
+                Debug.Log("Za³adowano deckName: " + DataManager.Instance.deckName);
+            }
+            else
+            {
+                Debug.LogWarning("DataManager.Instance.deckName is null or empty.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("DataManager.Instance is null. Ensure the DataManager object exists and is initialized.");
+        }
+
         LoadDeckList();
-        
     }
     public void LoadDeckList()
     {
@@ -161,6 +185,8 @@ public class AddCardsPanelController : MonoBehaviour
         {
             PlayerPrefs.SetString(deckNameText.text, json); // Zapisz z dynamiczn¹ nazw¹
             PlayerPrefs.Save(); // Upewnij siê, ¿e zmiany zostan¹ zapisane
+            //PlayerPrefsKeysManager.AddKey(deckNameText.text);
+
             Debug.Log($"Deck saved to PlayerPrefs with name {deckNameText.text}.");
         }
         else

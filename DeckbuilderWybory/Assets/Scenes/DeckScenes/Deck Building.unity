@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 116921210}
   - component: {fileID: 116921209}
   m_Layer: 5
-  m_Name: MetropoliaLabel
+  m_Name: Deck2Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -193,7 +193,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: METROPOLIA
+  m_Text: TALIA #2
 --- !u!222 &116921210
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -414,7 +414,7 @@ GameObject:
   - component: {fileID: 521118846}
   - component: {fileID: 521118845}
   m_Layer: 5
-  m_Name: PrzemyslLabel
+  m_Name: Deck4Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -472,7 +472,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "PRZEMYS\u0141"
+  m_Text: TALIA #4
 --- !u!222 &521118846
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1317,6 +1317,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1265702877}
   m_CullTransparentMesh: 1
+--- !u!1 &1448111035
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1448111036}
+  - component: {fileID: 1448111037}
+  m_Layer: 0
+  m_Name: DataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1448111036
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448111035}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1655.1466, y: 803.3598, z: -20.326805}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1448111037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448111035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9ab8b32d6f83024ab0fd9a5cfb52a8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deckName: 
 --- !u!1 &1517841525
 GameObject:
   m_ObjectHideFlags: 0
@@ -1379,7 +1424,7 @@ GameObject:
   - component: {fileID: 1601126664}
   - component: {fileID: 1601126663}
   m_Layer: 5
-  m_Name: AmbasadaLabel
+  m_Name: Deck1Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1437,7 +1482,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: AMBASADA
+  m_Text: TALIA #1
 --- !u!222 &1601126664
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1525,6 +1570,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1621642945}
   m_CullTransparentMesh: 1
+--- !u!1 &1632932641
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1632932642}
+  - component: {fileID: 1632932643}
+  m_Layer: 0
+  m_Name: DeckTextSaverHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1632932642
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1632932641}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1655.1466, y: 803.3598, z: -20.326805}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1632932643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1632932641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad49babb7113c7b4cb5f7d32b2857984, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1689445725
 GameObject:
   m_ObjectHideFlags: 0
@@ -1646,9 +1735,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2144552066}
-        m_TargetAssemblyTypeName: ChangeScene, Assembly-CSharp
-        m_MethodName: ChangeToScene
+      - m_Target: {fileID: 1632932643}
+        m_TargetAssemblyTypeName: DeckTextSavingManager, Assembly-CSharp
+        m_MethodName: SaveDeckName
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2080,7 +2169,7 @@ GameObject:
   - component: {fileID: 1891933467}
   - component: {fileID: 1891933466}
   m_Layer: 5
-  m_Name: SrodowiskoLabel
+  m_Name: Deck3Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2138,7 +2227,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u015ARODOWISKO"
+  m_Text: TALIA #3
 --- !u!222 &1891933467
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2537,7 +2626,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2144552064}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c66374f10609ab643a7f43cb99de16a1, type: 3}
+  m_Script: {fileID: 11500000, guid: c9580bab54a00d742b6fe3db63b70e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   sceneName: Deck Creation
@@ -2551,3 +2640,5 @@ SceneRoots:
   - {fileID: 2144552065}
   - {fileID: 1517841526}
   - {fileID: 1075485974}
+  - {fileID: 1448111036}
+  - {fileID: 1632932642}
