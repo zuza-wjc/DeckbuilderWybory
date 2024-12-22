@@ -389,17 +389,28 @@ public class AddCardsPanelController : MonoBehaviour
             if (type == "Podstawa" && podstawaCardsCount + (cardsCount - previousCount) >= 21)
             {
                 Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'podstawa'. Osi¹gniêto maksymalny limit 20 kart.");
+                infoText.text = "Nie mo¿na dodaæ wiêcej kart typu 'podstawa'. Osi¹gniêto maksymalny limit 20 kart.";
                 addCardPanel.SetActive(false);
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
-            if ((type!= "Podstawa" && type != deckCardsType) || specjalneCardsCount + (cardsCount - previousCount) >= 11)
+            if (type!= "Podstawa" && type != deckCardsType) 
+            {
+                Debug.LogWarning($"Nie mo¿na dodaæ innej karty typu specjalne. TYP TALII: {deckCardsType}.");
+                infoText.text = string.Format("Nie mo¿na dodaæ innej karty typu specjalne. TYP TALII: {0}.", deckCardsType);
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return; // Przerwij dzia³anie metody
+            }
+            if (specjalneCardsCount + (cardsCount - previousCount) >= 11)
             {
                 Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.");
+                infoText.text = "Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.";
                 addCardPanel.SetActive(false);
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
+
             existingCard.cardsCount = cardsCount;
 
             Debug.Log($"Karta o ID {cardId} ju¿ istnieje. Zaktualizowano iloœæ na {existingCard.cardsCount}.");
