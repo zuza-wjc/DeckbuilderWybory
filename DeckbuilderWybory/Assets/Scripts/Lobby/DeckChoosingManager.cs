@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,21 +9,28 @@ using System.Threading.Tasks;
 
 public class DeckChoosingManager : MonoBehaviour
 {
+
+    public GameObject chooseDeckPanel;
+    public GameObject buttonPrefab;
+    public Transform contentPanel;
+
+    public Button defaultButton;
     public Button chooseAmbasadaButton;
     public Button chooseMetropoliaButton;
     public Button chooseSrodowiskoButton;
     public Button choosePrzemyslButton;
-    public GameObject deckChoosingPanel;
+    public GameObject defaultDeckChoosingPanel;
 
     private DatabaseReference dbRef;
     private string lobbyId;
     private string playerId;
 
-    // Start is called before the first frame update
+
     void Start()
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
+
 
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
@@ -31,6 +39,63 @@ public class DeckChoosingManager : MonoBehaviour
         }
 
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
+
+
+        CreateButtons();
+
+        defaultButton.onClick.AddListener(DefaultDeck);
+
+    }
+
+    void CreateButtons()
+    {
+        bool firstChild = true;
+        foreach (Transform child in contentPanel)
+        {
+            if (firstChild)
+            {
+                firstChild = false;
+                continue;
+            }
+            Destroy(child.gameObject);
+        }
+
+        GameObject newButton = Instantiate(buttonPrefab, contentPanel);
+        newButton.GetComponentInChildren<Text>().text = "TALIA #1";
+
+        newButton.GetComponent<Button>().onClick.AddListener(() => ChooseNondefaultDeck("TALIA #1"));
+
+    }
+
+
+    private async Task ChooseNondefaultDeck(string buttonName)
+    {
+        try
+        {
+            if (dbRef == null)
+            {
+                Debug.LogError("Database reference is null!");
+                return;
+            }
+
+            await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync("Ambasada");
+            await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(false);
+
+            Debug.Log($"DeckType '{buttonName}' set for player '{playerId}'.");
+
+            chooseDeckPanel.SetActive(false);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error updating player stats: {ex.Message}");
+        }
+    }
+
+
+    void DefaultDeck()
+    {
+        defaultDeckChoosingPanel.SetActive(true);
+        chooseDeckPanel.SetActive(false);
 
         if (chooseAmbasadaButton != null)
         {
@@ -96,11 +161,12 @@ public class DeckChoosingManager : MonoBehaviour
                 return;
             }
 
+            await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(true);
             await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(deckType);
             Debug.Log($"DeckType '{deckType}' set for player '{playerId}'.");
 
-            // Wy³¹cz panel z przyciskami
-            deckChoosingPanel.SetActive(false);
+            // Wyï¿½ï¿½cz panel z przyciskami
+            defaultDeckChoosingPanel.SetActive(false);
         }
         catch (System.Exception ex)
         {

@@ -176,7 +176,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 597163343}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -2909,6 +2909,7 @@ MonoBehaviour:
   instructionTitle: {fileID: 940360735}
   pageNumber: {fileID: 2030827485}
   screenshot:
+  - {fileID: 1595575155}
   - {fileID: 1976992271}
   - {fileID: 1658483875}
   - {fileID: 1229953289}
@@ -2923,7 +2924,6 @@ MonoBehaviour:
   - {fileID: 1448696245}
   - {fileID: 1888874498}
   - {fileID: 899017188}
-  - {fileID: 1595575155}
   - {fileID: 143409345}
   - {fileID: 1109577104}
   - {fileID: 444060514}
