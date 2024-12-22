@@ -12,6 +12,21 @@ public class DeckController : MonoBehaviour
     string lobbyId;
     string playerId;
 
+    [Serializable]
+    public class CardData
+    {
+        public string cardId;
+        public string cardName;
+        public int cardsCount;
+        public string type;
+    }
+
+    [Serializable]
+    public class Deck
+    {
+        public List<CardData> cards;
+    }
+
     public ErrorPanelController errorPanelController;
 
     public async Task InitializeDeck()
@@ -30,30 +45,71 @@ public class DeckController : MonoBehaviour
             .Child(lobbyId)
             .Child("players");
 
-        try
+
+        var defaultDeckSnapshot = await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").GetValueAsync();
+
+        if (defaultDeckSnapshot.Exists && defaultDeckSnapshot.Value is bool && (bool)defaultDeckSnapshot.Value)
         {
-            // Pobranie deckType z Firebase
-            var deckTypeSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckType").GetValueAsync();
-            if (deckTypeSnapshot.Exists)
+            try
             {
-                string deckType = deckTypeSnapshot.Value.ToString();
-                Debug.Log($"DeckType found: {deckType}");
+                // Pobranie deckType z Firebase
+                var deckTypeSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckType").GetValueAsync();
+                if (deckTypeSnapshot.Exists)
+                {
+                    string deckType = deckTypeSnapshot.Value.ToString();
+                    Debug.Log($"DeckType found: {deckType}");
 
-                // Pobranie listy kart dla deckType
-                await LoadCardsFromDeckType(deckType);
+                    // Pobranie listy kart dla deckType
+                    await LoadCardsFromDeckType(deckType);
 
+                }
+                else
+                {
+                    Debug.LogWarning("DeckType not found for the player.");
+                    errorPanelController.ShowError("Deck type not assigned to the player!");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Debug.LogWarning("DeckType not found for the player.");
-                errorPanelController.ShowError("Deck type not assigned to the player!");
+                Debug.LogError($"Error while loading deck type: {ex.Message}");
+                errorPanelController.ShowError("Failed to load deck type.");
             }
         }
-        catch (Exception ex)
+        else
         {
-            Debug.LogError($"Error while loading deck type: {ex.Message}");
-            errorPanelController.ShowError("Failed to load deck type.");
+            LoadCardsFromJson();
         }
+    }
+
+    private async Task LoadCardsFromJson()
+    {
+        string buttonName = "TALIA #1";
+
+        if (dbRef == null)
+        {
+            Debug.LogError("Database reference is null!");
+            return;
+        }
+
+        string jsonDeck = PlayerPrefs.GetString(buttonName, "");
+
+        // JSON na obiekt klasy Deck
+        Deck deck = JsonUtility.FromJson<Deck>(jsonDeck);
+
+        if (deck == null || deck.cards == null || deck.cards.Count == 0)
+        {
+            Debug.LogError("Deserializacja nie powiodła się lub talia jest pusta.");
+            return;
+        }
+
+        foreach (CardData card in deck.cards)
+        {
+            for (int i = 0; i < card.cardsCount; i++)
+            {
+                AddCardToDeck(card.cardId, false);
+            }
+        }
+
     }
 
     private async Task LoadCardsFromDeckType(string deckType)
