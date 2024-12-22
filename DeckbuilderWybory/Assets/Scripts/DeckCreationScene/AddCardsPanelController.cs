@@ -32,6 +32,8 @@ public class AddCardsPanelController : MonoBehaviour
     public Sprite srodowiskoListCardSprite;
 
     public CardButtonController cardButtonController;
+    public EditListCardsPanel editListCardsPanel;
+
     public GameObject addCardPanel;
     public GameObject tooMuchCardsPanel;
     public GameObject cardIconPrefab;
@@ -157,6 +159,18 @@ public class AddCardsPanelController : MonoBehaviour
             GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
 
             newCardIcon.name = card.cardId;
+            // Pobierz przycisk z instancji
+            Button button = newCardIcon.GetComponent<Button>();
+
+            if (button != null && editListCardsPanel != null)
+            {
+                // Dodaj listener do przycisku
+                button.onClick.AddListener(() => editListCardsPanel.OnCardButtonClick(button));
+            }
+            else
+            {
+                Debug.LogWarning("Nie uda³o siê przypisaæ funkcji do przycisku!");
+            }
 
             // Ustawianie tekstu karty
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
@@ -490,6 +504,18 @@ public class AddCardsPanelController : MonoBehaviour
             // Tworzenie nowej ikony karty
             GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
             newCardIcon.name = cardId;
+            // Pobierz przycisk z instancji
+            Button button = newCardIcon.GetComponent<Button>();
+
+            if (button != null && editListCardsPanel != null)
+            {
+                // Dodaj listener do przycisku
+                button.onClick.AddListener(() => editListCardsPanel.OnCardButtonClick(button));
+            }
+            else
+            {
+                Debug.LogWarning("Nie uda³o siê przypisaæ funkcji do przycisku!");
+            }
 
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
             Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();

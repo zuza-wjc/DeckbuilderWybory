@@ -12,7 +12,7 @@ using Firebase.Extensions;
 
 public class EditListCardsPanel : MonoBehaviour
 {
-    public Button[] cardButtons;
+    //public Button[] cardButtons;
     public AddCardsPanelController addCardPanelController;
 
     public string cardId { get; private set; }
@@ -41,7 +41,55 @@ public class EditListCardsPanel : MonoBehaviour
         // Pobierz nazwê klikniêtego przycisku
         string cardId = button.gameObject.name;
         Debug.Log($"Klikniêto przycisk z ID karty: {cardId}");
+        FetchCardData(cardId);
 
     }
+    async void FetchCardData(string cardId)
+    {
+        try
+        {
+            // Pobierz wszystkie dostêpne grupy w "cards/id"
+            DataSnapshot snapshot = await dbRef.Child("id").GetValueAsync();
 
+            if (snapshot.Exists)
+            {
+                foreach (DataSnapshot groupSnapshot in snapshot.Children)
+                {
+                    if (groupSnapshot.HasChild(cardId))
+                    {
+                        string path = $"id/{groupSnapshot.Key}/{cardId}";
+                        DataSnapshot cardDataSnapshot = await dbRef.Child(path).GetValueAsync();
+
+                        if (cardDataSnapshot.Exists)
+                        {
+                            string type = cardDataSnapshot.Child("type").Value.ToString();
+                            string cardName = cardDataSnapshot.Child("name").Value.ToString();
+                            int maxDeckNumber = int.Parse(cardDataSnapshot.Child("maxDeckNumber").Value.ToString());
+
+                            addCardPanelController.ShowPanel(cardId, type, maxDeckNumber, cardName);
+                            return;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Nie znaleziono danych karty w œcie¿ce: {path}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Karta {cardId} nie jest potomkiem grupy {groupSnapshot.Key}");
+                    }
+                }
+
+                Debug.LogWarning($"Nie znaleziono karty o ID: {cardId}");
+            }
+            else
+            {
+                Debug.LogWarning("Brak danych w bazie.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"B³¹d podczas pobierania danych: {ex.Message}");
+        }
+    }
 }
