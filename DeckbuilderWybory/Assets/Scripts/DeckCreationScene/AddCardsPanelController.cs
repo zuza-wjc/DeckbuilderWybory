@@ -42,6 +42,7 @@ public class AddCardsPanelController : MonoBehaviour
 
     public Text deckNameText;
     public Text deckQuantityText;
+    public Text infoText;
 
     int cardsCount = 0;
     int maxDeckNumber = 0;
@@ -455,16 +456,27 @@ public class AddCardsPanelController : MonoBehaviour
             if (type == "Podstawa" && podstawaCardsCount + cardsCount >= 21)
             {
                 Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'podstawa'. Osi¹gniêto maksymalny limit 20 kart.");
+                infoText.text = "Nie mo¿na dodaæ wiêcej kart typu 'podstawa'. Osi¹gniêto maksymalny limit 20 kart podstawy.";
                 addCardPanel.SetActive(false);
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
-            if ((type != "Podstawa" && !(type == deckCardsType || deckCardsType == null)) && specjalneCardsCount + cardsCount >= 11)
+            if (type != "Podstawa" && deckCardsType != null && type != deckCardsType) 
             {
-                Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.");
+                Debug.LogWarning($"Nie mo¿na dodaæ innej karty typu specjalne. TYP TALII: {deckCardsType}.");
+                infoText.text = string.Format("Nie mo¿na dodaæ innej karty typu specjalne. TYP TALII: {0}.", deckCardsType);
                 addCardPanel.SetActive(false);
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
+            }
+            if (specjalneCardsCount + cardsCount >= 11)
+            {
+                Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.");
+                infoText.text = "Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.";
+                addCardPanel.SetActive(false);
+                tooMuchCardsPanel.SetActive(true);
+                return; // Przerwij dzia³anie metody
+
             }
 
             // Jeœli karta nie istnieje, dodaj now¹
