@@ -179,14 +179,14 @@ public class MapManager : MonoBehaviour
             }
 
             //float total = 18f;
-            await CreateChart(valuesChart,maxRegion,regionNumber);//, total);
+            CreateChart(valuesChart,maxRegion,regionNumber);//, total);
 //stworzenie chart na region
 
 
     }
 
 
-     public async Task CreateChart(float[] values, int total, int regionNumber)
+     public void CreateChart(float[] values, int total, int regionNumber)
      {
 
          foreach (Transform child in chartContainer[regionNumber])
