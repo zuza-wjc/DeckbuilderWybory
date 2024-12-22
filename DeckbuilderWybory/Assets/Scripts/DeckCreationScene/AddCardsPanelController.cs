@@ -156,6 +156,8 @@ public class AddCardsPanelController : MonoBehaviour
             // Tworzenie nowej ikony karty
             GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
 
+            newCardIcon.name = card.cardId;
+
             // Ustawianie tekstu karty
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
             Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
@@ -487,6 +489,8 @@ public class AddCardsPanelController : MonoBehaviour
         {
             // Tworzenie nowej ikony karty
             GameObject newCardIcon = Instantiate(cardIconPrefab, panelParent);
+            newCardIcon.name = cardId;
+
             Text cardText = newCardIcon.GetComponentInChildren<Text>();
             Text cardQuantityText = newCardIcon.transform.Find("CardQuantityText").GetComponent<Text>();
             Image cardImage = newCardIcon.GetComponentInChildren<Image>(); // Dodajemy Image, aby zmieniæ sprite
