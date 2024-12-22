@@ -10,9 +10,9 @@ using System.Linq;
 using System;
 using Firebase.Extensions;
 
-public class CardButtonController : MonoBehaviour
+public class EditListCardsPanel : MonoBehaviour
 {
-    public Button[] cardButtons;
+    //public Button[] cardButtons;
     public AddCardsPanelController addCardPanelController;
 
     public string cardId { get; private set; }
@@ -33,34 +33,17 @@ public class CardButtonController : MonoBehaviour
 
         // U¿ywamy ju¿ zainicjalizowanej referencji z FirebaseInitializer
         dbRef = FirebaseInitializer.DatabaseReference.Child("cards");
-
-        // Sprawdzenie, czy tablica cardButtons jest przypisana
-        if (cardButtons != null && cardButtons.Length > 0)
-        {
-            foreach (Button button in cardButtons)
-            {
-                // Dodaj listener z parametrem przycisku
-                button.onClick.AddListener(() => OnCardButtonClick(button));
-            }
-        }
-        else
-        {
-            Debug.LogError("Brak przypisanych przycisków do CardButtonControler!");
-        }
     }
 
     // Metoda obs³uguj¹ca klikniêcie przycisku
-    void OnCardButtonClick(Button button)
+    public void OnCardButtonClick(Button button)
     {
         // Pobierz nazwê klikniêtego przycisku
         string cardId = button.gameObject.name;
-
-        // Wywo³aj funkcjê przetwarzaj¹c¹ dane
         Debug.Log($"Klikniêto przycisk z ID karty: {cardId}");
-
         FetchCardData(cardId);
-    }
 
+    }
     async void FetchCardData(string cardId)
     {
         try
@@ -109,9 +92,4 @@ public class CardButtonController : MonoBehaviour
             Debug.LogError($"B³¹d podczas pobierania danych: {ex.Message}");
         }
     }
-
-
-
-
 }
-

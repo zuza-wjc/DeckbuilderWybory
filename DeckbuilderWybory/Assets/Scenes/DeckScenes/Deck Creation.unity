@@ -1231,6 +1231,51 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &272737306
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 272737307}
+  - component: {fileID: 272737308}
+  m_Layer: 0
+  m_Name: EditListCardsPanelHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &272737307
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 272737306}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1655.1466, y: 803.3598, z: -20.326805}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &272737308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 272737306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab4ed5e21eb44db4a9264977f1359c71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  addCardPanelController: {fileID: 408038053}
 --- !u!1001 &274333048
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1642,14 +1687,22 @@ MonoBehaviour:
   minusButtonActiveSprite: {fileID: 21300000, guid: 89cb1b400849c6e4485c7f2e36474e97, type: 3}
   minusButtonInactiveSprite: {fileID: 21300000, guid: 558bd6ded23af7148a7812d1bcecfd54, type: 3}
   addButtonInactiveSprite: {fileID: 21300000, guid: fb5807ffd76110d4e9c9f7f6e476d57c, type: 3}
+  podstawaListCardSprite: {fileID: 21300000, guid: e7e12dc6a8bf81e4a8ebdba5abfc3672, type: 3}
+  ambasadaListCardSprite: {fileID: 21300000, guid: 3dea54bf906f0d24bbdef915d1bc070c, type: 3}
+  przemyslListCardSprite: {fileID: 21300000, guid: afcac41002993524197852cf3053f50a, type: 3}
+  metropoliaListCardSprite: {fileID: 21300000, guid: 961f9943735f9b94f9aa8067bf2fefb8, type: 3}
+  srodowiskoListCardSprite: {fileID: 21300000, guid: 95f0eb8487544f44984197ce8ecbf39f, type: 3}
   cardButtonController: {fileID: 818951447}
+  editListCardsPanel: {fileID: 272737308}
   addCardPanel: {fileID: 976913445}
   tooMuchCardsPanel: {fileID: 493774882}
   cardIconPrefab: {fileID: 5989604964140433615, guid: 10dba85f365fc9342ac2e099a0b2e7bd, type: 3}
   panelParent: {fileID: 1606215286}
   deckNameText: {fileID: 1686203898}
   deckQuantityText: {fileID: 1217470910}
+  infoText: {fileID: 1244992528}
   cardList: []
+  Deck1Label: {fileID: 0}
 --- !u!224 &439547176 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5038254049942006975, guid: 726f3add9a0193b48bfe59c2318f2008, type: 3}
@@ -2220,7 +2273,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e31d4afdc958b284aa9e4cde0386476d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 82f90720d507e884192cde99362cdcc0, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8791,7 +8844,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 00224ad9772b6524bb0e50f03e8c2d19, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 80c35f136dd65e04a8f9d531639e3d61, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9538,3 +9591,4 @@ SceneRoots:
   - {fileID: 729692119}
   - {fileID: 408038052}
   - {fileID: 818951446}
+  - {fileID: 272737307}
