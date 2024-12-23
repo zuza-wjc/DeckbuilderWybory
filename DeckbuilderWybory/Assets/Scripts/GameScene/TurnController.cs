@@ -17,7 +17,8 @@ public class TurnController : MonoBehaviour
     public Text roundText;
     public Button firstPassButton;
     public Button passButton;
-    public GameObject passTurnPanel;
+
+    public Button yesSellButton;
 
     DatabaseReference dbRef;
     DatabaseReference dbRefLobby;
@@ -39,6 +40,8 @@ public class TurnController : MonoBehaviour
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
+
+        yesSellButton.interactable = false;
 
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
@@ -91,6 +94,7 @@ public class TurnController : MonoBehaviour
         else
         {
             turnPlayerName.text = "Twoja tura!";
+            yesSellButton.interactable = true;
             StartTurn();
         }
     }
@@ -122,7 +126,7 @@ public class TurnController : MonoBehaviour
                             }
                             else
                             {
-                                Debug.LogWarning($"Nie uda³o siê sparsowaæ kolejnoœci tury gracza {id}.");
+                                Debug.LogWarning($"Nie udaï¿½o siï¿½ sparsowaï¿½ kolejnoï¿½ci tury gracza {id}.");
                             }
                         }
                         else
@@ -149,10 +153,10 @@ public class TurnController : MonoBehaviour
                 Debug.LogError("Failed to get data from Firebase: " + task.Exception);
             }
 
-            isCompleted = true; // Oznacz jako ukoñczone
+            isCompleted = true; // Oznacz jako ukoï¿½czone
         });
 
-        // Czekaj, a¿ `isCompleted` bêdzie true
+        // Czekaj, aï¿½ `isCompleted` bï¿½dzie true
         while (!isCompleted)
         {
             yield return null;
@@ -181,7 +185,7 @@ public class TurnController : MonoBehaviour
         if (args.Snapshot.Exists && args.Snapshot.Value != null)
         {
             int previousPlayerTurn = int.Parse(args.Snapshot.Value.ToString());
-            if (previousPlayerTurn == 0 && !isMyTurn) // Jeœli poprzedni gracz zakoñczy³ turê i to moja kolej
+            if (previousPlayerTurn == 0 && !isMyTurn) // Jeï¿½li poprzedni gracz zakoï¿½czyï¿½ turï¿½ i to moja kolej
             {
                 StartTurn();
             }
@@ -214,7 +218,7 @@ public class TurnController : MonoBehaviour
             {
                 int displayRounds = 11 - newRounds;
                 roundText.text = "Runda: " + displayRounds;
-                Debug.Log($"Zaktualizowano wyœwietlan¹ rundê: {displayRounds}");
+                Debug.Log($"Zaktualizowano wyï¿½wietlanï¿½ rundï¿½: {displayRounds}");
             }
         }
     }
@@ -232,7 +236,7 @@ public class TurnController : MonoBehaviour
         getPlayerName(() =>
         {
             turnPlayerName.text = "Tura: " + currentPlayerName;
-            isCompleted = true; // Oznacz jako zakoñczone
+            isCompleted = true; // Oznacz jako zakoï¿½czone
         }, currentPlayerId);
 
         while (!isCompleted)
@@ -254,7 +258,7 @@ public class TurnController : MonoBehaviour
                 }
                 else
                 {
-                    currentPlayerName = "Unknown"; // Ustawienie domyœlnej wartoœci
+                    currentPlayerName = "Unknown"; // Ustawienie domyï¿½lnej wartoï¿½ci
                     Debug.LogWarning("PlayerName not found.");
                 }
             }
@@ -312,7 +316,7 @@ public class TurnController : MonoBehaviour
     
     public async Task DistributeInitialCards()
     {
-       // Debug.Log("Rozpoczynam rozdawanie pocz¹tkowych kart.");
+       // Debug.Log("Rozpoczynam rozdawanie poczï¿½tkowych kart.");
 
         if (string.IsNullOrEmpty(lobbyId))
         {
@@ -322,7 +326,7 @@ public class TurnController : MonoBehaviour
 
         await DrawCardsUntilLimit(playerId, 4); // Przydziel graczowi do 4 kart
 
-       // Debug.Log("Zakoñczono rozdawanie pocz¹tkowych kart.");
+       // Debug.Log("Zakoï¿½czono rozdawanie poczï¿½tkowych kart.");
         cardsOnHandController.ForceUpdateUI();
     }
 
@@ -350,7 +354,7 @@ public class TurnController : MonoBehaviour
             return;
         }
 
-        // Pobierz obecne karty na rêce
+        // Pobierz obecne karty na rï¿½ce
         List<string> currentHandCards = new();
         List<string> availableCards = new();
 
@@ -385,7 +389,7 @@ public class TurnController : MonoBehaviour
             }
 
             await playerDeckRef.Child(selectedInstanceId).Child("onHand").SetValueAsync(true);
-            availableCards.RemoveAt(randomIndex); // Usuñ wybran¹ kartê z dostêpnych
+            availableCards.RemoveAt(randomIndex); // Usuï¿½ wybranï¿½ kartï¿½ z dostï¿½pnych
         }
     }
 
@@ -439,18 +443,21 @@ public class TurnController : MonoBehaviour
         await dbRefLobby.Child("playerTurnId").SetValueAsync(playerId);
         isMyTurn = true;
         DataTransfer.IsFirstCardInTurn = true;
+        yesSellButton.interactable = true;
+        DataTransfer.IsPlayerTurn = true;
     }
 
     public async void EndTurn()
     {
-        SetPassTurnPanelInactive();
         timer = 60f;
         int cardLimit = await GetCardLimit();
         await DrawCardsUntilLimit(playerId, cardLimit);
         cardsOnHandController.ForceUpdateUI();
         firstPassButton.interactable = false;
+        yesSellButton.interactable = false;
         isMyTurn = false;
         await dbRef.Child(playerId).Child("stats").Child("playerTurn").SetValueAsync(0);
+        DataTransfer.IsPlayerTurn = false;
 
         if (playerId == lastInTurnPlayerId)
         {
@@ -459,7 +466,6 @@ public class TurnController : MonoBehaviour
             {
                 int updatedRounds = currentRounds - 1;
                 await dbRefLobby.Child("rounds").SetValueAsync(updatedRounds);
-               // Debug.Log("Zaktualizowano liczbê rund: " + updatedRounds);
             }
         }
     }
@@ -470,18 +476,6 @@ public class TurnController : MonoBehaviour
         {
             Debug.Log("Skipped turn");
             EndTurn();
-        }
-    }
-
-    public void SetPassTurnPanelInactive()
-    {
-        if (passTurnPanel != null)
-        {
-            passTurnPanel.SetActive(false);
-        }
-        else
-        {
-            Debug.LogWarning("PassTurnPanel nie jest przypisany!");
         }
     }
 

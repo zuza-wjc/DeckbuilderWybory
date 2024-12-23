@@ -41,7 +41,6 @@ public class LoadingManager : MonoBehaviour
         float startTime = Time.time;
 
         await GetReadyPlayersFromDatabaseAsync();
-        await SetPlayerBudgetAsync();
         await LoadPlayerCardsAsync();
         await SetPlayerInGameAsync();
         await AssignTurnOrderAsync();
@@ -83,38 +82,6 @@ public class LoadingManager : MonoBehaviour
         {
             Debug.LogError("Error fetching ready players: " + ex.Message);
             readyPlayers = 0;
-        }
-    }
-
-    private async Task SetPlayerBudgetAsync()
-    {
-        int budget;
-
-        if (readyPlayers >= 2 && readyPlayers <= 3)
-        {
-            budget = 50;
-        }
-        else if (readyPlayers >= 4 && readyPlayers <= 6)
-        {
-            budget = 70;
-        }
-        else if (readyPlayers >= 7 && readyPlayers <= 8)
-        {
-            budget = 90;
-        }
-        else
-        {
-            Debug.LogWarning("Unexpected number of ready players. Setting default budget to 50.");
-            budget = 50;
-        }
-
-        try
-        {
-            await dbRef.Child(playerId).Child("stats").Child("money").SetValueAsync(budget);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError("Error setting player budget: " + ex.Message);
         }
     }
 

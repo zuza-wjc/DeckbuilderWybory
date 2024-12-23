@@ -115,7 +115,7 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (desc == string.Empty)
         {
-            Debug.LogError("B��d w pobieraniu warto�ci playDescriptionPositive");
+            Debug.LogError("Błąd w pobieraniu warto�ci playDescriptionPositive");
             errorPanelController.ShowError("general_error");
             return;
         }
@@ -325,6 +325,11 @@ public class AddRemoveCardImp : MonoBehaviour
     {
         if(cardId == "AD090")
         {
+            if (!DataTransfer.IsPlayerTurn)
+            {
+                errorPanelController.ShowError("turn_over");
+                return (dbRefPlayerStats, -1, false, -1, null);
+            }
             chosenRegion = await mapManager.SelectArea();
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
@@ -361,6 +366,11 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 if(cardId == "AD059")
                 {
+                    if(!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, false, -1, null);
+                    }
                    bool errorCheck = await BonusBudget();
                     if(errorCheck)
                     {
@@ -371,6 +381,11 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if (string.IsNullOrEmpty(enemyId))
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
                         enemyId = await playerListManager.SelectEnemyPlayer();
                         if (string.IsNullOrEmpty(enemyId))
                         {
@@ -378,6 +393,11 @@ public class AddRemoveCardImp : MonoBehaviour
                             errorPanelController.ShowError("general_error");
                             return (dbRefPlayerStats, -1, false, -1, null); 
                         }
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, false, -1, null);
                     }
                     if (await cardUtilities.CheckIfProtected(enemyId, -1))
                     {
@@ -393,7 +413,12 @@ public class AddRemoveCardImp : MonoBehaviour
                     }
                     else
                     {
-                      bool errorCheck = await MoreThan2Cards(enemyId);
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
+                        bool errorCheck = await MoreThan2Cards(enemyId);
                         if(errorCheck)
                         {
                             return (dbRefPlayerStats, -1, false, -1, null);
@@ -403,6 +428,11 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
                 else if(cardId == "AD007")
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, false, -1, null);
+                    }
                     bool errorCheck = await ProtectRegions();
                     if(errorCheck)
                     {
@@ -411,10 +441,19 @@ public class AddRemoveCardImp : MonoBehaviour
 
                 } else if (cardId == "AD042")
                 {
-                   if (!(await cardUtilities.CheckBudgetBlock(playerId)))
+                    if (!DataTransfer.IsPlayerTurn)
                     {
-
-                    int areas = await CountMinSupport(playerId, data.Number);
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, false, -1, null);
+                    }
+                    if (!(await cardUtilities.CheckBudgetBlock(playerId)))
+                    {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
+                        int areas = await CountMinSupport(playerId, data.Number);
                         if(areas == -1)
                         {
                             return (dbRefPlayerStats, -1, false, -1, null);
@@ -426,7 +465,12 @@ public class AddRemoveCardImp : MonoBehaviour
                             errorPanelController.ShowError("no_budget");
                             return (dbRefPlayerStats, -1, false, -1, null);
                         }
-                    playerBudget += budgetMulti;
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
+                        playerBudget += budgetMulti;
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                     await cardUtilities.CheckAndAddCopyBudget(playerId, budgetMulti);
                 } else
@@ -438,11 +482,21 @@ public class AddRemoveCardImp : MonoBehaviour
 
             } else
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, false, -1, null);
+                    }
                     if (!(await cardUtilities.CheckBudgetBlock(playerId)))
                     {
                         playerBudget += data.Number;
                         if (playerBudget >= 0)
                         {
+                            if (!DataTransfer.IsPlayerTurn)
+                            {
+                                errorPanelController.ShowError("turn_over");
+                                return (dbRefPlayerStats, -1, false, -1, null);
+                            }
                             await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget);
                             await cardUtilities.CheckAndAddCopyBudget(playerId, data.Number);
                         } else
@@ -465,7 +519,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
                 if (data.TargetNumber == 7)
                 {
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, false, -1, null);
+                    }
                     bool errorCheck = await ChangeAllStats(data.Number, playerId, "money");
                     if(errorCheck) {  return (dbRefPlayerStats, -1, false, -1, null); }
                 }
@@ -473,13 +531,28 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if(cardId == "AD047")
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
                         await BudgetPenalty();
                         
                     } else if(cardId == "AD090")
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
                         enemyId = await HighestSupportInArea(chosenRegion);
                         if(enemyId == null)
                         {
+                            return (dbRefPlayerStats, -1, false, -1, null);
+                        }
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
                             return (dbRefPlayerStats, -1, false, -1, null);
                         }
                         playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money",playerBudget);
@@ -492,6 +565,11 @@ public class AddRemoveCardImp : MonoBehaviour
                     else {
                         if (string.IsNullOrEmpty(enemyId))
                         {
+                            if (!DataTransfer.IsPlayerTurn)
+                            {
+                                errorPanelController.ShowError("turn_over");
+                                return (dbRefPlayerStats, -1, false, -1, null);
+                            }
                             enemyId = await playerListManager.SelectEnemyPlayer();
                             if (string.IsNullOrEmpty(enemyId))
                             {
@@ -499,6 +577,11 @@ public class AddRemoveCardImp : MonoBehaviour
                                 errorPanelController.ShowError("general_error");
                                 return (dbRefPlayerStats, -1, false, -1, null); 
                             }
+                        }
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, false, -1, null);
                         }
                         playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "money", playerBudget);
                         if (playerBudget == -1)
@@ -518,6 +601,11 @@ public class AddRemoveCardImp : MonoBehaviour
     {
         if (cardId == "AD091")
         {
+            if (!DataTransfer.IsPlayerTurn)
+            {
+                errorPanelController.ShowError("turn_over");
+                return (-1, false, null);
+            }
             chosenRegion = await mapManager.SelectArea();
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
@@ -534,6 +622,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (cardId == "AD069" || cardId == "AD071")
         {
+            if (!DataTransfer.IsPlayerTurn)
+            {
+                errorPanelController.ShowError("turn_over");
+                return (-1, false, null);
+            }
             chosenRegion = await mapManager.SelectArea();
             isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
         }
@@ -555,7 +648,12 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 if (data.TargetNumber == 8)
                 {
-                   bool errorCheck = await ChangeAllSupport(data.Number);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
+                    }
+                    bool errorCheck = await ChangeAllSupport(data.Number);
                     if(errorCheck)
                     {
                         return (-1, false, null);
@@ -565,12 +663,22 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     if(chosenRegion < 0)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (-1, false, null);
+                        }
                         chosenRegion = await mapManager.SelectArea();
                         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                     }
 
                     if (data.TargetNumber == 7)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (-1, false, null);
+                        }
                         bool errorCheck = await ChangeAreaSupport(chosenRegion, data.Number, playerId);
                         if (errorCheck)
                         {
@@ -582,9 +690,19 @@ public class AddRemoveCardImp : MonoBehaviour
 
                         if (cardId == "AD091")
                         {
+                            if (!DataTransfer.IsPlayerTurn)
+                            {
+                                errorPanelController.ShowError("turn_over");
+                                return (-1, false, null);
+                            }
                             enemyId = await LowestSupportInArea(chosenRegion);
                             if(enemyId == null)
                             {
+                                return (-1, false, null);
+                            }
+                            if (!DataTransfer.IsPlayerTurn)
+                            {
+                                errorPanelController.ShowError("turn_over");
                                 return (-1, false, null);
                             }
                             bool checkError = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
@@ -596,11 +714,21 @@ public class AddRemoveCardImp : MonoBehaviour
                         }
                         else
                         {
+                            if (!DataTransfer.IsPlayerTurn)
+                            {
+                                errorPanelController.ShowError("turn_over");
+                                return (-1, false, null);
+                            }
                             enemyId = await playerListManager.SelectEnemyPlayerInArea(chosenRegion);
                             if (string.IsNullOrEmpty(enemyId))
                             {
                                 Debug.LogError("No enemy player found in the area.");
                                 errorPanelController.ShowError("general_error");
+                                return (-1, false, null);
+                            }
+                            if (!DataTransfer.IsPlayerTurn)
+                            {
+                                errorPanelController.ShowError("turn_over");
                                 return (-1, false, null);
                             }
                             bool errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
@@ -614,8 +742,11 @@ public class AddRemoveCardImp : MonoBehaviour
                                     errorPanelController.ShowError("general_error");
                                     return (-1, false, null);
                                 }
-
-                                Debug.Log("dobieram kartę");
+                                if (!DataTransfer.IsPlayerTurn)
+                                {
+                                    errorPanelController.ShowError("turn_over");
+                                    return (-1, false, null);
+                                }
 
                                 foreach (var cardData in cardsBonusOptionsDictionary.Values)
                                 {
@@ -663,21 +794,40 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 if (data.TargetNumber == 8)
                 {
-                   bool errorCheck = await ChangeSupportForAllRegions(data.Number);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
+                    }
+                    bool errorCheck = await ChangeSupportForAllRegions(data.Number);
                     if (errorCheck) { return (-1, false, null); }
                 }
                 else
                 {
-
                     if (chosenRegion < 0)
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (-1, false, null);
+                        }
                         chosenRegion = await mapManager.SelectArea();
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
                     }
                     bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
                     if (errorCheck) { return (-1, false, null); }
 
                     if (cardId == "AD075")
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (-1, false, null);
+                        }
                         isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                         if (isBonusRegion)
                         {
@@ -696,13 +846,28 @@ public class AddRemoveCardImp : MonoBehaviour
                 {
                     bool checkError = false;
                     List<int> areas;
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
+                    }
                     (areas,checkError) = await CheckHighestSupport(playerId);
                     if(checkError)
                     {
                         return (-1, false, null);
                     }
                     int supportValue = data.Number;
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
+                    }
                     supportValue = await cardUtilities.CheckBonusSupport(playerId, supportValue);
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
+                    }
                     foreach (var regionId in areas)
                     {
                         checkError = await cardUtilities.ChangeSupport(playerId, supportValue, regionId, cardId, mapManager);
@@ -715,10 +880,20 @@ public class AddRemoveCardImp : MonoBehaviour
                 }
                 else
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (-1, false, null);
+                    }
                     chosenRegion = await cardUtilities.RandomizeRegion(playerId, data.Number,mapManager);
                     if (chosenRegion == -1)
                     {
                         Debug.LogError("Failed to randomize region.");
+                        return (-1, false, null);
+                    }
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
                         return (-1, false, null);
                     }
                     bool errorCheck = await cardUtilities.ChangeSupport(playerId, data.Number, chosenRegion, cardId, mapManager);
@@ -730,11 +905,26 @@ public class AddRemoveCardImp : MonoBehaviour
             }
             else if (data.Target == "enemy-random")
             {
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (-1, false, null);
+                }
                 enemyId = await playerListManager.SelectEnemyPlayer();
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (-1, false, null);
+                }
                 chosenRegion = await cardUtilities.RandomizeRegion(enemyId, data.Number, mapManager);
                 if (chosenRegion == -1)
                 {
                     Debug.LogError("Failed to randomize region.");
+                    return (-1, false, null);
+                }
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
                     return (-1, false, null);
                 }
                 bool errorCheck = await cardUtilities.ChangeSupport(enemyId, data.Number, chosenRegion, cardId, mapManager);
@@ -782,6 +972,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
             if (data.Target == "player")
             {
+                if (!DataTransfer.IsPlayerTurn)
+                {
+                    errorPanelController.ShowError("turn_over");
+                    return (dbRefPlayerStats, -1, enemyId);
+                }
                 if (!(await cardUtilities.CheckIncomeBlock(playerId)))
                 {
                     playerIncome += data.Number;
@@ -807,6 +1002,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
                 if (data.TargetNumber == 7)
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
                     bool errorCheck = await ChangeAllStats(data.Number, playerId, "income");
                     if (errorCheck) { return (dbRefPlayerStats, -1, enemyId); }
                 }
@@ -815,6 +1015,11 @@ public class AddRemoveCardImp : MonoBehaviour
 
                     if (string.IsNullOrEmpty(enemyId))
                     {
+                        if (!DataTransfer.IsPlayerTurn)
+                        {
+                            errorPanelController.ShowError("turn_over");
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
                         enemyId = await playerListManager.SelectEnemyPlayer();
                         if (string.IsNullOrEmpty(enemyId))
                         {
@@ -823,7 +1028,11 @@ public class AddRemoveCardImp : MonoBehaviour
                             return (dbRefPlayerStats, -1, enemyId);
                         }
                     }
-
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
                     playerBudget = await cardUtilities.ChangeEnemyStat(enemyId, data.Number, "income", playerBudget);
                     if(playerBudget == -1)
                     {
@@ -836,6 +1045,11 @@ public class AddRemoveCardImp : MonoBehaviour
             {
                 if (data.TargetNumber == 7)
                 {
+                    if (!DataTransfer.IsPlayerTurn)
+                    {
+                        errorPanelController.ShowError("turn_over");
+                        return (dbRefPlayerStats, -1, enemyId);
+                    }
                     await ChangeAreaIncome(chosenRegion, data.Number, playerId);
                 }
             }
