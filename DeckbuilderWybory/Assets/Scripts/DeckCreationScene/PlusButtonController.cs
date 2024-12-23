@@ -12,6 +12,13 @@ public class PlusButtonController : MonoBehaviour
     public void OnPlusButtonClicked()
     {
         Debug.Log($"Klikniêto przycisk +");
+
+        // Sprawdzamy, czy scrollContent ma ju¿ 9 dzieci
+        if (scrollContent.childCount >= 9)
+        {
+            Debug.LogError("Nie mo¿na dodaæ wiêcej ni¿ 8 talii. Limit osi¹gniêty.");
+            return;
+        }
         // Tworzymy now¹ nazwê talii
         string newDeckName = "Nowa Talia";
         newDeckName = GetUniqueDeckName(newDeckName);
