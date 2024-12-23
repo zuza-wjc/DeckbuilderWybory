@@ -16,6 +16,8 @@ public class ChangeDeckNameController : MonoBehaviour
     public Text placeholder;
     public GameObject changeDeckNamePanel;
 
+    public AddCardsPanelController addCardsPanelController;
+
     private string newDeckName;
     private string oldDeckName;
 
@@ -108,6 +110,8 @@ public class ChangeDeckNameController : MonoBehaviour
                 if (deckNameText != null)
                 {
                     deckNameText.text = newDeckName;
+                    addCardsPanelController.DeleteDeck(oldDeckName);
+                    addCardsPanelController.SaveDeck();
                 }
 
                 return;
@@ -144,6 +148,12 @@ public class ChangeDeckNameController : MonoBehaviour
     {
         public List<string> items; // Lista decków
     }
+    [System.Serializable]
+    public class CardListWrapper
+    {
+        public List<CardData> cards;
+    }
+
     public void ClosePanel()
     {
         changeDeckNamePanel.SetActive(false);

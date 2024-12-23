@@ -3830,6 +3830,7 @@ MonoBehaviour:
   deckNameText: {fileID: 1686203898}
   placeholder: {fileID: 1401853352}
   changeDeckNamePanel: {fileID: 746247397}
+  addCardsPanelController: {fileID: 408038053}
 --- !u!114 &825991474 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 273761749536801976, guid: 726f3add9a0193b48bfe59c2318f2008, type: 3}

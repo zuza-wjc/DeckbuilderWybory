@@ -275,6 +275,45 @@ public class AddCardsPanelController : MonoBehaviour
             Debug.LogWarning("Deck name is not set or is empty.");
         }
     }
+    public void DeleteDeck(string deckName)
+    {
+        // SprawdŸ, czy nazwa decka jest ustawiona i nie jest pusta
+        if (deckNameText != null && !string.IsNullOrEmpty(deckNameText.text))
+        {
+            //string deckName = deckNameText.text;
+
+            // Usuñ zapisany deck z PlayerPrefs
+            if (PlayerPrefs.HasKey(deckName))
+            {
+                PlayerPrefs.DeleteKey(deckName);
+                Debug.Log($"DECKU USUNIETY: {deckNameText.text}.");
+                PlayerPrefs.Save(); // Upewnij siê, ¿e zmiany zostan¹ zapisane
+
+                // Pobierz listê zapisanych decków
+                List<string> decks = LoadDeckNames();
+                if (decks.Contains(deckName))
+                {
+                    decks.Remove(deckName);
+
+                    // Zapisz zaktualizowan¹ listê decków
+                    string decksJson = JsonUtility.ToJson(new ListWrapper { items = decks });
+                    PlayerPrefs.SetString("decks", decksJson);
+                    PlayerPrefs.Save(); // Upewnij siê, ¿e zmiany zostan¹ zapisane
+                }
+
+                Debug.Log($"Deck '{deckName}' has been deleted from PlayerPrefs.");
+            }
+            else
+            {
+                Debug.LogWarning($"Deck '{deckName}' does not exist in PlayerPrefs.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Deck name is not set or is empty.");
+        }
+    }
+
 
 
     // Funkcja ³aduj¹ca listê nazw talii z PlayerPrefs
