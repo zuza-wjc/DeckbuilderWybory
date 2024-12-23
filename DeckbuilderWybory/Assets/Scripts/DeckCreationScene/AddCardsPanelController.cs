@@ -249,19 +249,25 @@ public class AddCardsPanelController : MonoBehaviour
 
     public void SaveDeck()
     {
-        foreach (var card in cardList)
-        {
-            Debug.Log($"Karta: {card.cardName}, ID: {card.cardId}, Typ: {card.type}, Iloœæ: {card.cardsCount}");
-        }
         string json = JsonUtility.ToJson(new CardListWrapper { cards = cardList });
 
         // Zapisanie do PlayerPrefs, u¿ywaj¹c nazwy z DeckNameText
         if (deckNameText != null && !string.IsNullOrEmpty(deckNameText.text))
         {
-            PlayerPrefs.SetString(deckNameText.text, json); // Zapisz z dynamiczn¹ nazw¹
+            string deckName = deckNameText.text;
+            PlayerPrefs.SetString(deckName, json); // Zapisz z dynamiczn¹ nazw¹
             PlayerPrefs.Save(); // Upewnij siê, ¿e zmiany zostan¹ zapisane
-            //PlayerPrefsKeysManager.AddKey(deckNameText.text);
 
+            // £adujemy istniej¹c¹ listê decków
+            List<string> decks = LoadDeckNames();
+            if (!decks.Contains(deckName))
+            {
+                decks.Add(deckName);
+                // Upewnij siê, ¿e zapisujemy listê jako obiekt, nie tylko JSON listy
+                string decksJson = JsonUtility.ToJson(new ListWrapper { items = decks });
+                PlayerPrefs.SetString("decks", decksJson);  // Zapisz listê decków jako JSON
+                PlayerPrefs.Save();  // Upewnij siê, ¿e zmiany zostan¹ zapisane
+            }
             Debug.Log($"Deck saved to PlayerPrefs with name {deckNameText.text}.");
         }
         else
@@ -269,6 +275,30 @@ public class AddCardsPanelController : MonoBehaviour
             Debug.LogWarning("Deck name is not set or is empty.");
         }
     }
+
+
+    // Funkcja ³aduj¹ca listê nazw talii z PlayerPrefs
+    private List<string> LoadDeckNames()
+    {
+        // Pobieramy JSON z PlayerPrefs, domyœlnie jest to pusty JSON []
+        string decksJson = PlayerPrefs.GetString("decks", "{\"items\":[]}");
+
+        // Deserializujemy JSON do obiektu ListWrapper
+        ListWrapper listWrapper = JsonUtility.FromJson<ListWrapper>(decksJson);
+
+        // Zwracamy listê decków
+        return listWrapper.items;
+    }
+
+
+
+    // Klasa pomocnicza do konwersji List<string> na JSON
+    [System.Serializable]
+    public class ListWrapper
+    {
+        public List<string> items; // Lista decków
+    }
+
     [System.Serializable]
     public class CardListWrapper
     {
