@@ -17,7 +17,7 @@ public class LoadDeckIconsController : MonoBehaviour
         CreateDeckIcons(deckNames);
     }
 
-    void CreateDeckIcons(List<string> deckNames)
+    public void CreateDeckIcons(List<string> deckNames)
     {
         foreach (string deckName in deckNames)
         {
@@ -28,7 +28,7 @@ public class LoadDeckIconsController : MonoBehaviour
             GameObject icon = Instantiate(ChooseDeckIconPrefab, Panel);
 
             // Ustawiamy nazwê obiektu
-            icon.name = "DeckIcon" + deckName;
+            icon.name = deckName;
 
             // Znajdujemy komponent tekstowy dziecka i ustawiamy jego tekst na nazwê talii
             Text deckNameText = icon.GetComponentInChildren<Text>();
@@ -58,7 +58,7 @@ public class LoadDeckIconsController : MonoBehaviour
 
             // Zwiêkszamy szerokoœæ i skalê
             Vector3 newScale = icon.transform.localScale;
-            newScale.x *= 1.2f; // Zwiêkszamy szerokoœæ o 20%
+            newScale.x *= 1.1f; // Zwiêkszamy szerokoœæ o 20%
             icon.transform.localScale = newScale;
 
             icon.transform.localScale *= 100.0f;
