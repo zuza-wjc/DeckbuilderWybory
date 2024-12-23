@@ -6,6 +6,7 @@ public class PlusButtonController : MonoBehaviour
 {
     public LoadDeckIconsController loadDeckIconsController;
     public Transform scrollContent;
+    public GameObject tooMuchDecksPanel;
     private List<string> deckNames = new List<string>();
 
     // Funkcja wywo³ywana przy klikniêciu przycisku
@@ -17,6 +18,7 @@ public class PlusButtonController : MonoBehaviour
         if (scrollContent.childCount >= 9)
         {
             Debug.LogError("Nie mo¿na dodaæ wiêcej ni¿ 8 talii. Limit osi¹gniêty.");
+            tooMuchDecksPanel.SetActive(true);
             return;
         }
         // Tworzymy now¹ nazwê talii
@@ -56,5 +58,9 @@ public class PlusButtonController : MonoBehaviour
         }
 
         return uniqueName;
+    }
+    public void CloseWarningPanel()
+    {
+        tooMuchDecksPanel.SetActive(false);
     }
 }
