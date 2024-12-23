@@ -37,6 +37,26 @@ public class LoadDeckIconsController : MonoBehaviour
                 deckNameText.text = deckName;
             }
 
+            // Znajdujemy komponent Button i przypisujemy zdarzenie klikniêcia
+            Button button = icon.GetComponent<Button>();
+            if (button != null)
+            {
+                DeckTextSavingManager manager = FindObjectOfType<DeckTextSavingManager>();
+                if (manager != null)
+                {
+                    button.onClick.AddListener(() => manager.SaveDeckName(button));
+                }
+                else
+                {
+                    Debug.LogWarning("DeckTextSavingManager not found in the scene!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("No Button component found in the prefab!");
+            }
+
+            // Zwiêkszamy szerokoœæ i skalê
             Vector3 newScale = icon.transform.localScale;
             newScale.x *= 1.2f; // Zwiêkszamy szerokoœæ o 20%
             icon.transform.localScale = newScale;
@@ -49,6 +69,7 @@ public class LoadDeckIconsController : MonoBehaviour
             }
         }
     }
+
 
     private List<string> LoadDeckNames()
     {
