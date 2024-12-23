@@ -20,8 +20,8 @@ public class Instruction : MonoBehaviour
 
     void Start()
     {
-        instructionText.text="Witamy w Instrukcji gry Talia Władzy. Rozgrywka uruchomi się automatycznie gdy wszyscy gracze w lobby będą obecni i zaznaczą że są gotowi poprzez wciśnięcie przycisku z lewej strony ekranu.";
-        instructionTitle.text="Lobby";
+        instructionText.text="Witamy w Instrukcji gry Talia Władzy. Jeśli chcesz zmodyfikować swoją talię, wejdź w TWOJE TALIE w MENU. W talii musisz mieć 10 kart Podstawowych i 15 kart Specjalnych wybranego typu.";
+        instructionTitle.text="Twoje Talie";
         pageNumber.text="1/15";
         pagePreviousButton.interactable=false;
 
@@ -56,7 +56,7 @@ public class Instruction : MonoBehaviour
         switch (pageCount)
         {
             case 1:
-                instructionText.text="Witamy w Instrukcji gry Talia Władzy. Jeśli chcesz zmodyfikować swoją talię, wejdź w TWOJE TALIE w MENU. W talii musisz mieć 10 kart Podstawowych i 15 kart Specjalnych wybranego typu.";
+                instructionText.text="Witamy w Instrukcji gry Talia Władzy. Jeśli chcesz zmodyfikować swoją talię, wejdź w TWOJE TALIE w MENU. W talii musisz mieć 20 kart Podstawowych i 10 kart Specjalnych wybranego typu.";
                 instructionTitle.text="Twoje Talie";
                 pageNumber.text="1/15";
                 pagePreviousButton.interactable=false;

@@ -50,4 +50,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Instruction.unity
     guid: c120afe3ac52fc246af5e548e67d4164
+  - enabled: 1
+    path: Assets/Scenes/DeckScenes/DeckInstruction.unity
+    guid: 3524b73b5e7196343ab79ecd9aae8640
   m_configObjects: {}
