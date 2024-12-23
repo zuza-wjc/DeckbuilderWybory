@@ -83,32 +83,53 @@ public class DeckController : MonoBehaviour
 
     private async Task LoadCardsFromJson()
     {
-        string buttonName = "TALIA #1";
+        string deckName = "TALIA #1";
 
         if (dbRef == null)
         {
             Debug.LogError("Database reference is null!");
             return;
         }
+        dbRef = FirebaseInitializer.DatabaseReference
+            .Child("sessions")
+            .Child(lobbyId)
+            .Child("players");
 
-        string jsonDeck = PlayerPrefs.GetString(buttonName, "");
 
-        // JSON na obiekt klasy Deck
-        Deck deck = JsonUtility.FromJson<Deck>(jsonDeck);
-
-        if (deck == null || deck.cards == null || deck.cards.Count == 0)
+        var DeckSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckType").GetValueAsync();
+        if (DeckSnapshot.Exists)
         {
-            Debug.LogError("Deserializacja nie powiodła się lub talia jest pusta.");
-            return;
-        }
+            string deckType = DeckSnapshot.Value.ToString();
+            Debug.Log($"DeckType found: {deckType}");
 
-        foreach (CardData card in deck.cards)
-        {
-            for (int i = 0; i < card.cardsCount; i++)
+            string jsonDeck = PlayerPrefs.GetString(deckType, "");
+
+            // JSON na obiekt klasy Deck
+            Deck deck = JsonUtility.FromJson<Deck>(jsonDeck);
+
+            if (deck == null || deck.cards == null || deck.cards.Count == 0)
             {
-                AddCardToDeck(card.cardId, false);
+                Debug.LogError("Deserializacja nie powiodła się lub talia jest pusta.");
+                return;
             }
+
+            foreach (CardData card in deck.cards)
+            {
+                for (int i = 0; i < card.cardsCount; i++)
+                {
+                    AddCardToDeck(card.cardId, false);
+                }
+            }
+
+            }
+        else
+        {
+            Debug.LogWarning("DeckType not found for the player.");
+            errorPanelController.ShowError("Deck type not assigned to the player!");
         }
+
+
+        
 
     }
 
