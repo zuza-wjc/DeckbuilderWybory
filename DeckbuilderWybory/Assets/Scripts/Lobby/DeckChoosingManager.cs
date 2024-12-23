@@ -19,6 +19,7 @@ public class DeckChoosingManager : MonoBehaviour
     public Button chooseMetropoliaButton;
     public Button chooseSrodowiskoButton;
     public Button choosePrzemyslButton;
+    public Text deckNameText;
     public GameObject defaultDeckChoosingPanel;
 
     private DatabaseReference dbRef;
@@ -51,6 +52,11 @@ public class DeckChoosingManager : MonoBehaviour
     }
     public void ShowChoosingPanel()
     {
+        chooseDeckPanel.SetActive(true);
+    }
+    public void BackToCustomDecks()
+    {
+        defaultDeckChoosingPanel.SetActive(false);
         chooseDeckPanel.SetActive(true);
     }
     public void CreateDeckIcons(List<string> deckNames)
@@ -109,6 +115,7 @@ public class DeckChoosingManager : MonoBehaviour
             await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(buttonName);
             await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(false);
 
+            deckNameText.text = "Twoja talia: " + buttonName;
             Debug.Log($"DeckType '{buttonName}' set for player '{playerId}'.");
 
             chooseDeckPanel.SetActive(false);
@@ -191,6 +198,7 @@ public class DeckChoosingManager : MonoBehaviour
 
             await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(true);
             await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(deckType);
+            deckNameText.text = "Twoja talia: " + deckType;
             Debug.Log($"DeckType '{deckType}' set for player '{playerId}'.");
 
             // Wy��cz panel z przyciskami
@@ -201,7 +209,6 @@ public class DeckChoosingManager : MonoBehaviour
             Debug.LogError($"Error updating player stats: {ex.Message}");
         }
     }
-
 
     void OnDestroy()
     {
