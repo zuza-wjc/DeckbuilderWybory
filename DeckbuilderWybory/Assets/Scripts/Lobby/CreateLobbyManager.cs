@@ -30,6 +30,7 @@ public class CreateLobbyManager : MonoBehaviour
     bool isPublic = true; 
     int lobbySize = 2;
 
+    public GameObject namePanel;
     void Start()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -137,7 +138,6 @@ public class CreateLobbyManager : MonoBehaviour
         string playerId = System.Guid.NewGuid().ToString();
 
         var random = new System.Random();
-        string playerName = DataTransfer.PlayerName;
 
         string lobbyName = lobbyNameInput.text;
         bool isUnique = await IsLobbyNameUnique(lobbyName);
@@ -153,7 +153,47 @@ public class CreateLobbyManager : MonoBehaviour
             StartCoroutine(ShowErrorMessage("NAZWA JEST JUŻ ZAJĘTA"));
             return;
         }
-         
+
+        DataTransfer.LobbyId = lobbyId;
+
+        if (namePanel != null)
+        {
+            namePanel.SetActive(true);
+
+            var playerNameController = namePanel.GetComponentInChildren<PlayerNameController>();
+            if (playerNameController != null)
+            {
+                bool nameAccepted = false;
+
+                while (!nameAccepted)
+                {
+                    TaskCompletionSource<bool> nameAcceptedTcs = new TaskCompletionSource<bool>();
+
+                    playerNameController.OnSubmitCallback = (success) =>
+                    {
+                        nameAcceptedTcs.SetResult(success);
+                    };
+
+                    nameAccepted = await nameAcceptedTcs.Task;
+
+                    if (!nameAccepted)
+                    {
+                        Debug.Log("Imię niepoprawne, proszę spróbować ponownie.");
+                    }
+                }
+
+                namePanel.SetActive(false);
+
+            }
+            else
+            {
+                Debug.LogError("Brak komponentu PlayerNameController w namePanel.");
+                return;
+            }
+        }
+
+        string playerName = DataTransfer.PlayerName;
+
         await CheckAndSetMapData(lobbyId);
 
         int isStarted = 0;
@@ -175,7 +215,7 @@ public class CreateLobbyManager : MonoBehaviour
             { "rounds", 10 },
             { "players", new Dictionary<string, object> {
                 { playerId, new Dictionary<string, object> {
-                    { "playerName", "" },
+                    { "playerName", playerName },
                     {"drawCardsLimit", 4 },
                     { "ready", false },
                     { "stats", new Dictionary<string, object> {

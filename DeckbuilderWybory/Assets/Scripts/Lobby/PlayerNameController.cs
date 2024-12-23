@@ -7,10 +7,11 @@ public class PlayerNameController : MonoBehaviour
 {
     public InputField inputField;
     public Text errorMessage;
-    public GameObject sectionToChange;
-    public GameObject sectionFromChange;
+    public GameObject namePanel;
 
     private DatabaseReference dbRef;
+
+    public System.Action<bool> OnSubmitCallback;
 
     void Start()
     {
@@ -30,6 +31,7 @@ public class PlayerNameController : MonoBehaviour
         if (string.IsNullOrEmpty(playerName))
         {
             ShowErrorMessage("Pole nie mo¿e byæ puste!");
+            OnSubmitCallback?.Invoke(false);
             return;
         }
 
@@ -37,21 +39,14 @@ public class PlayerNameController : MonoBehaviour
 
         if (nameExists)
         {
-            bool isNameUpdated = await SetPlayerNameInDatabase(playerName);
-
-            if (isNameUpdated)
-            {
-                DataTransfer.PlayerName = playerName;
-                SwitchSections();
-            }
-            else
-            {
-                ShowErrorMessage("B³¹d z baz¹ danych.");
-            }
+            ShowErrorMessage("To imiê jest ju¿ zajête!");
+            OnSubmitCallback?.Invoke(false);
         }
         else
         {
-            ShowErrorMessage("To imiê jest ju¿ zajête!");
+            DataTransfer.PlayerName = playerName;
+            OnSubmitCallback?.Invoke(true);
+            CloseNamePanel();
         }
     }
 
@@ -59,6 +54,11 @@ public class PlayerNameController : MonoBehaviour
     {
         try
         {
+            if (string.IsNullOrEmpty(DataTransfer.LobbyId))
+            {
+                return false;
+            }
+
             DataSnapshot snapshot = await dbRef
                 .Child(DataTransfer.LobbyId)
                 .Child("players")
@@ -66,43 +66,21 @@ public class PlayerNameController : MonoBehaviour
                 .EqualTo(playerName)
                 .GetValueAsync();
 
-            return snapshot.ChildrenCount == 0;
+            return snapshot.ChildrenCount > 0;
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"B³¹d podczas sprawdzania nazwy gracza: {ex.Message}");
             ShowErrorMessage("B³¹d z baz¹ danych.");
-            return false;
-        }
-    }
-
-    private async System.Threading.Tasks.Task<bool> SetPlayerNameInDatabase(string playerName)
-    {
-        try
-        {
-            var playerRef = dbRef.Child(DataTransfer.LobbyId).Child("players").Child(DataTransfer.PlayerId);
-            await playerRef.Child("playerName").SetValueAsync(playerName);
             return true;
         }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"B³¹d podczas zapisywania imienia gracza: {ex.Message}");
-            ShowErrorMessage("B³¹d z baz¹ danych.");
-            return false;
-        }
     }
 
-    private void SwitchSections()
+    private void CloseNamePanel()
     {
-        if (sectionFromChange != null && sectionToChange != null)
+        if (namePanel != null)
         {
-            sectionFromChange.SetActive(false);
-            sectionToChange.SetActive(true);
-        }
-
-        if (errorMessage != null)
-        {
-            errorMessage.text = "";
+            namePanel.SetActive(false);
         }
     }
 

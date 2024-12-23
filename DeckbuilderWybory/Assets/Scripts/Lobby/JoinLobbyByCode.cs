@@ -1,13 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Firebase;
 using Firebase.Database;
 using UnityEngine.SceneManagement;
-using System.Collections;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using UnityEngine.SocialPlatforms;
 using System.Linq;
 using System;
 
@@ -19,6 +16,7 @@ public class JoinLobbyByCode : MonoBehaviour
     public Text feedbackText;
 
     public GameObject dialogBox;
+    public GameObject namePanel;
 
     DatabaseReference dbRef;
 
@@ -68,7 +66,42 @@ public class JoinLobbyByCode : MonoBehaviour
             return;
         }
 
-        Debug.Log("Checking and joining lobby...");
+        if (namePanel != null)
+        {
+            namePanel.SetActive(true);
+
+            var playerNameController = namePanel.GetComponentInChildren<PlayerNameController>();
+            if (playerNameController != null)
+            {
+                bool nameAccepted = false;
+
+                while (!nameAccepted)
+                {
+                    TaskCompletionSource<bool> nameAcceptedTcs = new TaskCompletionSource<bool>();
+
+                    playerNameController.OnSubmitCallback = (success) =>
+                    {
+                        nameAcceptedTcs.SetResult(success);
+                    };
+
+                    nameAccepted = await nameAcceptedTcs.Task;
+
+                    if (!nameAccepted)
+                    {
+                        Debug.Log("Imię niepoprawne, proszę spróbować ponownie.");
+                    }
+                }
+
+                namePanel.SetActive(false);
+
+            }
+            else
+            {
+                Debug.LogError("Brak komponentu PlayerNameController w namePanel.");
+                return;
+            }
+        }
+
         bool joinedSuccessfully = false;
 
         try
@@ -140,7 +173,7 @@ public class JoinLobbyByCode : MonoBehaviour
 
                 Dictionary<string, object> playerData = new Dictionary<string, object>
                 {
-                    { "playerName", "" },
+                    { "playerName", DataTransfer.PlayerName },
                     { "ready", false },
                     { "drawCardsLimit", 4 },
                     { "stats", new Dictionary<string, object>

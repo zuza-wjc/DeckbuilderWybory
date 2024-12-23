@@ -17,6 +17,8 @@ public class LobbyListManager : MonoBehaviour
     string playerId;
     DatabaseReference dbRef;
 
+    public GameObject namePanel;
+
     void Start()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -81,7 +83,6 @@ public class LobbyListManager : MonoBehaviour
 
         bool isPublicValue = bool.Parse(args.Snapshot.Child("isPublic").GetValue(true).ToString());
 
-        // Sprawdź, czy liczba graczy jest mniejsza od rozmiaru lobby
         if (playerCount >= lobbySize)
         {
             string lobbyName = args.Snapshot.Child("lobbyName").GetValue(true).ToString();
@@ -179,7 +180,8 @@ public class LobbyListManager : MonoBehaviour
 
 
     public async Task<bool> AddPlayer(string lobbyId)
-    {
+    {     
+        
         playerId = System.Guid.NewGuid().ToString();
         bool success = false;
 
@@ -214,7 +216,7 @@ public class LobbyListManager : MonoBehaviour
 
                 Dictionary<string, object> playerData = new Dictionary<string, object>
                 {
-                    { "playerName", "" },
+                    { "playerName", DataTransfer.PlayerName },
                     { "ready", false },
                     { "drawCardsLimit", 4 },
                     { "stats", new Dictionary<string, object>
@@ -326,11 +328,76 @@ public class LobbyListManager : MonoBehaviour
         }
     }
 
+    private async Task<bool> CheckIfLobbyIsFull(string lobbyId, int lobbySize)
+    {
+        try
+        {
+            var snapshot = await dbRef.Child(lobbyId).Child("players").GetValueAsync();
+            int currentPlayers = (int)snapshot.ChildrenCount;
+
+            if (currentPlayers >= lobbySize)
+            {
+                return true;
+            }
+            return false; 
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Błąd podczas sprawdzania, czy lobby jest pełne: {ex.Message}");
+            return true;
+        }
+    }
+
     async Task TaskOnClick(string lobbyName, string lobbyId, int lobbySize)
     {
         SetButtonsInteractable(false);
+        DataTransfer.LobbyId = lobbyId;
 
-        Debug.Log("Checking and joining lobby...");
+        if (namePanel != null)
+        {
+            namePanel.SetActive(true);
+
+            var playerNameController = namePanel.GetComponentInChildren<PlayerNameController>();
+            if (playerNameController != null)
+            {
+                bool nameAccepted = false;
+
+                while (!nameAccepted)
+                {
+                    TaskCompletionSource<bool> nameAcceptedTcs = new TaskCompletionSource<bool>();
+
+                    playerNameController.OnSubmitCallback = (success) =>
+                    {
+                        nameAcceptedTcs.SetResult(success);
+                    };
+
+                    nameAccepted = await nameAcceptedTcs.Task;
+
+                    if (!nameAccepted)
+                    {
+                        Debug.Log("Imię niepoprawne, proszę spróbować ponownie.");
+                    }
+                }
+
+                namePanel.SetActive(false);
+
+                bool isLobbyFull = await CheckIfLobbyIsFull(lobbyId, lobbySize);
+                if (isLobbyFull)
+                {
+                    openDialogBox();
+                    SetButtonsInteractable(true);
+                    return;
+                }
+            }
+            else
+            {
+                Debug.LogError("Brak komponentu PlayerNameController w namePanel.");
+                SetButtonsInteractable(true);
+                return;
+            }
+        }
+
+
         bool joinedSuccessfully = false;
 
         try
@@ -350,7 +417,6 @@ public class LobbyListManager : MonoBehaviour
             await AllocateSupportAsync(lobbyId, random);
 
             DataTransfer.LobbyName = lobbyName;
-            DataTransfer.LobbyId = lobbyId;
             DataTransfer.LobbySize = lobbySize;
             DataTransfer.PlayerId = playerId;
 
