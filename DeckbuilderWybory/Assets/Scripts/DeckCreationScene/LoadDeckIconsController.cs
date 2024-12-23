@@ -62,7 +62,6 @@ public class LoadDeckIconsController : MonoBehaviour
             icon.transform.localScale = newScale;
 
             icon.transform.localScale *= 100.0f;
-            Debug.Log($"Aktualny siblingCount {siblingCount}.");
             if (siblingCount > 0)
             {
                 icon.transform.SetSiblingIndex(siblingCount - 1); // Indeks na przedostatnie dziecko

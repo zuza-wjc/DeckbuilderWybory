@@ -30,6 +30,9 @@ public class DeckChoosingManager : MonoBehaviour
     {
         lobbyId = DataTransfer.LobbyId;
         playerId = DataTransfer.PlayerId;
+        // Pobierz listę nazw talii z PlayerPrefs
+        List<string> deckNames = LoadDeckNames();
+        CreateDeckIcons(deckNames);
 
 
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -41,30 +44,51 @@ public class DeckChoosingManager : MonoBehaviour
         dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
 
-        CreateButtons();
+        //CreateButtons();
 
         defaultButton.onClick.AddListener(DefaultDeck);
 
     }
-
-    void CreateButtons()
+    public void CreateDeckIcons(List<string> deckNames)
     {
-        bool firstChild = true;
-        foreach (Transform child in contentPanel)
+        foreach (string deckName in deckNames)
         {
-            if (firstChild)
+            // Tworzymy obiekt prefabrykatu i przypisujemy go jako dziecko obiektu Panel
+            GameObject icon = Instantiate(buttonPrefab, contentPanel);
+
+            // Ustawiamy nazwę obiektu
+            icon.name = deckName;
+
+            // Znajdujemy komponent tekstowy dziecka i ustawiamy jego tekst na nazwę talii
+            Text deckNameText = icon.GetComponentInChildren<Text>();
+            if (deckNameText != null)
             {
-                firstChild = false;
-                continue;
+                deckNameText.text = deckName;
             }
-            Destroy(child.gameObject);
+
+            // Znajdujemy komponent Button i przypisujemy zdarzenie kliknięcia
+            icon.GetComponentInChildren<Text>().text = deckName;
+
+            icon.GetComponent<Button>().onClick.AddListener(() => ChooseNondefaultDeck(deckName));
         }
+    }
+    
+    private List<string> LoadDeckNames()
+    {
+        string decksJson = PlayerPrefs.GetString("decks", "{\"items\":[]}");
 
-        GameObject newButton = Instantiate(buttonPrefab, contentPanel);
-        newButton.GetComponentInChildren<Text>().text = "TALIA #1";
+        // Deserializujemy JSON do obiektu ListWrapper
+        ListWrapper listWrapper = JsonUtility.FromJson<ListWrapper>(decksJson);
 
-        newButton.GetComponent<Button>().onClick.AddListener(() => ChooseNondefaultDeck("TALIA #1"));
+        // Zwracamy listę decków
+        return listWrapper.items;
+    }
 
+    // Klasa pomocnicza do konwersji List<string> na JSON
+    [System.Serializable]
+    public class ListWrapper
+    {
+        public List<string> items; // Lista decków
     }
 
 

@@ -12,8 +12,6 @@ public class PlusButtonController : MonoBehaviour
     // Funkcja wywo³ywana przy klikniêciu przycisku
     public void OnPlusButtonClicked()
     {
-        Debug.Log($"Klikniêto przycisk +");
-
         // Sprawdzamy, czy scrollContent ma ju¿ 9 dzieci
         if (scrollContent.childCount >= 9)
         {
