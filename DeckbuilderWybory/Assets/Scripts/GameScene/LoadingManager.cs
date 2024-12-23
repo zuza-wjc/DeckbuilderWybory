@@ -45,6 +45,8 @@ public class LoadingManager : MonoBehaviour
         await SetPlayerInGameAsync();
         await AssignTurnOrderAsync();
 
+        DataTransfer.IsFirstCardInTurn = true;
+
         float elapsedTime = Time.time - startTime;
         float waitTime = Mathf.Max(3f - elapsedTime, 0f);
 

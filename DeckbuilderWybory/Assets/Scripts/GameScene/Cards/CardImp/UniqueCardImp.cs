@@ -270,7 +270,7 @@ public class UniqueCardImp : MonoBehaviour
                         errorPanelController.ShowError("turn_over");
                         return (-1, enemyId);
                     }
-                    if (await CheckBlockAndLog()) break;
+                    if (await CheckBlockAndLog()) return (-1, enemyId);
                     if (!DataTransfer.IsPlayerTurn)
                     {
                         errorPanelController.ShowError("turn_over");
@@ -292,7 +292,7 @@ public class UniqueCardImp : MonoBehaviour
                         errorPanelController.ShowError("turn_over");
                         return (-1, enemyId);
                     }
-                    if (await CheckBlockAndLog()) break;
+                    if (await CheckBlockAndLog()) return (-1, enemyId);
                     if (!DataTransfer.IsPlayerTurn)
                     {
                         errorPanelController.ShowError("turn_over");

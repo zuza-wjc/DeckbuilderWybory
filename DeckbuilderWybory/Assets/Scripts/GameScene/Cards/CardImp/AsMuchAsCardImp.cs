@@ -297,11 +297,11 @@ public class AsMuchAsCardImp : MonoBehaviour
                     return;
                 }
             }
-        } else
-        {
-            errorPanelController.ShowError("action_blocked");
-            return;
-        }
+            } else
+            {
+                errorPanelController.ShowError("action_blocked");
+                return;
+            }
 
         if (ignoreCost)
         {
@@ -346,7 +346,7 @@ public class AsMuchAsCardImp : MonoBehaviour
         {
             Debug.LogError("No options to apply.");
             errorPanelController.ShowError("general_error");
-            return (dbRefPlayerStats,false);
+            return (dbRefPlayerStats,true);
         }
 
         if (isBonusRegion)
@@ -367,25 +367,25 @@ public class AsMuchAsCardImp : MonoBehaviour
                 if (!DataTransfer.IsPlayerTurn)
                 {
                     errorPanelController.ShowError("turn_over");
-                    return (dbRefPlayerStats, false);
+                    return (dbRefPlayerStats, true);
                 }
                 if (!(await cardUtilities.CheckIncomeBlock(playerId))) {
                     if (!DataTransfer.IsPlayerTurn)
                     {
                         errorPanelController.ShowError("turn_over");
-                        return (dbRefPlayerStats, false);
+                        return (dbRefPlayerStats, true);
                     }
                     int howMany = await CalculateValueFromHand(playerId, cardType);
                     if(howMany == -1)
                     {
-                        return (dbRefPlayerStats,false);
+                        return (dbRefPlayerStats, true);
                     }
                     playerIncome += howMany * data.NumberPerCard;
                     await dbRefPlayerStats.Child("income").SetValueAsync(playerIncome);
                 } else
                 {
                     errorPanelController.ShowError("action_blocked");
-                    return (dbRefPlayerStats, false);
+                    return (dbRefPlayerStats, true);
                 }
             }
         }
