@@ -49,6 +49,10 @@ public class DeckChoosingManager : MonoBehaviour
         defaultButton.onClick.AddListener(DefaultDeck);
 
     }
+    public void ShowChoosingPanel()
+    {
+        chooseDeckPanel.SetActive(true);
+    }
     public void CreateDeckIcons(List<string> deckNames)
     {
         foreach (string deckName in deckNames)
@@ -102,7 +106,7 @@ public class DeckChoosingManager : MonoBehaviour
                 return;
             }
 
-            await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync("Ambasada");
+            await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(buttonName);
             await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(false);
 
             Debug.Log($"DeckType '{buttonName}' set for player '{playerId}'.");
