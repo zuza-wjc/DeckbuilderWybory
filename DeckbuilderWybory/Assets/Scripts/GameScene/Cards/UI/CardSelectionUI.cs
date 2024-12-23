@@ -12,7 +12,6 @@ public class CardSelectionUI : MonoBehaviour
     public Transform cardListContainer;
     public Button submitButton;
     public GameObject cardSelectionPanel;
-    public ScrollRect cardScrollView;
     public Text infoText;
 
     public CardSpriteManager cardSpriteManager;

@@ -767,13 +767,13 @@ public class CardUtilities : MonoBehaviour
 
             if (increaseCostTurn == currentTurn)
             {
-                Debug.Log("Increase cost");
                 return true;
             }
         }
 
         return false;
     }
+
 
     public async Task<int> CountCardsOnHand(string playerId)
     {
