@@ -33,12 +33,15 @@ public class AddCardsPanelController : MonoBehaviour
 
     public CardButtonController cardButtonController;
     public EditListCardsPanel editListCardsPanel;
+    public CardSpriteManager cardSpriteManager;
 
     public GameObject addCardPanel;
     public GameObject tooMuchCardsPanel;
     public GameObject cardIconPrefab;
+    public GameObject cardPrefab;
 
     public Transform panelParent;
+    public Transform shadePanel;
 
     public Text deckNameText;
     public Text deckQuantityText;
@@ -303,13 +306,76 @@ public class AddCardsPanelController : MonoBehaviour
         plusButton.onClick.AddListener(IncreaseLobbySize);
         minusButton.onClick.AddListener(DecreaseLobbySize);
         acceptButton.onClick.AddListener(AcceptCard);
-
+        
+        ShowInfoCard();
+        Canvas.ForceUpdateCanvases();
         UpdateLobbySizeText();
+        
 
         // Znajdü CardButtonController w scenie
         cardButtonController = FindObjectOfType<CardButtonController>();
-        //Debug.Log($"Dane karty: ID={cardId}, Typ={type}, MaxDeck={maxDeckNumber}");
     }
+    public void ShowInfoCard()
+    {
+        if (cardSpriteManager != null)
+        {
+            // Get the sprite using the cardId
+            Sprite cardSprite = cardSpriteManager.GetCardSprite(cardId);
+            if (cardSprite != null)
+            {
+                // Assuming you have a reference to the 'cardPrefab' GameObject
+                if (cardPrefab != null)
+                {
+                    GameObject instantiatedCard = Instantiate(cardPrefab);
+                    instantiatedCard.transform.SetParent(shadePanel.transform);
+                    // Get the Image component from the cardPrefab (assuming it's a child of the prefab)
+                    Image cardImage = instantiatedCard.GetComponentInChildren<Image>();
+                    if (cardImage != null)
+                    {
+                        // Set the sprite on the Image component of the prefab
+                        cardImage.sprite = cardSprite;
+                        Debug.Log($"Card sprite for '{cardId}' has been set successfully.");
+                    }
+                    else
+                    {
+                        Debug.LogError("No Image component found in cardPrefab.");
+                    }
+
+                    if (shadePanel != null)
+                    {
+                        instantiatedCard.transform.SetParent(shadePanel.transform);
+
+                        // Adjust the position to the right by changing the localPosition
+                        RectTransform rectTransform = instantiatedCard.GetComponent<RectTransform>();
+                        if (rectTransform != null)
+                        {
+                            // Set the localPosition to move it to the right (adjust the X value)
+                            rectTransform.localPosition = new Vector3(650f, 0f, 0f); // Modify '200f' as per your need
+                            rectTransform.sizeDelta = new Vector2(800f, 1200f);
+                        }
+                        else
+                        {
+                            Debug.LogError("The instantiated card does not have a RectTransform.");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("shadePanel is not assigned.");
+                    }
+                }
+                else
+                {
+                    Debug.LogError("cardPrefab is not assigned.");
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("CardSpriteManager is not assigned.");
+        }
+    }
+
+
 
     public void IncreaseLobbySize()
     {
