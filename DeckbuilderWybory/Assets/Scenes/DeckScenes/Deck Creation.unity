@@ -1694,10 +1694,13 @@ MonoBehaviour:
   srodowiskoListCardSprite: {fileID: 21300000, guid: 95f0eb8487544f44984197ce8ecbf39f, type: 3}
   cardButtonController: {fileID: 818951447}
   editListCardsPanel: {fileID: 272737308}
+  cardSpriteManager: {fileID: 11400000, guid: ed2d075d8d2c1e94abdff7347401c8b4, type: 2}
   addCardPanel: {fileID: 976913445}
   tooMuchCardsPanel: {fileID: 493774882}
   cardIconPrefab: {fileID: 5989604964140433615, guid: 10dba85f365fc9342ac2e099a0b2e7bd, type: 3}
+  cardPrefab: {fileID: 3186081755441940955, guid: 74767850c01cadb49aab5353813df748, type: 3}
   panelParent: {fileID: 1606215286}
+  shadePanel: {fileID: 635271920}
   deckNameText: {fileID: 1686203898}
   deckQuantityText: {fileID: 1217470910}
   infoText: {fileID: 1244992528}

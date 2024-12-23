@@ -13,7 +13,7 @@ public class DeckTextSavingManager : MonoBehaviour
 {
     // Prywatna zmienna DeckLabel
     [SerializeField]
-    private Text DeckLabel;  // Teraz DeckLabel jest prywatne, przypisane w inspektorze Unity
+    private Text DeckLabel;  
 
     // Metoda wywo³ywana przy klikniêciu przycisku
     public void SaveDeckName(Button clickedButton)
