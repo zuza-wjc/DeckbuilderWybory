@@ -90,12 +90,14 @@ public class Instruction : MonoBehaviour
                 screenshot[pageCount-1].gameObject.SetActive(true);
                 return;
             case 5:
-                instructionText.text="Pod licznikiem rund znajdziesz jakie EFEKTY kart obecnie na ciebie wpływają.";
+                instructionText.text="Pod licznikiem rund i nad statystykami gracza znajdziesz jakie EFEKTY kart obecnie na ciebie wpływają. Jeśli nie jesteś pewien co dany symbol oznacza, zawsze możesz wejść w historie.";
                 instructionTitle.text="Efekty";
                 pageNumber.text="5/15";
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
+                screenshot[15].gameObject.SetActive(true);
+                screenshot[16].gameObject.SetActive(true);
                 return;
             case 6:
                 instructionText.text="Po lewej stronie ekranu, na dole, znajdziesz twoje obecne statystki. W lewym kole jest twój BUDŻET oraz na kolorowo twój DOCHÓD. Zagranie karty najczęściej kosztuje Ciebie budżet oraz w każdej rundzie dostajesz tyle budżetu ile wynosi Twój dochód. W prawym kole znajdziesz sumę twojego obecnego POPARCIA. Zaczynasz rozgrywkę z niskim poparciem.";
@@ -104,6 +106,7 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
+                screenshot[17].gameObject.SetActive(true);
                 return;
             case 7:
                 instructionText.text="Na dole po środku ekranu znajdziesz swoje KARTY NA RĘCE. Liczba kart na ręce dopełnia się do 4 po zakończeniu tury. Aby zagrać kartę musisz przeciągnąć ją na jasne pole w górnej części ekranu. W tym obszarze jest też wyświetlany TEKST FABULARNY kiedy jakikolwiek gracz zagra swoją kartę. Można zagrywać karty tylko w swojej turze.";
@@ -112,7 +115,7 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
-                screenshot[16].gameObject.SetActive(true);
+                screenshot[18].gameObject.SetActive(true);
 
                 return;
             case 8:
@@ -122,7 +125,7 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
-                screenshot[17].gameObject.SetActive(true);
+                screenshot[19].gameObject.SetActive(true);
                 return;
             case 9:
                 instructionText.text="Istnieją też karty specjalne charakterystyczne dla TYPU talii jaką grasz, możesz rozpoznać je po ramce innego koloru. Niektóre z nich mają pod opisem ich działania na kolorowo zapisany BONUS, który uaktywnia się gdy ta karta zostaje zagrana na region o tym samym typie co ta karta.";
@@ -131,6 +134,11 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
+                screenshot[20].gameObject.SetActive(true);
+                screenshot[21].gameObject.SetActive(true);
+                screenshot[22].gameObject.SetActive(true);
+                screenshot[23].gameObject.SetActive(true);
+                screenshot[24].gameObject.SetActive(true);
                 return;
             case 10:
                 instructionText.text="Na dole ekranu z prawej strony możesz sprawdzić HISTORIĘ ostatnich zagranych. Przez kogo była zagrana oraz na kogo. Poniżej możesz sprawdzić ile i jakie karty zostały w Twojej TALII. Nie są one pokazane w kolejności w jakiej będziesz je otrzymywać. UWAGA: gdy skończą się karty w tali nie będziesz w stanie otrzymać ich więcej.";
@@ -147,6 +155,8 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
+                screenshot[25].gameObject.SetActive(true);
+                screenshot[26].gameObject.SetActive(true);
                 return;
             case 12:
                 instructionText.text="W statystykach mapy zobaczysz 6 regionów. Kolor regionu wskazuje na jego TYP. Każdy region ma zapisane ile poparcia jest w nim już zajętego na ile można maksymalnie w nim zdobyć. Aby zobaczyć dokładniejsze statystyki regionu, kliknij w jego nazwę.";
@@ -163,7 +173,7 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
-                screenshot[18].gameObject.SetActive(true);
+                screenshot[27].gameObject.SetActive(true);
                 return;
             case 14:
                 instructionText.text="W statystykach graczy zobaczysz wszystkie wartości wszystkich graczy. Z lewej: Nazwa, Budżet, Przychód, Poparcie w całości, Poparcie w poszczególnych regionach. Z prawej: Używany typ talii, liczba kart wciąż w talii.";
@@ -173,7 +183,7 @@ public class Instruction : MonoBehaviour
                 ScrollToTop();
                 foreach (Transform child in screenshotsPanel.transform) child.gameObject.SetActive(false);
                 screenshot[pageCount-1].gameObject.SetActive(true);
-                screenshot[19].gameObject.SetActive(true);
+                screenshot[28].gameObject.SetActive(true);
                 return;
             case 15:
                 instructionText.text="Na koniec gry wygrywa osoba z największym poparciem. W wypadku remisu sprawdzana jest liczba regionów a w następnej kolejności wartość budżetu. Miłej Gry!";
