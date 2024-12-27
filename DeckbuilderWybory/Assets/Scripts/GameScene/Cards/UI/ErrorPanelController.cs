@@ -7,6 +7,8 @@ public class ErrorPanelController : MonoBehaviour
     [SerializeField] private GameObject errorPanel;
     [SerializeField] private Text errorMessageText;
     [SerializeField] private Button okButton;
+    [SerializeField] private GameObject cardListContainer;
+    [SerializeField] private Canvas mainCanvas;
 
     private void Start()
     {
@@ -20,11 +22,38 @@ public class ErrorPanelController : MonoBehaviour
 
         errorMessageText.text = message;
         errorPanel.SetActive(true);
+        errorPanel.transform.SetAsLastSibling();
+
+        MoveCardsToCardListContainer();
     }
 
     private void HideError()
     {
         errorPanel.SetActive(false);
+    }
+
+    private void MoveCardsToCardListContainer()
+    {
+        Transform[] allTransforms = FindObjectsOfType<Transform>();
+
+        foreach (Transform t in allTransforms)
+        {
+            DraggableItem draggableItem = t.GetComponent<DraggableItem>();
+            if (draggableItem != null)
+            {
+                if (t.parent == mainCanvas.transform && t.parent != cardListContainer.transform)
+                {
+                    t.SetParent(cardListContainer.transform);
+                    t.localPosition = Vector3.zero;
+ 
+                    Image cardImage = t.GetComponent<Image>();
+                    if (cardImage != null)
+                    {
+                        cardImage.raycastTarget = true;
+                    }
+                }
+            }
+        }
     }
 }
 

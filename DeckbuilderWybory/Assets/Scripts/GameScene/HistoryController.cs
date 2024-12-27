@@ -93,6 +93,7 @@ public class HistoryController : MonoBehaviour
     {
         ClearUI();
         cardViewerPanel.SetActive(true);
+        cardViewerPanel.transform.SetAsLastSibling();
         infoText.text = "Historia kart";
 
         var snapshot = await historyRef.GetValueAsync();

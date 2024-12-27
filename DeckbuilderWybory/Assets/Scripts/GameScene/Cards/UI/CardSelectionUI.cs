@@ -173,6 +173,7 @@ public class CardSelectionUI : MonoBehaviour
         ClearUI();
 
         cardSelectionPanel.SetActive(true);
+        cardSelectionPanel.transform.SetAsLastSibling();
         submitButton.gameObject.SetActive(false);
 
         infoText.text = "WYBIERZ KARTY";
@@ -214,6 +215,7 @@ public class CardSelectionUI : MonoBehaviour
         ClearUI();
 
         cardSelectionPanel.SetActive(true);
+        cardSelectionPanel.transform.SetAsLastSibling();
         submitButton.gameObject.SetActive(true);
 
         infoText.text = "KARTY GRACZA";
@@ -242,6 +244,7 @@ public class CardSelectionUI : MonoBehaviour
         ClearUI();
 
         cardSelectionPanel.SetActive(true);
+        cardSelectionPanel.transform.SetAsLastSibling();
         submitButton.gameObject.SetActive(true);
 
         submitButton.onClick.RemoveAllListeners();
@@ -271,6 +274,7 @@ public class CardSelectionUI : MonoBehaviour
         ClearUI();
 
         cardSelectionPanel.SetActive(true);
+        cardSelectionPanel.transform.SetAsLastSibling();
         submitButton.gameObject.SetActive(false);
 
         infoText.text = "WYBIERZ KARTÊ DO ZACHOWANIA";

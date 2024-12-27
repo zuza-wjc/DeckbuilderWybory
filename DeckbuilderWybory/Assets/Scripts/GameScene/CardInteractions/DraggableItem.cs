@@ -21,6 +21,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public Image panelImage;
     public Button closeButton;
     string currentCardId;
+    private bool droppedOnSlot = false;
 
     string cardType;
     int sellCost;
@@ -67,19 +68,16 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
         panelImage.sprite = image.sprite;
         cardPanel.SetActive(true);
+        cardPanel.transform.SetAsLastSibling();
 
         DraggableItem draggableItem = GetComponentInParent<DraggableItem>();
         if (draggableItem != null)
         {
             currentCardId = draggableItem.cardId;
         }
-        //Debug.LogError(currentCardId);
-
 
         trashButton.onClick.RemoveAllListeners();
         trashButton.onClick.AddListener(SellPanelOpen);
-
-
 
         closeButton.onClick.RemoveAllListeners();
         closeButton.onClick.AddListener(ClosePanel);
@@ -148,6 +146,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
         sellText.text= $"Czy chcesz sprzedać kartę za {sellCost}k?";
         sellPanel.SetActive(true);
+        sellPanel.transform.SetAsLastSibling();
 
         yesSellButton.onClick.RemoveAllListeners();
         yesSellButton.onClick.AddListener(ExchangeForMoney);
@@ -210,6 +209,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             if (distance > tapThreshold)
             {
                 isDrag = true;
+                droppedOnSlot = false;
                 parentAfterDrag = transform.parent;
                 transform.SetParent(transform.root);
                 transform.SetAsLastSibling();
@@ -230,8 +230,17 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     {
         if (isDrag)
         {
-            transform.SetParent(parentAfterDrag);
-            image.raycastTarget = true;
+            if (!droppedOnSlot)
+            {
+                transform.SetParent(parentAfterDrag);
+                transform.localPosition = Vector3.zero;
+                image.raycastTarget = true;
+            }
         }
+    }
+
+    public void MarkAsDroppedOnSlot()
+    {
+        droppedOnSlot = true;
     }
 }

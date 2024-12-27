@@ -17,6 +17,9 @@ public class DropSlot : MonoBehaviour, IDropHandler
     public Text notYourTurnInfo;
     public CanvasGroup infoTextCanvasGroup;
 
+    [SerializeField] private GameObject cardListContainer;
+    [SerializeField] private Canvas mainCanvas;
+
     private void Awake()
     {
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
@@ -33,7 +36,13 @@ public class DropSlot : MonoBehaviour, IDropHandler
     {
         GameObject dropped = eventData.pointerDrag;
         DraggableItem draggableItem = dropped.GetComponent<DraggableItem>();
-        CheckPlayerTurnAndDrop(draggableItem);
+
+        if (draggableItem != null)
+        {
+            draggableItem.MarkAsDroppedOnSlot();
+
+            CheckPlayerTurnAndDrop(draggableItem);
+        }
     }
 
     private async void CheckPlayerTurnAndDrop(DraggableItem draggableItem)
@@ -80,6 +89,8 @@ public class DropSlot : MonoBehaviour, IDropHandler
 
     private async Task ShowInfoText()
     {
+        MoveCardsToCardListContainer();
+
         if (infoTextCanvasGroup == null || notYourTurnInfo == null)
             return;
 
@@ -91,6 +102,30 @@ public class DropSlot : MonoBehaviour, IDropHandler
         await Task.Delay(2000);
 
         await FadeOutText(1f);
+    }
+
+    private void MoveCardsToCardListContainer()
+    {
+        Transform[] allTransforms = FindObjectsOfType<Transform>();
+
+        foreach (Transform t in allTransforms)
+        {
+            DraggableItem draggableItem = t.GetComponent<DraggableItem>();
+            if (draggableItem != null)
+            {
+                if (t.parent == mainCanvas.transform && t.parent != cardListContainer.transform)
+                {
+                    t.SetParent(cardListContainer.transform);
+                    t.localPosition = Vector3.zero;
+
+                    Image cardImage = t.GetComponent<Image>();
+                    if (cardImage != null)
+                    {
+                        cardImage.raycastTarget = true;
+                    }
+                }
+            }
+        }
     }
 
     private async Task FadeInText(float duration)

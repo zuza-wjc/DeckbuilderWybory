@@ -371,6 +371,7 @@ public class MapManager : MonoBehaviour
         if (mapPanel != null)
         {
             mapPanel.SetActive(true);
+            mapPanel.transform.SetAsLastSibling();
         }
     }
 

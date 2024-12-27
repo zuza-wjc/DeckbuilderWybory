@@ -156,7 +156,6 @@ public class TurnController : MonoBehaviour
             isCompleted = true; // Oznacz jako uko�czone
         });
 
-        // Czekaj, a� `isCompleted` b�dzie true
         while (!isCompleted)
         {
             yield return null;
@@ -316,8 +315,6 @@ public class TurnController : MonoBehaviour
     
     public async Task DistributeInitialCards()
     {
-       // Debug.Log("Rozpoczynam rozdawanie pocz�tkowych kart.");
-
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
@@ -326,7 +323,6 @@ public class TurnController : MonoBehaviour
 
         await DrawCardsUntilLimit(playerId, 4); // Przydziel graczowi do 4 kart
 
-       // Debug.Log("Zako�czono rozdawanie pocz�tkowych kart.");
         cardsOnHandController.ForceUpdateUI();
     }
 
@@ -354,7 +350,7 @@ public class TurnController : MonoBehaviour
             return;
         }
 
-        // Pobierz obecne karty na r�ce
+        // Pobierz obecne karty na rece
         List<string> currentHandCards = new();
         List<string> availableCards = new();
 
@@ -389,7 +385,7 @@ public class TurnController : MonoBehaviour
             }
 
             await playerDeckRef.Child(selectedInstanceId).Child("onHand").SetValueAsync(true);
-            availableCards.RemoveAt(randomIndex); // Usu� wybran� kart� z dost�pnych
+            availableCards.RemoveAt(randomIndex);
         }
     }
 
@@ -450,9 +446,6 @@ public class TurnController : MonoBehaviour
     public async void EndTurn()
     {
         timer = 60f;
-        int cardLimit = await GetCardLimit();
-        await DrawCardsUntilLimit(playerId, cardLimit);
-        cardsOnHandController.ForceUpdateUI();
         firstPassButton.interactable = false;
         yesSellButton.interactable = false;
         isMyTurn = false;
@@ -468,6 +461,13 @@ public class TurnController : MonoBehaviour
                 await dbRefLobby.Child("rounds").SetValueAsync(updatedRounds);
             }
         }
+
+        await Task.Delay(3000);
+
+        // Odczekaj 3 sek i dobierz karty do limitu
+        int cardLimit = await GetCardLimit();
+        await DrawCardsUntilLimit(playerId, cardLimit);
+        cardsOnHandController.ForceUpdateUI();
     }
 
     public void PassTurn()
