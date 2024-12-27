@@ -79,7 +79,7 @@ public class DeckChoosingManager : MonoBehaviour
             // Znajdujemy komponent Button i przypisujemy zdarzenie kliknięcia
             icon.GetComponentInChildren<Text>().text = deckName;
 
-            icon.GetComponent<Button>().onClick.AddListener(() => ChooseNondefaultDeck(deckName));
+            icon.GetComponent<Button>().onClick.AddListener(async () => await ChooseNondefaultDeck(deckName));
         }
     }
     

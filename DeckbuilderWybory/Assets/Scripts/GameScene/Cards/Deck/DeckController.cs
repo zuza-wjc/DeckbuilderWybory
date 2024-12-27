@@ -77,13 +77,12 @@ public class DeckController : MonoBehaviour
         }
         else
         {
-            LoadCardsFromJson();
+            await LoadCardsFromJson();
         }
     }
 
     private async Task LoadCardsFromJson()
     {
-        string deckName = "TALIA #1";
 
         if (dbRef == null)
         {
