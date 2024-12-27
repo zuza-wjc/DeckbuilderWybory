@@ -420,7 +420,7 @@ public class AddCardsPanelController : MonoBehaviour
                         {
                             // Set the localPosition to move it to the right (adjust the X value)
                             rectTransform.localPosition = new Vector3(650f, 0f, 0f); // Modify '200f' as per your need
-                            rectTransform.sizeDelta = new Vector2(800f, 1200f);
+                            rectTransform.sizeDelta = new Vector2(600f, 800f);
                         }
                         else
                         {
