@@ -33,6 +33,7 @@ public class GameExitDatabaseChange : MonoBehaviour
     void ShowExitPanel()
     {
         exitPanel.SetActive(true);
+        exitPanel.transform.SetAsLastSibling();
     }
 
     public void ToggleInGame()

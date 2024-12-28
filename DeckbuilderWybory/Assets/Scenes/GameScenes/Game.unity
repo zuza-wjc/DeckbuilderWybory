@@ -1218,7 +1218,7 @@ RectTransform:
   m_Children:
   - {fileID: 1719302436}
   - {fileID: 640840710}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -5131,7 +5131,7 @@ RectTransform:
   m_Children:
   - {fileID: 1217128450}
   - {fileID: 1432738151}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -6393,48 +6393,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 839974864}
   m_CullTransparentMesh: 1
---- !u!1 &854140879
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 854140880}
-  m_Layer: 5
-  m_Name: Panels
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &854140880
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 854140879}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1503094967}
-  - {fileID: 1802974897}
-  - {fileID: 887101016}
-  - {fileID: 881306025}
-  - {fileID: 142209813}
-  - {fileID: 717866315}
-  - {fileID: 1927901640}
-  m_Father: {fileID: 1826779536}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &859441749
 GameObject:
   m_ObjectHideFlags: 0
@@ -6509,14 +6467,14 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 881306024}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1898290779}
   - {fileID: 657021596}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -6565,7 +6523,7 @@ RectTransform:
   - {fileID: 2009477780}
   - {fileID: 1497161442}
   - {fileID: 1646668454}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -6781,6 +6739,8 @@ MonoBehaviour:
   errorPanel: {fileID: 881306024}
   errorMessageText: {fileID: 94672556}
   okButton: {fileID: 1636546103}
+  cardListContainer: {fileID: 1826129248}
+  mainCanvas: {fileID: 1826779539}
 --- !u!1 &990544504
 GameObject:
   m_ObjectHideFlags: 0
@@ -11696,7 +11656,7 @@ RectTransform:
   m_Children:
   - {fileID: 358477287}
   - {fileID: 1991954795}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -13343,6 +13303,8 @@ MonoBehaviour:
   cardTypeManager: {fileID: 308241388}
   notYourTurnInfo: {fileID: 1187263805}
   infoTextCanvasGroup: {fileID: 1187263804}
+  cardListContainer: {fileID: 1826129248}
+  mainCanvas: {fileID: 1826779539}
 --- !u!1 &1732120975
 GameObject:
   m_ObjectHideFlags: 0
@@ -13657,7 +13619,7 @@ RectTransform:
   m_Children:
   - {fileID: 362379847}
   - {fileID: 520015437}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -13977,7 +13939,13 @@ RectTransform:
   - {fileID: 1128105676}
   - {fileID: 2139798102}
   - {fileID: 1309352975}
-  - {fileID: 854140880}
+  - {fileID: 1503094967}
+  - {fileID: 1802974897}
+  - {fileID: 887101016}
+  - {fileID: 881306025}
+  - {fileID: 142209813}
+  - {fileID: 717866315}
+  - {fileID: 1927901640}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -14363,7 +14331,7 @@ RectTransform:
   m_Children:
   - {fileID: 1422100448}
   - {fileID: 44637880}
-  m_Father: {fileID: 854140880}
+  m_Father: {fileID: 1826779536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}

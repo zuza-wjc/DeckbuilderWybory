@@ -36,6 +36,7 @@ public class PassTurnPanelController : MonoBehaviour
         if (passTurnPanel != null)
         {
             passTurnPanel.SetActive(true);
+            passTurnPanel.transform.SetAsLastSibling();
         }
         else
         {
@@ -60,6 +61,7 @@ public class PassTurnPanelController : MonoBehaviour
         if (passTurnPanelExpired != null)
         {
             passTurnPanelExpired.SetActive(true);
+            passTurnPanelExpired.transform.SetAsLastSibling();
         }
         else
         {
