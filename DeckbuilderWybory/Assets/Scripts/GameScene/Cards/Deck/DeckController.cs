@@ -52,20 +52,20 @@ public class DeckController : MonoBehaviour
         {
             try
             {
-                // Pobranie deckType z Firebase
-                var deckTypeSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckType").GetValueAsync();
-                if (deckTypeSnapshot.Exists)
+                // Pobranie deckName z Firebase
+                var deckNameSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckName").GetValueAsync();
+                if (deckNameSnapshot.Exists)
                 {
-                    string deckType = deckTypeSnapshot.Value.ToString();
-                    Debug.Log($"DeckType found: {deckType}");
+                    string deckName = deckNameSnapshot.Value.ToString();
+                    Debug.Log($"DeckName found: {deckName}");
 
-                    // Pobranie listy kart dla deckType
-                    await LoadCardsFromDeckType(deckType);
+                    // Pobranie listy kart dla deckName
+                    await LoadCardsFromDeckName(deckName);
 
                 }
                 else
                 {
-                    Debug.LogWarning("DeckType not found for the player.");
+                    Debug.LogWarning("DeckName not found for the player.");
                     errorPanelController.ShowError("Deck type not assigned to the player!");
                 }
             }
@@ -95,13 +95,13 @@ public class DeckController : MonoBehaviour
             .Child("players");
 
 
-        var DeckSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckType").GetValueAsync();
+        var DeckSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckName").GetValueAsync();
         if (DeckSnapshot.Exists)
         {
-            string deckType = DeckSnapshot.Value.ToString();
-            Debug.Log($"DeckType found: {deckType}");
+            string deckName = DeckSnapshot.Value.ToString();
+            Debug.Log($"DeckName found: {deckName}");
 
-            string jsonDeck = PlayerPrefs.GetString(deckType, "");
+            string jsonDeck = PlayerPrefs.GetString(deckName, "");
 
             // JSON na obiekt klasy Deck
             Deck deck = JsonUtility.FromJson<Deck>(jsonDeck);
@@ -110,6 +110,53 @@ public class DeckController : MonoBehaviour
             {
                 Debug.LogError("Deserializacja nie powiodła się lub talia jest pusta.");
                 return;
+            }
+
+            var specialCardTypes = new HashSet<string> { "Ambasada", "Przemysł", "Metropolia", "Środowisko" };
+            string detectedSpecialType = null;
+
+            foreach (CardData card in deck.cards)
+            {
+                for (int i = 0; i < card.cardsCount; i++)
+                {
+                    AddCardToDeck(card.cardId, false);
+                }
+
+                // Jeśli znajdziemy kartę specjalną, ustawiamy typ specjalny
+                if (specialCardTypes.Contains(card.type))
+                {
+                    if (detectedSpecialType == null)
+                    {
+                        detectedSpecialType = card.type;
+                    }
+                    else if (detectedSpecialType != card.type)
+                    {
+                        Debug.LogError($"Talia zawiera karty więcej niż jednego specjalnego typu! Znaleziono: {detectedSpecialType} oraz {card.type}");
+                        errorPanelController.ShowError("Deck contains cards of multiple special types!");
+                        return;
+                    }
+                }
+            }
+
+            // Jeśli nie znaleziono żadnego specjalnego typu, zgłaszamy błąd
+            if (detectedSpecialType == null)
+            {
+                Debug.LogError("Talia nie zawiera żadnego specjalnego typu kart.");
+                errorPanelController.ShowError("Deck does not contain any special type cards!");
+                return;
+            }
+
+            // Zapisanie typu specjalnego do Firebase
+            try
+            {
+                string normalizedSpecialType = NormalizeString(detectedSpecialType);
+                await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(normalizedSpecialType);
+                Debug.Log($"DeckType '{detectedSpecialType}' zapisany w bazie danych.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Nie udało się zapisać typu talii: {ex.Message}");
+                errorPanelController.ShowError("Failed to save deck type to the database.");
             }
 
             foreach (CardData card in deck.cards)
@@ -123,28 +170,46 @@ public class DeckController : MonoBehaviour
             }
         else
         {
-            Debug.LogWarning("DeckType not found for the player.");
+            Debug.LogWarning("DeckName not found for the player.");
             errorPanelController.ShowError("Deck type not assigned to the player!");
         }
-
-
-        
-
     }
 
-    private async Task LoadCardsFromDeckType(string deckType)
+    private string NormalizeString(string input)
+    {
+        if (input == "Przemysł")
+        {
+            input = "przemysl";
+        }
+        if (input == "Środowisko")
+        {
+            input = "srodowisko";
+        }
+        if (input == "Ambasada")
+        {
+            input = "ambasada";
+        }
+        if (input == "Metropolia")
+        {
+            input = "metropolia";
+        }
+
+        return input;
+    }
+
+    private async Task LoadCardsFromDeckName(string deckName)
     {
         try
         {
             DatabaseReference readyDecksRef = FirebaseInitializer.DatabaseReference
                 .Child("readyDecks")
-                .Child(deckType);
+                .Child(deckName);
 
             var deckSnapshot = await readyDecksRef.GetValueAsync();
             if (!deckSnapshot.Exists)
             {
-                Debug.LogWarning($"No cards found for deckType: {deckType}");
-                errorPanelController.ShowError($"No cards available for the deck type '{deckType}'.");
+                Debug.LogWarning($"No cards found for deckName: {deckName}");
+                errorPanelController.ShowError($"No cards available for the deck type '{deckName}'.");
                 return;
             }
 
@@ -161,7 +226,7 @@ public class DeckController : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Error while loading cards for deckType {deckType}: {ex.Message}");
+            Debug.LogError($"Error while loading cards for deckName {deckName}: {ex.Message}");
             errorPanelController.ShowError("Failed to load cards for the selected deck type.");
         }
     }

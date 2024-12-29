@@ -112,7 +112,7 @@ public class DeckChoosingManager : MonoBehaviour
                 return;
             }
 
-            await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(buttonName);
+            await dbRef.Child(playerId).Child("stats").Child("deckName").SetValueAsync(buttonName);
             await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(false);
 
             deckNameText.text = "Twoja talia: " + buttonName;
@@ -197,11 +197,11 @@ public class DeckChoosingManager : MonoBehaviour
             }
 
             await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(true);
-            await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync(deckType);
+            await dbRef.Child(playerId).Child("stats").Child("deckName").SetValueAsync(deckType);
             deckNameText.text = "Twoja talia: " + deckType;
             Debug.Log($"DeckType '{deckType}' set for player '{playerId}'.");
 
-            // Wy��cz panel z przyciskami
+            // Wylacz panel z przyciskami
             defaultDeckChoosingPanel.SetActive(false);
         }
         catch (System.Exception ex)
