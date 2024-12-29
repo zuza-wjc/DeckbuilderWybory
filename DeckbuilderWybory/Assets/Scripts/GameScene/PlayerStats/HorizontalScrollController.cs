@@ -100,6 +100,15 @@ public class HorizontalScrollController : MonoBehaviour
         int turnNumber = int.Parse(playerSnapshot.Child("myTurnNumber").Value?.ToString());
         string deckType = playerSnapshot.Child("stats").Child("deckType").Value?.ToString() ?? "";
 
+        if (string.IsNullOrEmpty(deckType))
+        {
+            string deckName = playerSnapshot.Child("stats").Child("deckName").Value?.ToString() ?? "";
+
+            deckType = deckName;
+
+            Debug.LogWarning($"Brak deckType w bazie. Odczytany z nazwy: {deckType}");
+        }
+
         deckType = deckType switch
         {
             "srodowisko" => "ŒRODOWISKO",
