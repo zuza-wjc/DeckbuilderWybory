@@ -179,7 +179,7 @@ public class DeckController : MonoBehaviour
     {
         if (input == "Przemysł")
         {
-            input = "przmysl";
+            input = "przemysl";
         }
         if (input == "Środowisko")
         {
