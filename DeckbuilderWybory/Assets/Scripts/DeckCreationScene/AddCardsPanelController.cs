@@ -96,7 +96,7 @@ public class AddCardsPanelController : MonoBehaviour
             if (!string.IsNullOrEmpty(DataManager.Instance.deckName))
             {
                 deckNameText.text = DataManager.Instance.deckName;
-                Debug.Log("Za³adowano deckName: " + DataManager.Instance.deckName);
+               // Debug.Log("Za³adowano deckName: " + DataManager.Instance.deckName);
             }
             else
             {
@@ -401,9 +401,8 @@ public class AddCardsPanelController : MonoBehaviour
                     Image cardImage = instantiatedCard.GetComponentInChildren<Image>();
                     if (cardImage != null)
                     {
-                        // Set the sprite on the Image component of the prefab
                         cardImage.sprite = cardSprite;
-                        Debug.Log($"Card sprite for '{cardId}' has been set successfully.");
+                       // Debug.Log($"Card sprite for '{cardId}' has been set successfully.");
                     }
                     else
                     {
@@ -630,25 +629,25 @@ public class AddCardsPanelController : MonoBehaviour
             if(type == "Podstawa")
             {
                 podstawaCardsCount += cardsCount;
-                Debug.Log($"podstawaCardsCount: {podstawaCardsCount}");
+               // Debug.Log($"podstawaCardsCount: {podstawaCardsCount}");
             }
             else
             {
                 specjalneCardsCount += cardsCount;
-                Debug.Log($"specjalneCardsCount: {specjalneCardsCount}");
+               // Debug.Log($"specjalneCardsCount: {specjalneCardsCount}");
             }
             cardList.Add(newCard);
             if(deckCardsType == null && type!= "Podstawa" )
             {
                 deckCardsType = type;
-                Debug.Log($"zmiana typu przy pierwszej specjalnej karcie: {type}");
+              //  Debug.Log($"zmiana typu przy pierwszej specjalnej karcie: {type}");
             }
 
             // Dodaj iloœæ nowej karty do `listCardsCount`
             listCardsCount += cardsCount;
             deckQuantityText.text = $"{listCardsCount}/30";
 
-            Debug.Log($"Nowa karta zosta³a zapisana: {cardName} ({cardsCount} szt.), ID: {cardId}, Typ: {type}");
+           // Debug.Log($"Nowa karta zosta³a zapisana: {cardName} ({cardsCount} szt.), ID: {cardId}, Typ: {type}");
             ShowCardOnList();
         }
 
@@ -704,23 +703,23 @@ public class AddCardsPanelController : MonoBehaviour
                 {
                     case "Podstawa":
                         cardImage.sprite = podstawaListCardSprite;
-                        Debug.Log($"Sprite for card {cardName} changed to 'Podstawa'.");
+                      //  Debug.Log($"Sprite for card {cardName} changed to 'Podstawa'.");
                         break;
                     case "Ambasada":
                         cardImage.sprite = ambasadaListCardSprite;
-                        Debug.Log($"Sprite for card {cardName} changed to 'Ambasada'.");
+                     //   Debug.Log($"Sprite for card {cardName} changed to 'Ambasada'.");
                         break;
                     case "Przemys³":
                         cardImage.sprite = przemyslListCardSprite;
-                        Debug.Log($"Sprite for card {cardName} changed to 'Przemys³'.");
+                      //  Debug.Log($"Sprite for card {cardName} changed to 'Przemys³'.");
                         break;
                     case "Metropolia":
                         cardImage.sprite = metropoliaListCardSprite;
-                        Debug.Log($"Sprite for card {cardName} changed to 'Metropolia'.");
+                      //  Debug.Log($"Sprite for card {cardName} changed to 'Metropolia'.");
                         break;
                     case "Œrodowisko":
                         cardImage.sprite = srodowiskoListCardSprite;
-                        Debug.Log($"Sprite for card {cardName} changed to 'Œrodowisko'.");
+                     //   Debug.Log($"Sprite for card {cardName} changed to 'Œrodowisko'.");
                         break;
                     default:
                         Debug.LogWarning($"Unknown card type: {type}. No sprite change.");

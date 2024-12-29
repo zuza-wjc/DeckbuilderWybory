@@ -464,10 +464,12 @@ public class TurnController : MonoBehaviour
 
         await Task.Delay(3000);
 
-        // Odczekaj 3 sek i dobierz karty do limitu
         int cardLimit = await GetCardLimit();
         await DrawCardsUntilLimit(playerId, cardLimit);
         cardsOnHandController.ForceUpdateUI();
+
+        DataTransfer.TurnEnded = true;
+        DataTransfer.EffectActive = false;
     }
 
     public void PassTurn()

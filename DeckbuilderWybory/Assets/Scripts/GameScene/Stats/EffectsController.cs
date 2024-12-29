@@ -11,47 +11,36 @@ public class EffectsController : MonoBehaviour
 
     public GameObject copySupportPrefab;
     public GameObject copyBudgetPrefab;
+
     public GameObject increaseCostPrefab;
     public GameObject decreaseCostPrefab;
+
     public GameObject budgetPenaltyPrefab;
-    public Transform scrollViewContent;
-
-    private GameObject copySupportInstance;
-    private GameObject copyBudgetInstance;
-    private GameObject increaseCostInstance;
-    private GameObject decreaseCostInstance;
-    private GameObject increaseAllCostInstance;
-    private GameObject budgetPenaltyInstance;
-
-    private DatabaseReference copySupportTurnsTakenRef;
-    private DatabaseReference copyBudgetTurnsTakenRef;
-    private DatabaseReference increaseCostTurnsTakenRef;
-    private DatabaseReference decreaseCostTurnsTakenRef;
-    private DatabaseReference increaseAllCostTurnsTakenRef;
-    private DatabaseReference budgetPenaltyTurnsTakenRef;
-
-    private int savedCopySupportTurnsTaken;
-    private int savedCopyBudgetTurnsTaken;
-    private int savedDecreaseCostTurnsTaken;
-    private int savedIncreaseAllCostTurnsTaken;
-    private int savedBudgetPenaltyTurnsTaken;
 
     public GameObject incomeBlockPrefab;
     public GameObject supportBlockPrefab;
     public GameObject budgetBlockPrefab;
 
+    public Transform scrollViewContent;
+
+    private GameObject copySupportInstance;
+    private GameObject copyBudgetInstance;
+
+    private GameObject increaseCostInstance;
+    private GameObject decreaseCostInstance;
+    private GameObject increaseAllCostInstance;
+
+    private GameObject budgetPenaltyInstance;
+
     private GameObject incomeBlockInstance;
     private GameObject supportBlockInstance;
     private GameObject budgetBlockInstance;
 
-    private DatabaseReference incomeBlockTurnsTakenRef;
-    private DatabaseReference supportBlockTurnsTakenRef;
-    private DatabaseReference budgetBlockTurnsTakenRef;
+    private DatabaseReference copySupportTurnsTakenRef;
+    private DatabaseReference copyBudgetTurnsTakenRef;
+    private DatabaseReference budgetPenaltyRef;
 
-    private int savedIncomeBlockTurnsTaken;
-    private int savedSupportBlockTurnsTaken;
-    private int savedBudgetBlockTurnsTaken;
-
+    private EventHandler<ValueChangedEventArgs> budgetPenaltyListener;
 
     void Start()
     {
@@ -75,10 +64,69 @@ public class EffectsController : MonoBehaviour
     {
         if (increaseCostInstance != null)
         {
-            CheckIsFirstCardChange();
+            if (DataTransfer.IsFirstCardInTurn == false || (DataTransfer.TurnEnded && !DataTransfer.EffectActive))
+            {
+                if (increaseCostInstance != null)
+                {
+                    Destroy(increaseCostInstance);
+                    increaseCostInstance = null;
+                }
+            }
+        }
+
+        if (DataTransfer.TurnEnded && !DataTransfer.EffectActive)
+        {
+            if (supportBlockInstance != null)
+            {
+                Destroy(supportBlockInstance);
+                supportBlockInstance = null;
+            }
+
+            if (budgetBlockInstance != null)
+            {
+                Destroy(budgetBlockInstance);
+                budgetBlockInstance = null;
+            }
+
+            if (incomeBlockInstance != null)
+            {
+                Destroy(incomeBlockInstance);
+                incomeBlockInstance = null;
+            }
+
+            if (decreaseCostInstance != null)
+            {
+                Destroy(decreaseCostInstance);
+                decreaseCostInstance = null;
+            }
+
+            if (increaseAllCostInstance != null)
+            {
+                Destroy(increaseAllCostInstance);
+                increaseAllCostInstance = null;
+            }
+
+            if (copySupportInstance != null)
+            {
+                Destroy(copySupportInstance);
+                copySupportInstance = null;
+            }
+
+            if (copyBudgetInstance != null)
+            {
+                Destroy(copyBudgetInstance);
+                copyBudgetInstance = null;
+            }
+
+            if(budgetPenaltyInstance  != null)
+            {
+                Destroy(budgetPenaltyInstance);
+                budgetPenaltyInstance = null;
+            }
+
+            DataTransfer.TurnEnded = false;
         }
     }
-
     private void ListenForIncomeBlockChanges()
     {
         DatabaseReference incomeBlockRef = dbRef
@@ -95,51 +143,16 @@ public class EffectsController : MonoBehaviour
             if (incomeBlockSnapshot.Exists)
             {
                 int turnsTakenInIncomeBlock = Convert.ToInt32(incomeBlockSnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-                turnsTakenInStats++;
+                string playerIdFromIncomeBlock = incomeBlockSnapshot.Child("playerId").Value.ToString();
+
+                int turnsTakenInStats = await GetTurnsTakenFromStats(playerIdFromIncomeBlock);
 
                 if (turnsTakenInIncomeBlock == turnsTakenInStats)
                 {
-                    savedIncomeBlockTurnsTaken = turnsTakenInStats;
                     CreateIncomeBlockPrefab();
                 }
             }
             else
-            {
-                if (incomeBlockInstance != null)
-                {
-                    Destroy(incomeBlockInstance);
-                    incomeBlockInstance = null;
-                }
-            }
-        };
-    }
-
-    private void CreateIncomeBlockPrefab()
-    {
-        if (incomeBlockInstance == null)
-        {
-            incomeBlockInstance = Instantiate(incomeBlockPrefab, scrollViewContent.transform);
-            incomeBlockInstance.SetActive(true);
-            ListenForIncomeBlockTurnsTakenChange();
-        }
-    }
-
-    private void ListenForIncomeBlockTurnsTakenChange()
-    {
-        incomeBlockTurnsTakenRef = dbRef
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
-
-        incomeBlockTurnsTakenRef.ValueChanged += (sender, args) =>
-        {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken > savedIncomeBlockTurnsTaken)
             {
                 if (incomeBlockInstance != null)
                 {
@@ -166,51 +179,18 @@ public class EffectsController : MonoBehaviour
             if (supportBlockSnapshot.Exists)
             {
                 int turnsTakenInSupportBlock = Convert.ToInt32(supportBlockSnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-                turnsTakenInStats++;
+                string playerIdFromSupportBlock = supportBlockSnapshot.Child("playerId").Value.ToString();
 
+                // Pobieranie turnsTaken z Firebase
+                int turnsTakenInStats = await GetTurnsTakenFromStats(playerIdFromSupportBlock);
+
+                // Sprawdzanie, czy turnsTaken z supportBlock pasuje do wartoœci w stats
                 if (turnsTakenInSupportBlock == turnsTakenInStats)
                 {
-                    savedSupportBlockTurnsTaken = turnsTakenInStats;
                     CreateSupportBlockPrefab();
                 }
             }
             else
-            {
-                if (supportBlockInstance != null)
-                {
-                    Destroy(supportBlockInstance);
-                    supportBlockInstance = null;
-                }
-            }
-        };
-    }
-
-    private void CreateSupportBlockPrefab()
-    {
-        if (supportBlockInstance == null)
-        {
-            supportBlockInstance = Instantiate(supportBlockPrefab, scrollViewContent.transform);
-            supportBlockInstance.SetActive(true);
-            ListenForSupportBlockTurnsTakenChange();
-        }
-    }
-
-    private void ListenForSupportBlockTurnsTakenChange()
-    {
-        supportBlockTurnsTakenRef = dbRef
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
-
-        supportBlockTurnsTakenRef.ValueChanged += (sender, args) =>
-        {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken > savedSupportBlockTurnsTaken)
             {
                 if (supportBlockInstance != null)
                 {
@@ -237,12 +217,14 @@ public class EffectsController : MonoBehaviour
             if (budgetBlockSnapshot.Exists)
             {
                 int turnsTakenInBudgetBlock = Convert.ToInt32(budgetBlockSnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-                turnsTakenInStats++;
+                string playerIdFromBudgetBlock = budgetBlockSnapshot.Child("playerId").Value.ToString();
 
+                // Pobieranie turnsTaken z Firebase
+                int turnsTakenInStats = await GetTurnsTakenFromStats(playerIdFromBudgetBlock);
+
+                // Sprawdzanie, czy turnsTaken z budgetBlock pasuje do wartoœci w stats
                 if (turnsTakenInBudgetBlock == turnsTakenInStats)
                 {
-                    savedBudgetBlockTurnsTaken = turnsTakenInStats;
                     CreateBudgetBlockPrefab();
                 }
             }
@@ -257,41 +239,35 @@ public class EffectsController : MonoBehaviour
         };
     }
 
+    private void CreateSupportBlockPrefab()
+    {
+        if (supportBlockInstance == null)
+        {
+            DataTransfer.EffectActive = true;
+            supportBlockInstance = Instantiate(supportBlockPrefab, scrollViewContent.transform);
+            supportBlockInstance.SetActive(true);
+        }
+    }
+
     private void CreateBudgetBlockPrefab()
     {
         if (budgetBlockInstance == null)
         {
+            DataTransfer.EffectActive = true;
             budgetBlockInstance = Instantiate(budgetBlockPrefab, scrollViewContent.transform);
             budgetBlockInstance.SetActive(true);
-            ListenForBudgetBlockTurnsTakenChange();
         }
     }
 
-    private void ListenForBudgetBlockTurnsTakenChange()
+    private void CreateIncomeBlockPrefab()
     {
-        budgetBlockTurnsTakenRef = dbRef
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
-
-        budgetBlockTurnsTakenRef.ValueChanged += (sender, args) =>
+        if (incomeBlockInstance == null)
         {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken > savedBudgetBlockTurnsTaken)
-            {
-                if (budgetBlockInstance != null)
-                {
-                    Destroy(budgetBlockInstance);
-                    budgetBlockInstance = null;
-                }
-            }
-        };
+            DataTransfer.EffectActive = true;
+            incomeBlockInstance = Instantiate(incomeBlockPrefab, scrollViewContent.transform);
+            incomeBlockInstance.SetActive(true);
+        }
     }
-
 
     private void ListenForBudgetPenaltyChanges()
     {
@@ -309,12 +285,12 @@ public class EffectsController : MonoBehaviour
             if (budgetPenaltySnapshot.Exists)
             {
                 int turnsTakenInBudgetPenalty = Convert.ToInt32(budgetPenaltySnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-                turnsTakenInStats++;
+                string playerIdFromBudgetPenalty = budgetPenaltySnapshot.Child("playerId").Value.ToString();
+
+                int turnsTakenInStats = await GetTurnsTakenFromStats(playerIdFromBudgetPenalty);
 
                 if (turnsTakenInBudgetPenalty == turnsTakenInStats)
                 {
-                    savedBudgetPenaltyTurnsTaken = turnsTakenInStats;
                     CreateBudgetPenaltyPrefab();
                 }
             }
@@ -333,38 +309,12 @@ public class EffectsController : MonoBehaviour
     {
         if (budgetPenaltyInstance == null)
         {
+            DataTransfer.EffectActive = true;
             budgetPenaltyInstance = Instantiate(budgetPenaltyPrefab, scrollViewContent.transform);
             budgetPenaltyInstance.SetActive(true);
-            ListenForBudgetPenaltyTurnsTakenChange();
+            ListenForBudgetPenaltyDelete();
         }
     }
-
-    private void ListenForBudgetPenaltyTurnsTakenChange()
-    {
-        budgetPenaltyTurnsTakenRef = dbRef
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
-
-        budgetPenaltyTurnsTakenRef.ValueChanged += (sender, args) =>
-        {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken > savedBudgetPenaltyTurnsTaken)
-            {
-                if (budgetPenaltyInstance != null)
-                {
-                    Destroy(budgetPenaltyInstance);
-                    budgetPenaltyInstance = null;
-                }
-            }
-        };
-    }
-
-
 
     private void ListenForCopySupportChanges()
     {
@@ -403,9 +353,7 @@ public class EffectsController : MonoBehaviour
                 return;
             }
 
-            savedCopySupportTurnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
-
-            CreateCopySupportPrefab(otherPlayerId, copySupportTurnsTakenRef);
+            CreateCopySupportPrefab();
         };
     }
 
@@ -446,9 +394,7 @@ public class EffectsController : MonoBehaviour
                 return;
             }
 
-            savedCopyBudgetTurnsTaken = Convert.ToInt32(turnsTakenSnapshot.Value);
-
-            CreateCopyBudgetPrefab(otherPlayerId, copyBudgetTurnsTakenRef);
+            CreateCopyBudgetPrefab();
         };
     }
 
@@ -507,8 +453,6 @@ public class EffectsController : MonoBehaviour
 
                 if (turnsTakenInDecreaseCost == turnsTakenInStats)
                 {
-                    savedDecreaseCostTurnsTaken = turnsTakenInStats;
-
                     CreateDecreaseCostPrefab();
                 }
             }
@@ -536,8 +480,6 @@ public class EffectsController : MonoBehaviour
 
                 if (turnsTakenInIncreaseAllCost == turnsTakenInStats)
                 {
-                    savedIncreaseAllCostTurnsTaken = turnsTakenInStats;
-
                     CreateIncreaseAllCostPrefab();
                 }
             }
@@ -558,23 +500,23 @@ public class EffectsController : MonoBehaviour
         return turnsTakenSnapshot.Exists ? Convert.ToInt32(turnsTakenSnapshot.Value) : 0;
     }
 
-    private void CreateCopySupportPrefab(string otherPlayerId, DatabaseReference turnsTakenRef)
+    private void CreateCopySupportPrefab()
     {
         if (copySupportInstance == null)
         {
+            DataTransfer.EffectActive = true;
             copySupportInstance = Instantiate(copySupportPrefab, scrollViewContent.transform);
             copySupportInstance.SetActive(true);
-            ListenForCopySupportTurnsTakenChange(turnsTakenRef);
         }
     }
 
-    private void CreateCopyBudgetPrefab(string otherPlayerId, DatabaseReference turnsTakenRef)
+    private void CreateCopyBudgetPrefab()
     {
         if (copyBudgetInstance == null)
         {
+            DataTransfer.EffectActive = true;
             copyBudgetInstance = Instantiate(copyBudgetPrefab, scrollViewContent.transform);
             copyBudgetInstance.SetActive(true);
-            ListenForCopyBudgetTurnsTakenChange(turnsTakenRef);
         }
     }
 
@@ -582,6 +524,7 @@ public class EffectsController : MonoBehaviour
     {
         if (increaseCostInstance == null)
         {
+            DataTransfer.EffectActive = true;
             increaseCostInstance = Instantiate(increaseCostPrefab, scrollViewContent.transform);
             increaseCostInstance.SetActive(true);
         }
@@ -591,9 +534,9 @@ public class EffectsController : MonoBehaviour
     {
         if (increaseAllCostInstance == null)
         {
+            DataTransfer.EffectActive = true;
             increaseAllCostInstance = Instantiate(increaseCostPrefab, scrollViewContent.transform);
             increaseAllCostInstance.SetActive(true);
-            ListenForIncreaseAllTurnsTakenChange();
         }
     }
 
@@ -601,154 +544,44 @@ public class EffectsController : MonoBehaviour
     {
         if (decreaseCostInstance == null)
         {
+            DataTransfer.EffectActive = true;
             decreaseCostInstance = Instantiate(decreaseCostPrefab, scrollViewContent.transform);
             decreaseCostInstance.SetActive(true);
-            ListenForDecreaseCostTurnsTakenChange();
         }
     }
 
-    private void ListenForCopySupportTurnsTakenChange(DatabaseReference turnsTakenRef)
+    private void ListenForBudgetPenaltyDelete()
     {
-        turnsTakenRef.ValueChanged += (sender, args) =>
-        {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken != savedCopySupportTurnsTaken)
-            {
-                if (copySupportInstance != null)
-                {
-                    Destroy(copySupportInstance);
-                    copySupportInstance = null;
-                }
-            }
-        };
-    }
-
-    private void ListenForCopyBudgetTurnsTakenChange(DatabaseReference turnsTakenRef)
-    {
-        turnsTakenRef.ValueChanged += (sender, args) =>
-        {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken != savedCopyBudgetTurnsTaken)
-            {
-                if (copyBudgetInstance != null)
-                {
-                    Destroy(copyBudgetInstance);
-                    copyBudgetInstance = null;
-                }
-            }
-        };
-    }
-
-    private void CheckIsFirstCardChange()
-    {
-
-        if (DataTransfer.IsFirstCardInTurn == false)
-        {
-            if (increaseCostInstance != null)
-            {
-                Destroy(increaseCostInstance);
-                increaseCostInstance = null;
-            }
-        }
-    }
-
-
-    private void ListenForDecreaseCostTurnsTakenChange()
-    {
-        decreaseCostTurnsTakenRef = dbRef
+        budgetPenaltyRef = dbRef
             .Child("sessions")
             .Child(lobbyId)
             .Child("players")
             .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
+            .Child("budgetPenalty");
 
-        decreaseCostTurnsTakenRef.ValueChanged += (sender, args) =>
+        budgetPenaltyListener = (sender, args) =>
         {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken != savedDecreaseCostTurnsTaken)
+            if (!args.Snapshot.Exists)
             {
-                if (decreaseCostInstance != null)
+                if (budgetPenaltyInstance != null)
                 {
-                    Destroy(decreaseCostInstance);
-                    decreaseCostInstance = null;
+                    Destroy(budgetPenaltyInstance);
+                    budgetPenaltyInstance = null;
                 }
+
+                budgetPenaltyRef.ValueChanged -= budgetPenaltyListener;
             }
         };
-    }
 
-    private void ListenForIncreaseAllTurnsTakenChange()
-    {
-        increaseCostTurnsTakenRef = dbRef
-            .Child("sessions")
-            .Child(lobbyId)
-            .Child("players")
-            .Child(playerId)
-            .Child("stats")
-            .Child("turnsTaken");
-
-        increaseCostTurnsTakenRef.ValueChanged += (sender, args) =>
-        {
-            int currentTurnsTaken = Convert.ToInt32(args.Snapshot.Value);
-
-            if (currentTurnsTaken > savedIncreaseAllCostTurnsTaken)
-            {
-                if (increaseAllCostInstance != null)
-                {
-                    Destroy(increaseAllCostInstance);
-                    increaseAllCostInstance = null;
-                }
-            }
-        };
+        budgetPenaltyRef.ValueChanged += budgetPenaltyListener;
     }
 
     private void OnDestroy()
     {
-        if (copySupportTurnsTakenRef != null)
+        if (budgetPenaltyRef != null)
         {
-            copySupportTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (copyBudgetTurnsTakenRef != null)
-        {
-            copyBudgetTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (increaseCostTurnsTakenRef != null)
-        {
-            increaseCostTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (increaseAllCostTurnsTakenRef != null)
-        {
-            increaseAllCostTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (decreaseCostTurnsTakenRef != null)
-        {
-            decreaseCostTurnsTakenRef.ValueChanged -= null;
-        }
-        if (budgetPenaltyTurnsTakenRef != null)
-        {
-            budgetPenaltyTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (incomeBlockTurnsTakenRef != null)
-        {
-            incomeBlockTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (supportBlockTurnsTakenRef != null)
-        {
-            supportBlockTurnsTakenRef.ValueChanged -= null;
-        }
-
-        if (budgetBlockTurnsTakenRef != null)
-        {
-            budgetBlockTurnsTakenRef.ValueChanged -= null;
+            budgetPenaltyRef.ValueChanged -= budgetPenaltyListener;
         }
     }
+
 }

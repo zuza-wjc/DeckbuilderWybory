@@ -56,7 +56,7 @@ public class CardButtonController : MonoBehaviour
         string cardId = button.gameObject.name;
 
         // Wywo³aj funkcjê przetwarzaj¹c¹ dane
-        Debug.Log($"Klikniêto przycisk z ID karty: {cardId}");
+      //  Debug.Log($"Klikniêto przycisk z ID karty: {cardId}");
 
         FetchCardData(cardId);
     }
@@ -93,7 +93,7 @@ public class CardButtonController : MonoBehaviour
                     }
                     else
                     {
-                        Debug.LogWarning($"Karta {cardId} nie jest potomkiem grupy {groupSnapshot.Key}");
+                      //  Debug.LogWarning($"Karta {cardId} nie jest potomkiem grupy {groupSnapshot.Key}");
                     }
                 }
 
