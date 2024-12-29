@@ -73,10 +73,8 @@ public class LoadDeckIconsController : MonoBehaviour
                 {
                     deleteButton.onClick.AddListener(() =>
                     {
-                        Debug.Log($"Delete button clicked for deck: {deckName}");
-                        // Pamiêtaj nazwê decka do usuniêcia
+                        //Debug.Log($"Delete button clicked for deck: {deckName}");
                         deckNameToDelete = deckName;
-                        // Pokaz panel
                         OpenDeletePanel();
                     });
                 }
@@ -105,14 +103,12 @@ public class LoadDeckIconsController : MonoBehaviour
 
     public void DeleteDeck()
     {
-        // SprawdŸ, czy nazwa decka jest ustawiona i nie jest pusta
         if (!string.IsNullOrEmpty(deckNameToDelete))
         {
-            // Usuñ zapisany deck z PlayerPrefs
             if (PlayerPrefs.HasKey(deckNameToDelete))
             {
                 PlayerPrefs.DeleteKey(deckNameToDelete);
-                Debug.Log($"Deck '{deckNameToDelete}' has been deleted from PlayerPrefs.");
+                //Debug.Log($"Deck '{deckNameToDelete}' has been deleted from PlayerPrefs.");
             }
             else
             {
@@ -126,17 +122,14 @@ public class LoadDeckIconsController : MonoBehaviour
 
                 if (deckNames[i] == deckNameToDelete)
                 {
-                    Debug.Log("Usuwanie klucza:" + deckNameToDelete);
-                    // Aktualizacja listy decków
+                   // Debug.Log("Usuwanie klucza:" + deckNameToDelete);
                     deckNames.RemoveAt(i);
-                    // Zapis listy do PlayerPrefs
                     SaveDeckNames(deckNames);
-                    // Usuniêcie obiektu ikony z panelu
-                    Transform iconToDelete = Panel.Find(deckNameToDelete); // ZnajdŸ obiekt ikony po nazwie
+                    Transform iconToDelete = Panel.Find(deckNameToDelete);
                     if (iconToDelete != null)
                     {
-                        Destroy(iconToDelete.gameObject); // Zniszcz obiekt ikony
-                        Debug.Log($"Icon for deck '{deckNameToDelete}' has been destroyed.");
+                        Destroy(iconToDelete.gameObject); 
+                       // Debug.Log($"Icon for deck '{deckNameToDelete}' has been destroyed.");
                     }
                     else
                     {
@@ -171,7 +164,7 @@ public class LoadDeckIconsController : MonoBehaviour
         PlayerPrefs.SetString("decks", decksJson);
         PlayerPrefs.Save();
 
-        Debug.Log("Lista talii zapisana: " + decksJson);
+        //Debug.Log("Lista talii zapisana: " + decksJson);
         
     }
 

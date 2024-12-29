@@ -27,7 +27,7 @@ public class DeckTextSavingManager : MonoBehaviour
             {
                 // Zapisujemy tekst do DataManager
                 DataManager.Instance.deckName = buttonText.text;
-                Debug.Log("Saved deckName: " + DataManager.Instance.deckName);
+              //  Debug.Log("Saved deckName: " + DataManager.Instance.deckName);
                 SceneManager.LoadScene("Deck Creation"); // Zmiana sceny 
             }
             else
