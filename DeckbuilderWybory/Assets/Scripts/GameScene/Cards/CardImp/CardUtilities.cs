@@ -744,7 +744,7 @@ public class CardUtilities : MonoBehaviour
         return false;
     }
 
-    public async Task<bool> CheckIncreaseCost(string playerId)
+    public async Task<(bool, int)> CheckIncreaseCost(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -756,22 +756,27 @@ public class CardUtilities : MonoBehaviour
 
         DataSnapshot playerSnapshot = await dbRefPlayer.GetValueAsync();
 
-        if (!playerSnapshot.Exists) return false;
+        if (!playerSnapshot.Exists) return (false, 0);
 
         var increaseCostSnapshot = playerSnapshot.Child("increaseCost");
 
-        if (increaseCostSnapshot.Exists && increaseCostSnapshot.HasChild("turnsTaken"))
+        if (increaseCostSnapshot.Exists)
         {
-            int increaseCostTurn = Convert.ToInt32(increaseCostSnapshot.Child("turnsTaken").Value);
+            int entriesCount = (int)increaseCostSnapshot.ChildrenCount;
             int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
 
-            if (increaseCostTurn == currentTurn)
+            foreach (var child in increaseCostSnapshot.Children)
             {
-                return true;
+                int increaseCostTurn = Convert.ToInt32(child.Child("turnsTaken").Value);
+
+                if (increaseCostTurn == currentTurn)
+                {
+                    return (true, entriesCount);
+                }
             }
         }
 
-        return false;
+        return (false, 0);
     }
 
 
@@ -1029,7 +1034,7 @@ public class CardUtilities : MonoBehaviour
         return CheckTurnsTakenForBlock(blockIncomeSnapshot, blockIncomePlayerSnapshot);
     }
 
-    public async Task<bool> CheckIncreaseCostAllTurn(string playerId)
+    public async Task<(bool, int)> CheckIncreaseCostAllTurn(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -1040,16 +1045,32 @@ public class CardUtilities : MonoBehaviour
             .Child(playerId)
             .GetValueAsync();
 
-        if (!playerSnapshot.Exists || !playerSnapshot.HasChild("increaseCostAllTurn")) return false;
+        if (!playerSnapshot.Exists || !playerSnapshot.HasChild("increaseCostAllTurn"))
+            return (false, 0);
 
         var increaseCostSnapshot = playerSnapshot.Child("increaseCostAllTurn");
-        int increaseCostTurn = Convert.ToInt32(increaseCostSnapshot.Child("turnsTaken").Value);
-        int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
 
-        return increaseCostTurn == currentTurn;
+        if (increaseCostSnapshot.Exists)
+        {
+            int entriesCount = (int)increaseCostSnapshot.ChildrenCount;
+            int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
+
+            foreach (var child in increaseCostSnapshot.Children)
+            {
+                int increaseCostTurn = Convert.ToInt32(child.Child("turnsTaken").Value);
+
+                if (increaseCostTurn == currentTurn)
+                {
+                    return (true, entriesCount);
+                }
+            }
+        }
+
+        return (false, 0);
     }
 
-    public async Task<bool> CheckDecreaseCost(string playerId)
+
+    public async Task<(bool, int)> CheckDecreaseCost(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
 
@@ -1060,14 +1081,29 @@ public class CardUtilities : MonoBehaviour
             .Child(playerId)
             .GetValueAsync();
 
-        if (!playerSnapshot.Exists || !playerSnapshot.HasChild("decreaseCost")) return false;
+        if (!playerSnapshot.Exists || !playerSnapshot.HasChild("decreaseCost"))
+            return (false, 0);
 
         var decreaseCostSnapshot = playerSnapshot.Child("decreaseCost");
-        int decreaseCostTurn = Convert.ToInt32(decreaseCostSnapshot.Child("turnsTaken").Value);
+        if (!playerSnapshot.HasChild("stats") || !playerSnapshot.Child("stats").HasChild("turnsTaken"))
+            return (false, 0);
+
         int currentTurn = Convert.ToInt32(playerSnapshot.Child("stats").Child("turnsTaken").Value);
 
-        return decreaseCostTurn == currentTurn;
+        int validEntriesCount = 0;
+
+        foreach (var child in decreaseCostSnapshot.Children)
+        {
+            if (child.HasChild("turnsTaken") &&
+                Convert.ToInt32(child.Child("turnsTaken").Value) == currentTurn)
+            {
+                validEntriesCount++;
+            }
+        }
+
+        return (validEntriesCount > 0, validEntriesCount);
     }
+
 
     public async Task CheckIfPlayed2Cards(string playerId)
     {
