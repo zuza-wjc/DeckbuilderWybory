@@ -614,7 +614,7 @@ public class AddCardsPanelController : MonoBehaviour
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
-            if (specjalneCardsCount + cardsCount >= 11)
+            if (type != "Podstawa" && specjalneCardsCount + cardsCount >= 11)
             {
                 Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.");
                 infoText.text = "Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.";
