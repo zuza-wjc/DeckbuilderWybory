@@ -269,6 +269,8 @@ public class AddCardsPanelController : MonoBehaviour
                 PlayerPrefs.Save();  // Upewnij siê, ¿e zmiany zostan¹ zapisane
             }
             Debug.Log($"Deck saved to PlayerPrefs with name {deckNameText.text}.");
+            infoText.text = "Pomyœlnie zapisano taliê: " + deckName;
+            tooMuchCardsPanel.SetActive(true);
         }
         else
         {
