@@ -66,13 +66,11 @@ public class DeckController : MonoBehaviour
                 else
                 {
                     Debug.LogWarning("DeckName not found for the player.");
-                    errorPanelController.ShowError("Deck type not assigned to the player!");
                 }
             }
             catch (Exception ex)
             {
                 Debug.LogError($"Error while loading deck type: {ex.Message}");
-                errorPanelController.ShowError("Failed to load deck type.");
             }
         }
         else
@@ -83,7 +81,6 @@ public class DeckController : MonoBehaviour
 
     private async Task LoadCardsFromJson()
     {
-
         if (dbRef == null)
         {
             Debug.LogError("Database reference is null!");
@@ -93,7 +90,6 @@ public class DeckController : MonoBehaviour
             .Child("sessions")
             .Child(lobbyId)
             .Child("players");
-
 
         var DeckSnapshot = await dbRef.Child(playerId).Child("stats").Child("deckName").GetValueAsync();
         if (DeckSnapshot.Exists)
@@ -132,7 +128,6 @@ public class DeckController : MonoBehaviour
                     else if (detectedSpecialType != card.type)
                     {
                         Debug.LogError($"Talia zawiera karty więcej niż jednego specjalnego typu! Znaleziono: {detectedSpecialType} oraz {card.type}");
-                        errorPanelController.ShowError("Deck contains cards of multiple special types!");
                         return;
                     }
                 }
@@ -156,24 +151,14 @@ public class DeckController : MonoBehaviour
             catch (Exception ex)
             {
                 Debug.LogError($"Nie udało się zapisać typu talii: {ex.Message}");
-                errorPanelController.ShowError("Failed to save deck type to the database.");
             }
-
-            foreach (CardData card in deck.cards)
-            {
-                for (int i = 0; i < card.cardsCount; i++)
-                {
-                    AddCardToDeck(card.cardId, false);
-                }
-            }
-
-            }
+        }
         else
         {
             Debug.LogWarning("DeckName not found for the player.");
-            errorPanelController.ShowError("Deck type not assigned to the player!");
         }
     }
+
 
     private string NormalizeString(string input)
     {
