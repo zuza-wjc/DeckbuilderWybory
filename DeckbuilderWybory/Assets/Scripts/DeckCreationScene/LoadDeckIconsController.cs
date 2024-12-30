@@ -27,8 +27,19 @@ public class LoadDeckIconsController : MonoBehaviour
 
     public void CreateDeckIcons(List<string> deckNames)
     {
+        // Pobierz aktualn¹ listê talii z PlayerPrefs
+        List<string> savedDeckNames = LoadDeckNames();
+
         foreach (string deckName in deckNames)
         {
+            // Jeœli talia nie znajduje siê na liœcie zapisanych talii, dodaj j¹
+            if (!savedDeckNames.Contains(deckName))
+            {
+                savedDeckNames.Add(deckName);
+                SaveDeckNames(savedDeckNames); // Zapisz aktualizowan¹ listê
+                Debug.Log($"Added new deck '{deckName}' to PlayerPrefs.");
+            }
+
             // Obliczamy liczbê dzieci przed dodaniem nowego obiektu
             int siblingCount = Panel.childCount;
 
