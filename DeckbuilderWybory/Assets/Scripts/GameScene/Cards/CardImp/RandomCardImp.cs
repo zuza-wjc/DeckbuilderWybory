@@ -51,7 +51,7 @@ public class RandomCardImp : MonoBehaviour
         int cost = cardData.Cost;
         string cardType = cardData.CardType;
 
-        cost = await AdjustCardCost(cardIdDropped, cost);
+        cost = await AdjustCardCost(cost);
 
         var playerStats = await GetPlayerStats(playerId);
         if (playerStats == null)
@@ -175,25 +175,35 @@ public class RandomCardImp : MonoBehaviour
         return new CardData(cost, cardType, budgetChange, supportChange, budgetOptions, budgetBonusOptions, supportOptions, supportBonusOptions, descriptions);
     }
 
-    private async Task<int> AdjustCardCost(string cardIdDropped, int cost)
+    private async Task<int> AdjustCardCost(int cost)
     {
-        bool isFirstCardInTurn = DataTransfer.IsFirstCardInTurn;
-        bool canIncreaseCost = await cardUtilities.CheckIncreaseCost(playerId);
-
-        if (isFirstCardInTurn && canIncreaseCost)
+        if (DataTransfer.IsFirstCardInTurn)
         {
-            cost = (int)Math.Ceiling(1.5 * cost);
+            var (isIncreaseCost, increaseCostEntriesCount) = await cardUtilities.CheckIncreaseCost(playerId);
+            if (isIncreaseCost)
+            {
+                double multiplier = 1 + 0.5 * increaseCostEntriesCount;
+                double increasedCost = multiplier * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
+            }
         }
 
-
-        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        var (isIncreaseCostAllTurn, increaseCostAllTurnEntriesCount) = await cardUtilities.CheckIncreaseCostAllTurn(playerId);
+        if (isIncreaseCostAllTurn)
         {
-            cost = (int)Math.Ceiling(1.5 * cost);
+            double multiplier = 1 + 0.5 * increaseCostAllTurnEntriesCount;
+            double increasedCost = multiplier * cost;
+            cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
         }
 
-        if (await cardUtilities.CheckDecreaseCost(playerId))
+        var (hasValidEntries, validEntriesCount) = await cardUtilities.CheckDecreaseCost(playerId);
+
+        if (hasValidEntries && validEntriesCount > 0)
         {
-            cost = (int)Math.Floor(0.5 * cost);
+            double multiplier = 1.0 / validEntriesCount;
+            double decreasedCost = 0.5 * cost * multiplier;
+
+            cost = (int)Math.Round(decreasedCost);
         }
 
         return cost;
