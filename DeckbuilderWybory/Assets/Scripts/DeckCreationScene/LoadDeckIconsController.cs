@@ -37,6 +37,7 @@ public class LoadDeckIconsController : MonoBehaviour
             {
                 savedDeckNames.Add(deckName);
                 SaveDeckNames(savedDeckNames); // Zapisz aktualizowan¹ listê
+                CreateEmptyDeck(deckName);
                 Debug.Log($"Added new deck '{deckName}' to PlayerPrefs.");
             }
 
@@ -111,6 +112,30 @@ public class LoadDeckIconsController : MonoBehaviour
             }
         }
     }
+    public void CreateEmptyDeck(string deckName)
+    {
+        // SprawdŸ, czy deck ju¿ istnieje w PlayerPrefs
+        if (!PlayerPrefs.HasKey(deckName))
+        {
+            // Tworzymy pust¹ taliê w formacie {"cards":[]}
+            CardListWrapper emptyDeck = new CardListWrapper { cards = new List<CardData>() };
+
+            // Konwertujemy obiekt na JSON
+            string emptyDeckJson = JsonUtility.ToJson(emptyDeck);
+
+            // Zapisujemy JSON w PlayerPrefs
+            PlayerPrefs.SetString(deckName, emptyDeckJson);
+            PlayerPrefs.Save();
+
+            Debug.Log($"Created an empty deck '{deckName}' with the format: {emptyDeckJson}");
+        }
+        else
+        {
+            Debug.Log($"Deck '{deckName}' already exists in PlayerPrefs.");
+        }
+    }
+
+
 
     public void DeleteDeck()
     {
@@ -196,5 +221,11 @@ public class LoadDeckIconsController : MonoBehaviour
     public class ListWrapper
     {
         public List<string> items; // Lista decków
+    }
+
+    [System.Serializable]
+    public class CardListWrapper
+    {
+        public List<CardData> cards;
     }
 }
