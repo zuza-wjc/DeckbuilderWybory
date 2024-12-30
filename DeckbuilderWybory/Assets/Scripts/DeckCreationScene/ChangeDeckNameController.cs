@@ -15,6 +15,8 @@ public class ChangeDeckNameController : MonoBehaviour
     public Text deckNameText;
     public Text placeholder;
     public GameObject changeDeckNamePanel;
+    public GameObject infoPanel;
+    public Text infoText;
 
     public AddCardsPanelController addCardsPanelController;
 
@@ -93,6 +95,8 @@ public class ChangeDeckNameController : MonoBehaviour
             if (deckNames[i] == newDeckName)
             {
                 Debug.LogWarning("Ta nazwa ju¿ istnieje: " + newDeckName);
+                infoText.text = "Ta nazwa ju¿ istnieje: " + newDeckName;
+                infoPanel.SetActive(true);
                 return;
             }
 
