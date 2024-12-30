@@ -192,20 +192,31 @@ public class UniqueCardImp : MonoBehaviour
     {
         if (DataTransfer.IsFirstCardInTurn)
         {
-            if (await cardUtilities.CheckIncreaseCost(playerId))
+            var (isIncreaseCost, increaseCostEntriesCount) = await cardUtilities.CheckIncreaseCost(playerId);
+            if (isIncreaseCost)
             {
-                cost = (int)Math.Ceiling(1.5 * cost);
+                double multiplier = 1 + 0.5 * increaseCostEntriesCount;
+                double increasedCost = multiplier * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
             }
         }
 
-        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        var (isIncreaseCostAllTurn, increaseCostAllTurnEntriesCount) = await cardUtilities.CheckIncreaseCostAllTurn(playerId);
+        if (isIncreaseCostAllTurn)
         {
-            cost = (int)Math.Ceiling(1.5 * cost);
+            double multiplier = 1 + 0.5 * increaseCostAllTurnEntriesCount;
+            double increasedCost = multiplier * cost;
+            cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
         }
 
-        if (await cardUtilities.CheckDecreaseCost(playerId))
+        var (hasValidEntries, validEntriesCount) = await cardUtilities.CheckDecreaseCost(playerId);
+
+        if (hasValidEntries && validEntriesCount > 0)
         {
-            cost = (int)Math.Floor(0.5 * cost);
+            double multiplier = 1.0 / validEntriesCount;
+            double decreasedCost = 0.5 * cost * multiplier;
+
+            cost = (int)Math.Round(decreasedCost);
         }
 
         return cost;
@@ -1457,15 +1468,66 @@ public class UniqueCardImp : MonoBehaviour
 
         DatabaseReference dbRefIncreaseCost = dbRefPlayer.Child("increaseCost");
 
-        var increaseCostData = new Dictionary<string, object>
-    {
-        { "turnsTaken", turnsTaken + 1 }
-    };
+        var increaseCostSnapshot = await dbRefIncreaseCost.GetValueAsync();
 
-        await dbRefIncreaseCost.SetValueAsync(increaseCostData);
+        if (increaseCostSnapshot.Exists)
+        {
+            bool entryExists = false;
+            int nextIndex = 0;
+
+            foreach (var child in increaseCostSnapshot.Children)
+            {
+                int existingTurnsTaken = Convert.ToInt32(child.Child("turnsTaken").Value);
+                if (existingTurnsTaken == turnsTaken + 1)
+                {
+                    entryExists = true;
+                    break;
+                }
+
+                if (int.TryParse(child.Key, out int index) && index >= nextIndex)
+                {
+                    nextIndex = index + 1;
+                }
+            }
+
+            if (!entryExists)
+            {
+                foreach (var child in increaseCostSnapshot.Children)
+                {
+                    await dbRefIncreaseCost.Child(child.Key).RemoveValueAsync();
+                }
+
+                var increaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken + 1 }
+            };
+
+                await dbRefIncreaseCost.Child(nextIndex.ToString()).SetValueAsync(increaseCostData);
+            }
+            else
+            {
+                var increaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken + 1 }
+            };
+
+                await dbRefIncreaseCost.Child(nextIndex.ToString()).SetValueAsync(increaseCostData);
+            }
+        }
+        else
+        {
+            var increaseCostData = new Dictionary<string, object>
+        {
+            { "turnsTaken", turnsTaken + 1 }
+        };
+
+            await dbRefIncreaseCost.Child("0").SetValueAsync(increaseCostData);
+        }
 
         return false;
     }
+
+
 
     private async Task<bool> BlockSupportAction(string enemyId)
     {
@@ -1516,15 +1578,58 @@ public class UniqueCardImp : MonoBehaviour
 
         DatabaseReference dbRefIncreaseCost = dbRefPlayer.Child("increaseCostAllTurn");
 
-        var increaseCostData = new Dictionary<string, object>
-    {
-        { "turnsTaken", turnsTaken + 1 }
-    };
+        var increaseCostSnapshot = await dbRefIncreaseCost.GetValueAsync();
 
-        await dbRefIncreaseCost.SetValueAsync(increaseCostData);
+        if (increaseCostSnapshot.Exists)
+        {
+            bool entryExists = false;
+
+            foreach (var child in increaseCostSnapshot.Children)
+            {
+                int existingTurnsTaken = Convert.ToInt32(child.Child("turnsTaken").Value);
+
+                if (existingTurnsTaken == turnsTaken + 1)
+                {
+                    entryExists = true;
+                    break;
+                }
+            }
+
+            if (!entryExists)
+            {
+                await dbRefIncreaseCost.RemoveValueAsync();
+
+                var increaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken + 1 }
+            };
+
+                await dbRefIncreaseCost.Child("0").SetValueAsync(increaseCostData);
+            }
+            else
+            {
+                int index = (int)increaseCostSnapshot.ChildrenCount;
+                var increaseCostData = new Dictionary<string, object>
+            {
+                { "turnsTaken", turnsTaken + 1 }
+            };
+
+                await dbRefIncreaseCost.Child(index.ToString()).SetValueAsync(increaseCostData);
+            }
+        }
+        else
+        {
+            var increaseCostData = new Dictionary<string, object>
+        {
+            { "turnsTaken", turnsTaken + 1 }
+        };
+
+            await dbRefIncreaseCost.Child("0").SetValueAsync(increaseCostData);
+        }
 
         return false;
     }
+
 
     private async Task<bool> DecreaseCost()
     {
@@ -1546,12 +1651,40 @@ public class UniqueCardImp : MonoBehaviour
 
         DatabaseReference dbRefDecreaseCost = dbRefPlayer.Child("decreaseCost");
 
+        DataSnapshot snapshot = await dbRefDecreaseCost.GetValueAsync();
+        bool hasSameTurnsTaken = false;
+        int nextIndex = 0;
+
+        if (snapshot.Exists)
+        {
+            foreach (var child in snapshot.Children)
+            {
+                if (int.TryParse(child.Key, out int index) && index >= nextIndex)
+                {
+                    nextIndex = index + 1;
+                }
+
+                if (child.Child("turnsTaken").Value?.ToString() == turnsTaken.ToString())
+                {
+                    hasSameTurnsTaken = true;
+                }
+            }
+
+            if (!hasSameTurnsTaken)
+            {
+                foreach (var child in snapshot.Children)
+                {
+                    await dbRefDecreaseCost.Child(child.Key).RemoveValueAsync();
+                }
+            }
+        }
+
         var decreaseCostData = new Dictionary<string, object>
     {
         { "turnsTaken", turnsTaken }
     };
 
-        await dbRefDecreaseCost.SetValueAsync(decreaseCostData);
+        await dbRefDecreaseCost.Child(nextIndex.ToString()).SetValueAsync(decreaseCostData);
 
         return false;
     }

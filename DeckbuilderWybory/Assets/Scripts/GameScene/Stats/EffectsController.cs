@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using Firebase.Database;
 using System;
+using System.Linq;
 
 public class EffectsController : MonoBehaviour
 {
@@ -411,15 +412,19 @@ public class EffectsController : MonoBehaviour
         {
             var increaseCostSnapshot = args.Snapshot;
 
-            if (increaseCostSnapshot.Exists)
+            if (increaseCostSnapshot.Exists && increaseCostSnapshot.ChildrenCount > 0)
             {
-                int turnsTakenInIncreaseCost = Convert.ToInt32(increaseCostSnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-                turnsTakenInStats++;
-
-                if (turnsTakenInIncreaseCost == turnsTakenInStats)
+                var firstChild = increaseCostSnapshot.Children.FirstOrDefault();
+                if (firstChild != null)
                 {
-                    CreateIncreaseCostPrefab();
+                    int turnsTakenInIncreaseCost = Convert.ToInt32(firstChild.Child("turnsTaken").Value);
+                    int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
+                    turnsTakenInStats++;
+
+                    if (turnsTakenInIncreaseCost == turnsTakenInStats)
+                    {
+                        CreateIncreaseCostPrefab();
+                    }
                 }
             }
             else
@@ -432,6 +437,7 @@ public class EffectsController : MonoBehaviour
             }
         };
     }
+
 
     private void ListenForDecreaseCostChanges()
     {
@@ -446,18 +452,23 @@ public class EffectsController : MonoBehaviour
         {
             var decreaseCostSnapshot = args.Snapshot;
 
-            if (decreaseCostSnapshot.Exists)
+            if (decreaseCostSnapshot.Exists && decreaseCostSnapshot.Children.Count() > 0)
             {
-                int turnsTakenInDecreaseCost = Convert.ToInt32(decreaseCostSnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-
-                if (turnsTakenInDecreaseCost == turnsTakenInStats)
+                var firstChild = decreaseCostSnapshot.Children.FirstOrDefault();
+                if (firstChild != null && firstChild.HasChild("turnsTaken"))
                 {
-                    CreateDecreaseCostPrefab();
+                    int turnsTakenInDecreaseCost = Convert.ToInt32(firstChild.Child("turnsTaken").Value);
+                    int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
+
+                    if (turnsTakenInDecreaseCost == turnsTakenInStats)
+                    {
+                        CreateDecreaseCostPrefab();
+                    }
                 }
             }
         };
     }
+
 
     private void ListenForIncreaseAllCostChanges()
     {
@@ -472,19 +483,24 @@ public class EffectsController : MonoBehaviour
         {
             var increaseAllCostSnapshot = args.Snapshot;
 
-            if (increaseAllCostSnapshot.Exists)
+            if (increaseAllCostSnapshot.Exists && increaseAllCostSnapshot.ChildrenCount > 0)
             {
-                int turnsTakenInIncreaseAllCost = Convert.ToInt32(increaseAllCostSnapshot.Child("turnsTaken").Value);
-                int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
-                turnsTakenInStats++;
-
-                if (turnsTakenInIncreaseAllCost == turnsTakenInStats)
+                var firstChild = increaseAllCostSnapshot.Children.FirstOrDefault();
+                if (firstChild != null)
                 {
-                    CreateIncreaseAllCostPrefab();
+                    int turnsTakenInIncreaseAllCost = Convert.ToInt32(firstChild.Child("turnsTaken").Value);
+                    int turnsTakenInStats = await GetTurnsTakenFromStats(playerId);
+                    turnsTakenInStats++;
+
+                    if (turnsTakenInIncreaseAllCost == turnsTakenInStats)
+                    {
+                        CreateIncreaseAllCostPrefab();
+                    }
                 }
             }
         };
     }
+
 
     private async Task<int> GetTurnsTakenFromStats(string playerId)
     {

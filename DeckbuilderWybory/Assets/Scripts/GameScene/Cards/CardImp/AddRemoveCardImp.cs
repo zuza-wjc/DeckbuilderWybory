@@ -77,27 +77,32 @@ public class AddRemoveCardImp : MonoBehaviour
 
         if (DataTransfer.IsFirstCardInTurn)
         {
-            if (await cardUtilities.CheckIncreaseCost(playerId))
+            var (isIncreaseCost, increaseCostEntriesCount) = await cardUtilities.CheckIncreaseCost(playerId);
+            if (isIncreaseCost)
             {
-                    double increasedCost = 1.5 * cost;
-                    cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
+                double multiplier = 1 + 0.5 * increaseCostEntriesCount;
+                double increasedCost = multiplier * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
             }
         }
 
-        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        var (isIncreaseCostAllTurn, increaseCostAllTurnEntriesCount) = await cardUtilities.CheckIncreaseCostAllTurn(playerId);
+        if (isIncreaseCostAllTurn)
         {
-
-                double increasedCost = 1.5 * cost;
-                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
-           
+            double multiplier = 1 + 0.5 * increaseCostAllTurnEntriesCount; 
+            double increasedCost = multiplier * cost;
+            cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
         }
 
-        if (await cardUtilities.CheckDecreaseCost(playerId))
+
+        var (hasValidEntries, validEntriesCount) = await cardUtilities.CheckDecreaseCost(playerId);
+
+        if (hasValidEntries && validEntriesCount > 0)
         {
+            double multiplier = 1.0 / validEntriesCount;
+            double decreasedCost = 0.5 * cost * multiplier;
 
-                double decreasedCost = 0.5 * cost;
-                cost = (cost % 2 != 0) ? (int)Math.Floor(decreasedCost) : (int)decreasedCost;
-
+            cost = (int)Math.Round(decreasedCost);
         }
 
         DataSnapshot typeSnapshot = snapshot.Child("type");
@@ -812,6 +817,7 @@ public class AddRemoveCardImp : MonoBehaviour
                             return (-1, false, null);
                         }
                         chosenRegion = await mapManager.SelectArea();
+                        isBonusRegion = await mapManager.CheckIfBonusRegion(chosenRegion, cardType);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {

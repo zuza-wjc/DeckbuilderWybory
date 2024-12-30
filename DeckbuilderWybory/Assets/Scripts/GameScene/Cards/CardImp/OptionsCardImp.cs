@@ -108,20 +108,31 @@ public class OptionsCardImp : MonoBehaviour
 
         if (DataTransfer.IsFirstCardInTurn)
         {
-            if (await cardUtilities.CheckIncreaseCost(playerId))
+            var (isIncreaseCost, increaseCostEntriesCount) = await cardUtilities.CheckIncreaseCost(playerId);
+            if (isIncreaseCost)
             {
-                cost = AdjustCost(cost, 1.5);
+                double multiplier = 1 + 0.5 * increaseCostEntriesCount;
+                double increasedCost = multiplier * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
             }
         }
 
-        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        var (isIncreaseCostAllTurn, increaseCostAllTurnEntriesCount) = await cardUtilities.CheckIncreaseCostAllTurn(playerId);
+        if (isIncreaseCostAllTurn)
         {
-            cost = AdjustCost(cost, 1.5);
+            double multiplier = 1 + 0.5 * increaseCostAllTurnEntriesCount;
+            double increasedCost = multiplier * cost;
+            cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
         }
 
-        if (await cardUtilities.CheckDecreaseCost(playerId))
+        var (hasValidEntries, validEntriesCount) = await cardUtilities.CheckDecreaseCost(playerId);
+
+        if (hasValidEntries && validEntriesCount > 0)
         {
-            cost = AdjustCost(cost, 0.5, true);
+            double multiplier = 1.0 / validEntriesCount;
+            double decreasedCost = 0.5 * cost * multiplier;
+
+            cost = (int)Math.Round(decreasedCost);
         }
 
         if (snapshot.Child("budget").Exists)
@@ -261,25 +272,6 @@ public class OptionsCardImp : MonoBehaviour
 
         await historyController.AddCardToHistory(cardIdDropped, playerId, descriptions[0], enemyId);
     }
-
-    private int AdjustCost(int cost, double multiplier, bool decrease = false)
-    {
-        if (cost < 0)
-        {
-            Debug.LogWarning("Cost is negative, not adjusting cost.");
-            return cost;
-        }
-
-        double adjustedCost = multiplier * cost;
-
-        if (decrease)
-        {
-            return cost % 2 != 0 ? (int)Math.Floor(adjustedCost) : (int)adjustedCost;
-        }
-
-        return cost % 2 != 0 ? (int)Math.Ceiling(adjustedCost) : (int)adjustedCost;
-    }
-
 
     private async Task<(DatabaseReference dbRefPlayerStats, int playerBudget, List<string>, string)> BudgetAction(
    DatabaseReference dbRefPlayerStats, List<string> descriptions,

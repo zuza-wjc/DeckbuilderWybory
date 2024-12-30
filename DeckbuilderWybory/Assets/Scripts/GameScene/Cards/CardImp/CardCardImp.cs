@@ -87,50 +87,31 @@ public class CardCardImp : MonoBehaviour
 
         if (DataTransfer.IsFirstCardInTurn)
         {
-            if (await cardUtilities.CheckIncreaseCost(playerId))
+            var (isIncreaseCost, increaseCostEntriesCount) = await cardUtilities.CheckIncreaseCost(playerId);
+            if (isIncreaseCost)
             {
-                double increasedCost = 1.5 * cost;
-
-                if (cost % 2 != 0)
-                {
-                    cost = (int)Math.Ceiling(increasedCost);
-                }
-                else
-                {
-                    cost = (int)increasedCost;
-                }
-
+                double multiplier = 1 + 0.5 * increaseCostEntriesCount;
+                double increasedCost = multiplier * cost;
+                cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
             }
         }
 
-        if (await cardUtilities.CheckIncreaseCostAllTurn(playerId))
+        var (isIncreaseCostAllTurn, increaseCostAllTurnEntriesCount) = await cardUtilities.CheckIncreaseCostAllTurn(playerId);
+        if (isIncreaseCostAllTurn)
         {
-            double increasedCost = 1.5 * cost;
-
-            if (cost % 2 != 0)
-            {
-                cost = (int)Math.Ceiling(increasedCost);
-            }
-            else
-            {
-                cost = (int)increasedCost;
-            }
-
+            double multiplier = 1 + 0.5 * increaseCostAllTurnEntriesCount;
+            double increasedCost = multiplier * cost;
+            cost = (cost % 2 != 0) ? (int)Math.Ceiling(increasedCost) : (int)increasedCost;
         }
 
-        if (await cardUtilities.CheckDecreaseCost(playerId))
+        var (hasValidEntries, validEntriesCount) = await cardUtilities.CheckDecreaseCost(playerId);
+
+        if (hasValidEntries && validEntriesCount > 0)
         {
-            double decreasedCost = 0.5 * cost;
+            double multiplier = 1.0 / validEntriesCount;
+            double decreasedCost = 0.5 * cost * multiplier;
 
-            if (cost % 2 != 0)
-            {
-                cost = (int)Math.Floor(decreasedCost);
-            }
-            else
-            {
-                cost = (int)decreasedCost;
-            }
-
+            cost = (int)Math.Round(decreasedCost);
         }
 
         cardType = snapshot.Child("type").Exists ? snapshot.Child("type").Value.ToString() : string.Empty;
