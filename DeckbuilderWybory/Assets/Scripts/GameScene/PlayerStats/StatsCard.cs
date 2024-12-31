@@ -47,7 +47,6 @@ public class StatsCard : MonoBehaviour
     {
         if (deckTypeImage == null)
         {
-            Debug.LogError("DeckTypeImage is not assigned!");
             return;
         }
 
@@ -66,7 +65,6 @@ public class StatsCard : MonoBehaviour
                 deckTypeImage.sprite = przemyslSprite;
                 break;
             default:
-                Debug.LogWarning($"Unknown deckType: {deckType}. Default sprite will be used.");
                 deckTypeImage.sprite = podstawaSprite;
                 break;
         }
