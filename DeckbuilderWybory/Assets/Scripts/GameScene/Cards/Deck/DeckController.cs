@@ -104,6 +104,8 @@ public class DeckController : MonoBehaviour
 
             if (deck == null || deck.cards == null || deck.cards.Count == 0)
             {
+                await dbRef.Child(playerId).Child("stats").Child("deckType").SetValueAsync("podstawa");
+
                 Debug.LogError("Deserializacja nie powiodła się lub talia jest pusta.");
                 return;
             }
@@ -133,12 +135,10 @@ public class DeckController : MonoBehaviour
                 }
             }
 
-            // Jeśli nie znaleziono żadnego specjalnego typu, zgłaszamy błąd
+            // Jeśli nie znaleziono żadnego specjalnego typu, zapisujemy jako podstawa
             if (detectedSpecialType == null)
             {
-                Debug.LogError("Talia nie zawiera żadnego specjalnego typu kart.");
-                errorPanelController.ShowError("Deck does not contain any special type cards!");
-                return;
+                detectedSpecialType = "podstawa";
             }
 
             // Zapisanie typu specjalnego do Firebase

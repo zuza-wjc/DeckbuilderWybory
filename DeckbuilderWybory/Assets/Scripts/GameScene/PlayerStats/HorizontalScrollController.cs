@@ -89,6 +89,19 @@ public class HorizontalScrollController : MonoBehaviour
     {
         string currentPlayerId = playerSnapshot.Key;
 
+        if (!playerSnapshot.Exists)
+        {
+            if (statsCards.TryGetValue(currentPlayerId, out StatsCard destroyedCard))
+            {
+                if (destroyedCard != null)
+                {
+                    Destroy(destroyedCard.gameObject);
+                }
+                statsCards.Remove(currentPlayerId);
+            }
+            return;
+        }
+
         string playerName = playerSnapshot.Child("playerName").Value?.ToString() ?? "Unknown";
         if (currentPlayerId == playerId)
         {
@@ -105,8 +118,6 @@ public class HorizontalScrollController : MonoBehaviour
             string deckName = playerSnapshot.Child("stats").Child("deckName").Value?.ToString() ?? "";
 
             deckType = deckName;
-
-            Debug.LogWarning($"Brak deckType w bazie. Odczytany z nazwy: {deckType}");
         }
 
         deckType = deckType switch
@@ -115,6 +126,7 @@ public class HorizontalScrollController : MonoBehaviour
             "ambasada" => "AMBASADA",
             "przemysl" => "PRZEMYS£",
             "metropolia" => "METROPOLIA",
+            "podstawa" => "PODSTAWA",
             _ => deckType
         };
 
@@ -195,6 +207,10 @@ public class HorizontalScrollController : MonoBehaviour
 
     void SortStatsCards()
     {
+        statsCards = statsCards
+            .Where(pair => pair.Value != null)
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+
         var sortedCards = statsCards.Values
             .OrderByDescending(card => card.PlayerSupportValue)
             .ThenByDescending(card => card.RegionsNumberValue)
