@@ -250,9 +250,9 @@ public class CardUtilities : MonoBehaviour
         bool isProtectedOneCard = await CheckIfProtectedOneCard(playerId, supportToAdd);
         if (isProtectedOneCard)
         {
-            Debug.Log("Obszar jest chroniony, nie mo¿na zagraæ karty");
-            errorPanelController.ShowError("region_protected");
-            return true;
+            Debug.Log("Karta zosta³a skontrowana.");
+            errorPanelController.ShowError("counter");
+            return false;
         }
 
 
@@ -353,9 +353,9 @@ public class CardUtilities : MonoBehaviour
             bool isProtectedOneCard = await CheckIfProtectedOneCard(enemyId, value);
             if (isProtectedOneCard)
             {
-                Debug.Log("Gracz jest chroniony, nie mo¿na zagraæ karty");
-                errorPanelController.ShowError("player_protected");
-                return -1;
+                Debug.Log("Karta zosta³a skontrowana.");
+                errorPanelController.ShowError("counter");
+                return playerBudget;
             }
 
 
@@ -779,7 +779,6 @@ public class CardUtilities : MonoBehaviour
         return (false, 0);
     }
 
-
     public async Task<int> CountCardsOnHand(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
@@ -1069,7 +1068,6 @@ public class CardUtilities : MonoBehaviour
         return (false, 0);
     }
 
-
     public async Task<(bool, int)> CheckDecreaseCost(string playerId)
     {
         string lobbyId = DataTransfer.LobbyId;
@@ -1103,7 +1101,6 @@ public class CardUtilities : MonoBehaviour
 
         return (validEntriesCount > 0, validEntriesCount);
     }
-
 
     public async Task CheckIfPlayed2Cards(string playerId)
     {
@@ -1300,9 +1297,16 @@ public class CardUtilities : MonoBehaviour
 
     int playerTurnsTaken = Convert.ToInt32(playerStatsSnapshot.Child("turnsTaken").Value);
 
-    if (limitCardsTurnsTaken != playerTurnsTaken) return false;
+    if (playerId == limitCardsPlayerId)
+        {
+            if (limitCardsTurnsTaken != playerTurnsTaken + 1) return false;
+        }
+        else
+        {
+            if (limitCardsTurnsTaken != playerTurnsTaken) return false;
+        }
 
-    if (playedCards == 1) return true;
+        if (playedCards == 1) return true;
 
     if (playedCards == 0 || playedCards == -1)
     {

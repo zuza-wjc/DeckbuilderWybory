@@ -75,6 +75,7 @@ public static class ErrorMessages
         { "not_first", "Karta ta mo¿e byæ zagrana tylko jako pierwsza w turze." },
         { "no_cards", "Brak dostêpnych kart." },
         { "cards_lack", "Za ma³o kart dostêpnych aby zagraæ kartê." },
-        { "turn_over", "Twoja tura siê skoñczy³a." }
+        { "turn_over", "Twoja tura siê skoñczy³a." },
+        {"counter", "Karta zosta³a skontrowana." }
     };
 }

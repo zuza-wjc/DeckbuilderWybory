@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class UniqueCardImp : MonoBehaviour
 {
@@ -126,18 +127,67 @@ public class UniqueCardImp : MonoBehaviour
                 errorPanelController.ShowError("no_budget");
                 return;
             }
-
-            if (!ignoreCost)
+            if (!(await cardUtilities.CheckBlockedCard(playerId)))
             {
-                await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
-                playerBudget -= cost;
+
+                if (!ignoreCost)
+                {
+                    await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
+                    playerBudget -= cost;
+                }
+                string enemyId = string.Empty;
+
+                (playerBudget, enemyId) = await SwitchCase(instanceId, dbRefPlayerStats, playerIncome, playerBudget, cardIdDropped, -1, false, cardType, enemyId);
+
+                if (playerBudget == -1)
+                {
+                    DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+                    if (currentBudgetSnapshot.Exists)
+                    {
+                        int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                        int updatedBudget = currentBudget + cost;
+                        await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to fetch current player budget.");
+                    }
+                    return;
+                }
+
+                if (ignoreCost)
+                {
+                    await HandleIgnoreCost(dbRefPlayerStats, cost);
+                }
+
+                DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
+                    .Child("sessions")
+                    .Child(lobbyId)
+                    .Child("players")
+                    .Child(playerId)
+                    .Child("deck")
+                    .Child(instanceId);
+
+                if (cardIdDropped != "UN032")
+                {
+
+                    await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
+                    await dbRefPlayerDeck.Child("played").SetValueAsync(true);
+                }
+
+
+                DataTransfer.IsFirstCardInTurn = false;
+                await cardUtilities.CheckIfPlayed2Cards(playerId);
+
+                cardLimitExceeded = await cardUtilities.CheckCardLimit(playerId);
+
+                await historyController.AddCardToHistory(cardIdDropped, playerId, desc, enemyId);
             }
-            string enemyId = string.Empty;
-
-            (playerBudget,enemyId) = await SwitchCase(instanceId, dbRefPlayerStats, playerIncome, playerBudget, cardIdDropped, -1, false, cardType, enemyId);
-
-            if(playerBudget == -1)
+            else
             {
+                Debug.Log("Karta została zablokowana");
+                errorPanelController.ShowError("action_blocked");
+
                 DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
                 if (currentBudgetSnapshot.Exists)
                 {
@@ -149,36 +199,19 @@ public class UniqueCardImp : MonoBehaviour
                 {
                     Debug.LogError("Failed to fetch current player budget.");
                 }
+
+                DatabaseReference dbRefDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
+                await dbRefDeck.Child("onHand").SetValueAsync(false);
+                await dbRefDeck.Child("played").SetValueAsync(true);
+
+                DataTransfer.IsFirstCardInTurn = false;
+
+                await cardUtilities.CheckIfPlayed2Cards(playerId);
+
+                cardLimitExceeded = await cardUtilities.CheckCardLimit(playerId);
+
                 return;
             }
-            
-            if (ignoreCost)
-            {
-                await HandleIgnoreCost(dbRefPlayerStats, cost);
-            }
-
-            DatabaseReference dbRefPlayerDeck = FirebaseInitializer.DatabaseReference
-                .Child("sessions")
-                .Child(lobbyId)
-                .Child("players")
-                .Child(playerId)
-                .Child("deck")
-                .Child(instanceId);
-
-            if (cardIdDropped != "UN032")
-            {
-
-                await dbRefPlayerDeck.Child("onHand").SetValueAsync(false);
-                await dbRefPlayerDeck.Child("played").SetValueAsync(true);
-            }
-            
-
-            DataTransfer.IsFirstCardInTurn = false;
-            await cardUtilities.CheckIfPlayed2Cards(playerId);
-
-            cardLimitExceeded = await cardUtilities.CheckCardLimit(playerId);
-
-            await historyController.AddCardToHistory(cardIdDropped, playerId, desc, enemyId);
         }
         catch (Exception ex)
         {
@@ -567,9 +600,9 @@ public class UniqueCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (playerBudget, enemyId);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {
@@ -631,9 +664,9 @@ public class UniqueCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (playerBudget, enemyId);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {
@@ -696,9 +729,9 @@ public class UniqueCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (playerBudget, enemyId);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {
@@ -735,9 +768,9 @@ public class UniqueCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony na jednej karcie, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (playerBudget, enemyId);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {
@@ -810,9 +843,9 @@ public class UniqueCardImp : MonoBehaviour
                     }
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (-1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (playerBudget, enemyId);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {
@@ -1013,9 +1046,9 @@ public class UniqueCardImp : MonoBehaviour
 
         if (await cardUtilities.CheckIfProtectedOneCard(playerId, value))
         {
-            Debug.Log("Player is protected by a one-card protection, unable to play the card.");
-            errorPanelController.ShowError("region_protected");
-            return true;
+            Debug.Log("Karta została skontrowana.");
+            errorPanelController.ShowError("counter");
+            return false;
         }
 
         await cardUtilities.CheckIfBudgetPenalty(areaId);
@@ -1119,12 +1152,17 @@ public class UniqueCardImp : MonoBehaviour
         bool isProtected = await cardUtilities.CheckIfProtected(maxPlayer.playerId, minSupport - maxSupport);
         bool isProtectedOneCard = await cardUtilities.CheckIfProtectedOneCard(maxPlayer.playerId, minSupport - maxSupport);
 
-        if (isProtected || isProtectedOneCard)
+        if (isProtected)
         {
             Debug.Log("Player is protected, unable to play the card.");
             return true;
         }
 
+        if(isProtectedOneCard)
+        {
+            Debug.Log("Karta została skontrowana.");
+            return false;
+        }
         await cardUtilities.CheckIfBudgetPenalty(chosenRegion);
         return false;
     }
@@ -1176,11 +1214,18 @@ public class UniqueCardImp : MonoBehaviour
         bool isPlayerProtected = await cardUtilities.CheckIfProtected(enemyId, playerSupport - enemySupport);
         bool isOneCardProtected = await cardUtilities.CheckIfProtectedOneCard(enemyId, playerSupport - enemySupport);
 
-        if (isRegionProtected || isPlayerProtected || isOneCardProtected)
+        if (isRegionProtected || isPlayerProtected)
         {
             Debug.Log("The area or player is protected, unable to play the card.");
             errorPanelController.ShowError("player_protected");
             return true;
+        }
+
+        if(isOneCardProtected)
+        {
+            Debug.Log("Karta została skontrowana");
+            errorPanelController.ShowError("counter");
+            return false;
         }
 
         await cardUtilities.CheckIfBudgetPenalty(chosenRegion);
@@ -1389,9 +1434,9 @@ public class UniqueCardImp : MonoBehaviour
         }
         if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
         {
-            Debug.Log("Gracz jest chroniony, nie można zagrać karty");
-            errorPanelController.ShowError("player_protected");
-            return true;
+            Debug.Log("Karta została skontrowana");
+            errorPanelController.ShowError("counter");
+            return false;
         }
 
         int? turnsTaken = await GetTurnsTakenAsync(enemyId);
