@@ -204,6 +204,29 @@ public class AddRemoveCardImp : MonoBehaviour
         {
             Debug.Log("Karta została zablokowana");
             errorPanelController.ShowError("action_blocked");
+
+            DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+            if (currentBudgetSnapshot.Exists)
+            {
+                int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                int updatedBudget = currentBudget + cost;
+                await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+            }
+            else
+            {
+                Debug.LogError("Failed to fetch current player budget.");
+            }
+
+            DatabaseReference dbRefDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
+            await dbRefDeck.Child("onHand").SetValueAsync(false);
+            await dbRefDeck.Child("played").SetValueAsync(true);
+
+            DataTransfer.IsFirstCardInTurn = false;
+
+            await cardUtilities.CheckIfPlayed2Cards(playerId);
+
+            tmp = await cardUtilities.CheckCardLimit(playerId);
+
             return;
         }
 
@@ -412,9 +435,9 @@ public class AddRemoveCardImp : MonoBehaviour
                     }
                     else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (dbRefPlayerStats, -1, false, -1, null);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (dbRefPlayerStats, chosenRegion, isBonusRegion, playerBudget, enemyId);
                     }
                     else
                     {

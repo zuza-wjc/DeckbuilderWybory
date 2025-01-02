@@ -413,15 +413,26 @@ public class AddCardsPanelController : MonoBehaviour
 
                     if (shadePanel != null)
                     {
-                        instantiatedCard.transform.SetParent(shadePanel.transform);
+                        instantiatedCard.transform.SetParent(shadePanel.transform, worldPositionStays: false);
 
-                        // Adjust the position to the right by changing the localPosition
                         RectTransform rectTransform = instantiatedCard.GetComponent<RectTransform>();
                         if (rectTransform != null)
                         {
-                            // Set the localPosition to move it to the right (adjust the X value)
-                            rectTransform.localPosition = new Vector3(650f, 0f, 0f); // Modify '200f' as per your need
-                            rectTransform.sizeDelta = new Vector2(600f, 800f);
+                            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                            rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                            rectTransform.localPosition = new Vector3(650f, 0f, 0f);
+
+                            float referenceAspectRatio = 16f / 9f;
+                            float currentAspectRatio = (float)Screen.width / Screen.height;
+
+                            float scale = currentAspectRatio <= referenceAspectRatio
+                                ? (float)Screen.width / 1920f
+                                : (float)Screen.height / 1080f;
+
+                            scale *= 0.75f;
+
+                            rectTransform.localScale = new Vector3(scale, scale, 1f);
                         }
                         else
                         {
@@ -432,6 +443,8 @@ public class AddCardsPanelController : MonoBehaviour
                     {
                         Debug.LogError("shadePanel is not assigned.");
                     }
+
+
                 }
                 else
                 {

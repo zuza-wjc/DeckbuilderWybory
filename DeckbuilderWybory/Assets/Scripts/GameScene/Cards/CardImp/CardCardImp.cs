@@ -239,6 +239,29 @@ public class CardCardImp : MonoBehaviour
         {
             Debug.Log("Karta została zablokowana");
             errorPanelController.ShowError("action_blocked");
+
+            DataSnapshot currentBudgetSnapshot = await dbRefPlayerStats.Child("money").GetValueAsync();
+            if (currentBudgetSnapshot.Exists)
+            {
+                int currentBudget = Convert.ToInt32(currentBudgetSnapshot.Value);
+                int updatedBudget = currentBudget + cost;
+                await dbRefPlayerStats.Child("money").SetValueAsync(updatedBudget);
+            }
+            else
+            {
+                Debug.LogError("Failed to fetch current player budget.");
+            }
+
+            DatabaseReference dbRefDeck = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players").Child(playerId).Child("deck").Child(instanceId);
+            await dbRefDeck.Child("onHand").SetValueAsync(false);
+            await dbRefDeck.Child("played").SetValueAsync(true);
+
+            DataTransfer.IsFirstCardInTurn = false;
+
+            await cardUtilities.CheckIfPlayed2Cards(playerId);
+
+            tmp = await cardUtilities.CheckCardLimit(playerId);
+
             return;
         }
 
@@ -426,9 +449,9 @@ public class CardCardImp : MonoBehaviour
                         return (dbRefPlayerStats, -1, enemyId);
                     } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (dbRefPlayerStats, -1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (dbRefPlayerStats, playerBudget, enemyId);
                     }
                     else
                     {
@@ -645,9 +668,9 @@ public class CardCardImp : MonoBehaviour
                         }
                         else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                         {
-                            Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                            errorPanelController.ShowError("player_protected");
-                            return (dbRefPlayerStats, -1, enemyId);
+                            Debug.Log("Karta została skontrowana.");
+                            errorPanelController.ShowError("counter");
+                            return (dbRefPlayerStats, playerBudget, enemyId);
                         }
                         else
                         {
@@ -768,6 +791,22 @@ public class CardCardImp : MonoBehaviour
                         errorPanelController.ShowError("turn_over");
                         return (dbRefPlayerStats, -1, enemyId);
                     }
+
+                    if(cardId == "CA070")
+                    {
+                        int cardsInDeck = await deckController.CountCardsInDeck(playerId);
+                        if (cardsInDeck < data.CardNumber)
+                        {
+                            Debug.Log("Za mało kart w talii aby zagrać kartę");
+                            errorPanelController.ShowError("cards_lack");
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
+                        else if (cardsInDeck == -1)
+                        {
+                            return (dbRefPlayerStats, -1, enemyId);
+                        }
+                    }
+
                     selectedCardIds = await cardSelectionUI.ShowCardSelection(playerId, data.CardNumber, instanceId, true);
 
                     if (data.Source == "player")
@@ -895,9 +934,9 @@ public class CardCardImp : MonoBehaviour
                         return (dbRefPlayerStats, -1, enemyId);
                     } else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (dbRefPlayerStats, -1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (dbRefPlayerStats, playerBudget, enemyId);
                     }
                     else
                     {
@@ -947,9 +986,9 @@ public class CardCardImp : MonoBehaviour
 
                     if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony, nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (dbRefPlayerStats, -1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (dbRefPlayerStats, playerBudget, enemyId);
                     }
                     if (!DataTransfer.IsPlayerTurn)
                     {
@@ -1009,9 +1048,9 @@ public class CardCardImp : MonoBehaviour
                     }
                     else if (await cardUtilities.CheckIfProtectedOneCard(enemyId, -1))
                     {
-                        Debug.Log("Gracz jest chroniony nie można zagrać karty");
-                        errorPanelController.ShowError("player_protected");
-                        return (dbRefPlayerStats, -1, enemyId);
+                        Debug.Log("Karta została skontrowana.");
+                        errorPanelController.ShowError("counter");
+                        return (dbRefPlayerStats, playerBudget, enemyId);
                     }
                     else
                     {
@@ -1279,7 +1318,7 @@ public class CardCardImp : MonoBehaviour
             bool isProtectedOneCard = await cardUtilities.CheckIfProtectedOneCard(enemyId, -1);
             if (isProtectedOneCard)
             {
-                Debug.Log($"Enemy {enemyId} is protected by one card. Action cannot proceed.");
+                Debug.Log("Karta została skontrowana.");
                 return true;
             }
         }

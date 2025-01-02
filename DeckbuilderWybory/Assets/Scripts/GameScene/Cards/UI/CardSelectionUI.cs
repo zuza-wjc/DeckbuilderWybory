@@ -320,7 +320,11 @@ public class CardSelectionUI : MonoBehaviour
         }
 
         HideCardSelectionPanel();
-        return new(selectedCards[0].Key, selectedCards[1].Key);
+
+        string keepCard = selectedCards[0].Key;
+        string destroyCard = keepCard == playerCard ? enemyCard : playerCard;
+
+        return (keepCard, destroyCard);
     }
 
     private void HideCardSelectionPanel()
