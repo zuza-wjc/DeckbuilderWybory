@@ -530,6 +530,7 @@ public class AddCardsPanelController : MonoBehaviour
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
+
             if (type!= "Podstawa" && type != deckCardsType) 
             {
                 Debug.LogWarning($"Nie mo¿na dodaæ innej karty typu specjalne. TYP TALII: {deckCardsType}.");
@@ -538,7 +539,7 @@ public class AddCardsPanelController : MonoBehaviour
                 tooMuchCardsPanel.SetActive(true);
                 return; // Przerwij dzia³anie metody
             }
-            if (specjalneCardsCount + (cardsCount - previousCount) >= 11)
+            if (type != "Podstawa" && specjalneCardsCount + (cardsCount - previousCount) >= 11)
             {
                 Debug.LogWarning($"Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.");
                 infoText.text = "Nie mo¿na dodaæ wiêcej kart typu 'specjalne'. Osi¹gniêto maksymalny limit 10 kart.";
