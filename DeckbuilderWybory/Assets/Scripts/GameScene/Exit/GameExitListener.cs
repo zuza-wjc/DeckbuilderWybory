@@ -7,7 +7,6 @@ using System.Collections;
 
 public class GameExitListener : MonoBehaviour
 {
-    DatabaseReference dbRef;
     DatabaseReference dbRefPlayers;
 
     string lobbyId;
@@ -30,8 +29,7 @@ public class GameExitListener : MonoBehaviour
             return;
         }
 
-        dbRef = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId);
-        dbRefPlayers = dbRef.Child("players");
+        dbRefPlayers = FirebaseInitializer.DatabaseReference.Child("sessions").Child(lobbyId).Child("players");
 
         if (dbRefPlayers != null)
         {

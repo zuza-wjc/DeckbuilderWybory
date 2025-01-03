@@ -96,6 +96,8 @@ public class GameEndManager : MonoBehaviour
         catch (System.Exception ex)
         {
             Debug.LogError($"Error handling end game: {ex.Message}");
+
+            await dbRef.Child(playerId).Child("stats").Child("inGame").SetValueAsync(false);
             ChangeToScene();
         }
     }
@@ -103,21 +105,5 @@ public class GameEndManager : MonoBehaviour
     private void ChangeToScene()
     {
         SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
-    }
-
-    private async Task RemoveSession()
-    {
-        try
-        {
-            if (dbRefLobby != null)
-            {
-                await dbRefLobby.RemoveValueAsync();
-                Debug.Log("Session removed successfully.");
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Failed to remove session: {ex.Message}");
-        }
     }
 }
