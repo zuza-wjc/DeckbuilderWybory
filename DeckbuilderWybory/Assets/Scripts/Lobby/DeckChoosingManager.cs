@@ -21,11 +21,26 @@ public class DeckChoosingManager : MonoBehaviour
     public Button choosePrzemyslButton;
     public Text deckNameText;
     public GameObject defaultDeckChoosingPanel;
+    public GameObject deckInfoPanel;
 
     private DatabaseReference dbRef;
     private string lobbyId;
     private string playerId;
 
+    [Serializable]
+    public class CardData
+    {
+        public string cardId;
+        public string cardName;
+        public int cardsCount;
+        public string type;
+    }
+
+    [Serializable]
+    public class Deck
+    {
+        public List<CardData> cards;
+    }
 
     void Start()
     {
@@ -50,15 +65,23 @@ public class DeckChoosingManager : MonoBehaviour
         defaultButton.onClick.AddListener(DefaultDeck);
 
     }
+
     public void ShowChoosingPanel()
     {
         chooseDeckPanel.SetActive(true);
     }
+
+    public void CloseDeckInfoPanel()
+    {
+        deckInfoPanel.SetActive(false);
+    }
+
     public void BackToCustomDecks()
     {
         defaultDeckChoosingPanel.SetActive(false);
         chooseDeckPanel.SetActive(true);
     }
+
     public void CreateDeckIcons(List<string> deckNames)
     {
         foreach (string deckName in deckNames)
@@ -116,9 +139,22 @@ public class DeckChoosingManager : MonoBehaviour
             await dbRef.Child(playerId).Child("stats").Child("defaultDeckType").SetValueAsync(false);
 
             deckNameText.text = "Twoja talia: " + buttonName;
-            Debug.Log($"DeckType '{buttonName}' set for player '{playerId}'.");
 
             chooseDeckPanel.SetActive(false);
+
+            string jsonDeck = PlayerPrefs.GetString(buttonName, "");
+            Deck deck = JsonUtility.FromJson<Deck>(jsonDeck);
+
+            int totalCardCount = 0;
+            foreach (CardData card in deck.cards)
+            {
+                totalCardCount += card.cardsCount;
+            }
+
+            if (totalCardCount < 30)
+            {
+                deckInfoPanel.SetActive(true);
+            }
         }
         catch (System.Exception ex)
         {
