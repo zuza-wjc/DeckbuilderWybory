@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,14 +11,44 @@ public class SaveAndExitManager : MonoBehaviour
     {
         saveAndExitPanel.SetActive(true);
     }
+
     public void OnExit()
     {
+        AudioManager audioManager = FindObjectOfType<AudioManager>();
+
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClickSound();
+            StartCoroutine(LoadSceneAfterSound("Deck Building", audioManager.buttonClickSound.length / 2));
+        }
+        else
+        {
+            SceneManager.LoadScene("Deck Building");
+        }
+
         saveAndExitPanel.SetActive(false);
-        SceneManager.LoadScene("Deck Building");
     }
+
     public void OnSave()
     {
+        AudioManager audioManager = FindObjectOfType<AudioManager>();
+
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClickSound();
+            StartCoroutine(LoadSceneAfterSound("Deck Building", audioManager.buttonClickSound.length / 2));
+        }
+        else
+        {
+            SceneManager.LoadScene("Deck Building");
+        }
+
         addCardsPanelController.SaveDeck();
-        SceneManager.LoadScene("Deck Building");
+    }
+
+    private IEnumerator LoadSceneAfterSound(string sceneName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SceneManager.LoadScene(sceneName);
     }
 }

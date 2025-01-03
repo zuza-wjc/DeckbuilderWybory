@@ -1,12 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using Firebase.Extensions;
-using System;
 
 public class ExitToGameScene : MonoBehaviour
 {
@@ -32,6 +29,12 @@ public class ExitToGameScene : MonoBehaviour
 
     void OnButtonClicked()
     {
+        AudioManager audioManager = FindObjectOfType<AudioManager>();
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClickSound();
+        }
+
         dbRef.GetValueAsync().ContinueWithOnMainThread(task =>
         {
             if (task.IsFaulted)
@@ -44,12 +47,10 @@ public class ExitToGameScene : MonoBehaviour
 
                 if (snapshot.Exists)
                 {
-                    // jesli lobby istnieje, wroc do sceny "Game"
                     SceneManager.UnloadSceneAsync(sceneName);
                 }
                 else
                 {
-                    // jesli lobby nie istnieje przejdz do sceny "Main Menu"
                     SceneManager.LoadScene("Main Menu", LoadSceneMode.Single);
                 }
             }
@@ -58,7 +59,7 @@ public class ExitToGameScene : MonoBehaviour
 
     void OnDestroy()
     {
-        if(backButton != null)
+        if (backButton != null)
         {
             backButton.onClick.RemoveListener(OnButtonClicked);
         }
