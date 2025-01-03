@@ -88,13 +88,12 @@ public class TurnController : MonoBehaviour
         if (playerId != turnOrderList[0])
         {
             yield return StartCoroutine(SetTurnPlayerName(turnOrderList[0]));
-
-            //Debug.Log("Tura gracza: " + turnOrderList[0]);
         }
         else
         {
             turnPlayerName.text = "Twoja tura!";
             yesSellButton.interactable = true;
+            dbRefLobby.Child("isStarted").SetValueAsync(0);
             StartTurn();
         }
     }

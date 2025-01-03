@@ -12,9 +12,8 @@ public class TurnListener : MonoBehaviour
     DatabaseReference dbRefLobby;
     string lobbyId;
 
-    private float timer = 120f;
-    private float maxIdleTime = 120f; // Maksymalny czas oczekiwania na zmianê tury
-    private bool sessionRemoved = false; // Flaga, aby unikn¹æ wielokrotnego usuwania
+    private float timer = 125f;
+    private float maxIdleTime = 125f; // Maksymalny czas oczekiwania na zmianê tury
 
     void Start()
     {
@@ -74,37 +73,12 @@ public class TurnListener : MonoBehaviour
         timer -= Time.deltaTime;
 
         // SprawdŸ, czy czas siê skoñczy³
-        if (timer <= 0 && !sessionRemoved)
+        if (timer <= 0)
         {
-            sessionRemoved = true; // Ustaw flagê, aby unikn¹æ wielokrotnego usuwania
-            Debug.LogWarning("No turn change detected for 120 seconds. Ending game and deleting lobby.");
+            Debug.LogWarning("No turn change detected for 120 seconds. Ending game.");
 
-            StartCoroutine(RemoveSessionAndEndGame());
+            SceneManager.LoadScene("End Game", LoadSceneMode.Single);
         }
-    }
-
-    IEnumerator RemoveSessionAndEndGame()
-    {
-        // Usuñ sesjê z opóŸnieniem
-        yield return new WaitForSeconds(1.0f);
-
-        if (dbRefLobby != null)
-        {
-            var task = dbRefLobby.RemoveValueAsync();
-            yield return new WaitUntil(() => task.IsCompleted);
-
-            if (task.IsFaulted)
-            {
-                Debug.LogError("Failed to remove session: " + task.Exception);
-            }
-            else
-            {
-                Debug.Log("Session removed successfully.");
-            }
-        }
-
-        // PrzejdŸ do sceny koñcowej
-        SceneManager.LoadScene("End Game", LoadSceneMode.Single);
     }
 
     void OnDestroy()
