@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4392694958778057747}
   - component: {fileID: 3244998667000673944}
   - component: {fileID: 804879408462305058}
+  - component: {fileID: 6646301946128922593}
   m_Layer: 5
   m_Name: CopyBudget
   m_TagString: Untagged
@@ -121,7 +122,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4392694958778057747}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6646301946128922593}
+        m_TargetAssemblyTypeName: AudioManager, Assembly-CSharp
+        m_MethodName: PlayButtonClickSound
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &804879408462305058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,6 +148,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   displayText: "KOPIA BUD\u017BETU"
+--- !u!114 &6646301946128922593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461890678460828765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef4e20425422a0b4dad2ffa3f37bf92e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonClickSound: {fileID: 8300000, guid: 2c6c4a904b6bd39448e28ee991d4fb40, type: 3}
+  cardDroppedSound: {fileID: 8300000, guid: d8002a354ddcd114899d5a7cd5e7d8cb, type: 3}
+  endTurnSound: {fileID: 8300000, guid: cf9a9f48cecd26a45a8952b0f082bb57, type: 3}
+  startTurnSound: {fileID: 8300000, guid: 4869ec04e01cc214aaa6051c671eaaf4, type: 3}
 --- !u!1 &3739295503644203049
 GameObject:
   m_ObjectHideFlags: 0

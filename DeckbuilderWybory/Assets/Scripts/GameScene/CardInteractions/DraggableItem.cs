@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-
 public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerDownHandler, IPointerUpHandler
 {
     public Image image;
@@ -25,7 +24,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     string cardType;
     int sellCost;
-    private int clickCount=0;
+    private int clickCount = 0;
 
     public GameObject sellPanel;
     public Button trashButton;
@@ -53,6 +52,13 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     private void OnTap()
     {
+        AudioManager audioManager = FindObjectOfType<AudioManager>();
+
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClickSound();
+        }
+
         if (cardPanel == null || panelImage == null || closeButton == null)
         {
             Debug.LogError("Panel UI or its components are not assigned in DraggableItem!");
@@ -64,7 +70,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             Debug.LogError("Image reference is missing in DraggableItem!");
             return;
         }
-
 
         panelImage.sprite = image.sprite;
         cardPanel.SetActive(true);
@@ -85,7 +90,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     private async void SellPanelOpen()
     {
-        clickCount=0;
+        clickCount = 0;
         if (FirebaseApp.DefaultInstance == null || FirebaseInitializer.DatabaseReference == null)
         {
             Debug.LogError("Firebase is not initialized properly!");
@@ -117,8 +122,8 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             default:
                 cardType = "";
                 break;
-
         }
+
         dbRef = FirebaseInitializer.DatabaseReference
             .Child("cards")
             .Child("id")
@@ -127,40 +132,36 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             .Child("cost");
 
         DataSnapshot sellSnapshot = await dbRef.GetValueAsync();
-
         sellCost = Convert.ToInt32(sellSnapshot.Value);
-        //Debug.Log(currentCardId + " koszt: " + sellCost + " Type: " + cardType);
 
-        if (0<=sellCost && sellCost<=4)
+        if (0 <= sellCost && sellCost <= 4)
         {
-            sellCost=2;
+            sellCost = 2;
         }
-        else if (sellCost%2==0)
+        else if (sellCost % 2 == 0)
         {
-            sellCost=sellCost/2;
+            sellCost = sellCost / 2;
         }
         else
         {
-            sellCost=(sellCost+1)/2;
+            sellCost = (sellCost + 1) / 2;
         }
 
-        sellText.text= $"Czy chcesz sprzedać kartę za {sellCost}k?";
+        sellText.text = $"Czy chcesz sprzedać kartę za {sellCost}k?";
         sellPanel.SetActive(true);
         sellPanel.transform.SetAsLastSibling();
 
         yesSellButton.onClick.RemoveAllListeners();
         yesSellButton.onClick.AddListener(ExchangeForMoney);
         noSellButton.onClick.AddListener(SellPanelClose);
-
     }
 
-
-    private async void ExchangeForMoney(){
-
-
-        if(clickCount==0){
+    private async void ExchangeForMoney()
+    {
+        if (clickCount == 0)
+        {
             clickCount++;
-            
+
             lobbyId = DataTransfer.LobbyId;
             playerId = DataTransfer.PlayerId;
 
@@ -173,19 +174,14 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             DataSnapshot budgetSellSnapshot = await dbRef.Child("stats").Child("money").GetValueAsync();
             int budgetSellCost = Convert.ToInt32(budgetSellSnapshot.Value);
 
-            //Debug.Log("obecny fundusz:" + budgetSellCost);
-
-            budgetSellCost=budgetSellCost+sellCost;
-            //Debug.Log("po zmianie:" + budgetSellCost);
+            budgetSellCost = budgetSellCost + sellCost;
             await dbRef.Child("stats").Child("money").SetValueAsync(budgetSellCost);
 
             await dbRef.Child("deck").Child(instanceId).Child("onHand").SetValueAsync(false);
             await dbRef.Child("deck").Child(instanceId).Child("played").SetValueAsync(true);
-
         }
         SellPanelClose();
         ClosePanel();
-
     }
 
     private void SellPanelClose()

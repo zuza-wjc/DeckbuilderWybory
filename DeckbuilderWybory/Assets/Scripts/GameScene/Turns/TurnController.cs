@@ -36,6 +36,9 @@ public class TurnController : MonoBehaviour
 
     public CardOnHandController cardsOnHandController;
 
+    public AudioManager audioManager;
+
+
     void Start()
     {
         lobbyId = DataTransfer.LobbyId;
@@ -440,6 +443,12 @@ public class TurnController : MonoBehaviour
         DataTransfer.IsFirstCardInTurn = true;
         yesSellButton.interactable = true;
         DataTransfer.IsPlayerTurn = true;
+
+        if(audioManager != null)
+        {
+            audioManager.PlayStartTurnSound();
+        }
+
     }
 
     public async void EndTurn()
@@ -461,7 +470,12 @@ public class TurnController : MonoBehaviour
             }
         }
 
-        await Task.Delay(3000);
+        if (audioManager != null)
+        {
+            audioManager.PlayEndTurnSound();
+        }
+
+        await Task.Delay(1500);
 
         int cardLimit = await GetCardLimit();
         await DrawCardsUntilLimit(playerId, cardLimit);
@@ -469,6 +483,7 @@ public class TurnController : MonoBehaviour
 
         DataTransfer.TurnEnded = true;
         DataTransfer.EffectActive = false;
+
     }
 
     public void PassTurn()

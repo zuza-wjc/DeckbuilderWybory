@@ -1,34 +1,34 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Firebase.Database;
 using System.Collections;
-using System.Collections.Generic;
-using Firebase;
-using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
-using System.Linq;
-using System;
 
 public class DeckTextSavingManager : MonoBehaviour
 {
-    // Prywatna zmienna DeckLabel
     [SerializeField]
-    private Text DeckLabel;  
+    private Text DeckLabel;
 
-    // Metoda wywo³ywana przy klikniêciu przycisku
     public void SaveDeckName(Button clickedButton)
     {
         if (clickedButton != null)
         {
-            // Pobieramy komponent Text z dziecka przycisku
             Text buttonText = clickedButton.GetComponentInChildren<Text>();
 
             if (buttonText != null)
             {
-                // Zapisujemy tekst do DataManager
                 DataManager.Instance.deckName = buttonText.text;
-              //  Debug.Log("Saved deckName: " + DataManager.Instance.deckName);
-                SceneManager.LoadScene("Deck Creation"); // Zmiana sceny 
+
+                AudioManager audioManager = FindObjectOfType<AudioManager>();
+
+                if (audioManager != null)
+                {
+                    audioManager.PlayButtonClickSound();
+                    StartCoroutine(LoadSceneAfterSound("Deck Creation", audioManager.buttonClickSound.length / 2));
+                }
+                else
+                {
+                    SceneManager.LoadScene("Deck Creation");
+                }
             }
             else
             {
@@ -39,5 +39,11 @@ public class DeckTextSavingManager : MonoBehaviour
         {
             Debug.LogWarning("Clicked button is null!");
         }
+    }
+
+    private IEnumerator LoadSceneAfterSound(string sceneName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SceneManager.LoadScene(sceneName);
     }
 }

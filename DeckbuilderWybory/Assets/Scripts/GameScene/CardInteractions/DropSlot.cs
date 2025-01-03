@@ -41,6 +41,12 @@ public class DropSlot : MonoBehaviour, IDropHandler
         {
             draggableItem.MarkAsDroppedOnSlot();
 
+            AudioManager audioManager = FindObjectOfType<AudioManager>();
+            if (audioManager != null)
+            {
+                audioManager.PlayCardDroppedSound();
+            }
+
             CheckPlayerTurnAndDrop(draggableItem);
         }
     }
