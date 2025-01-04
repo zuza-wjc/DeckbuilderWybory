@@ -16,25 +16,33 @@ public class AudioManager : MonoBehaviour
 
     public void PlayButtonClickSound()
     {
-        audioSource.PlayOneShot(buttonClickSound);
+        if (!DataTransfer.IsMuted)
+        {
+            audioSource.PlayOneShot(buttonClickSound);
+        }
     }
 
     public void PlayCardDroppedSound()
     {
-        audioSource.PlayOneShot(cardDroppedSound);
+        if (!DataTransfer.IsMuted)
+        {
+            audioSource.PlayOneShot(cardDroppedSound);
+        }
     }
 
     public void PlayEndTurnSound()
     {
-        Debug.Log("end sound will play");
-        audioSource.PlayOneShot(endTurnSound);
-        Debug.Log("end sound played");
+        if (!DataTransfer.IsMuted)
+        {
+            audioSource.PlayOneShot(endTurnSound);
+        }
     }
 
     public void PlayStartTurnSound()
     {
-        Debug.Log("start sound will play");
-        audioSource.PlayOneShot(startTurnSound);
-        Debug.Log("start sound played");
+        if (!DataTransfer.IsMuted)
+        {
+            audioSource.PlayOneShot(startTurnSound);
+        }
     }
 }
