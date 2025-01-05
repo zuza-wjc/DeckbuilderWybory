@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 using UnityEngine.SceneManagement;
 
 public class DeckTextSavingManager : MonoBehaviour
@@ -22,13 +21,10 @@ public class DeckTextSavingManager : MonoBehaviour
 
                 if (audioManager != null)
                 {
-                    audioManager.PlayButtonClickSound();
-                    StartCoroutine(LoadSceneAfterSound("Deck Creation", audioManager.buttonClickSound.length / 2));
+                    audioManager.PlaySoundForSceneChange(audioManager.buttonClickSound);
                 }
-                else
-                {
-                    SceneManager.LoadScene("Deck Creation");
-                }
+
+                SceneManager.LoadScene("Deck Creation");
             }
             else
             {
@@ -39,11 +35,5 @@ public class DeckTextSavingManager : MonoBehaviour
         {
             Debug.LogWarning("Clicked button is null!");
         }
-    }
-
-    private IEnumerator LoadSceneAfterSound(string sceneName, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        SceneManager.LoadScene(sceneName);
     }
 }

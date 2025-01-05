@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
 using UnityEngine;
-using static Unity.Burst.Intrinsics.X86.Avx;
 
 public class UniqueCardImp : MonoBehaviour
 {
@@ -127,10 +126,13 @@ public class UniqueCardImp : MonoBehaviour
                 errorPanelController.ShowError("no_budget");
                 return;
             }
+
+            bool ignoreCostCard = await cardUtilities.CheckIgnoreCost(playerId);
+
             if (!(await cardUtilities.CheckBlockedCard(playerId)))
             {
 
-                if (!ignoreCost)
+                if (!ignoreCost && !ignoreCostCard)
                 {
                     await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
                     playerBudget -= cost;
