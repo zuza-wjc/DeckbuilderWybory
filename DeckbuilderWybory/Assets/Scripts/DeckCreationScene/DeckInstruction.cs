@@ -20,7 +20,7 @@ public class DeckInstruction : MonoBehaviour
 
     void Start()
     {
-        instructionText.text="Witamy w Twoich Taliach! Możesz tutaj stworzyć aż do 8 własnych talii. Jeśli chcesz DODAĆ TALIĘ kliknij przycisk plus. Jeśli chcesz którąś USUNĄĆ wystarczy że klikniesz trzy kropki w prawym górnym rogu talii którą chcesz usunąć. Jeśli chcesz ZMODYFIKOWAĆ talię kliknij w przycisk z nazwą talii którą chcesz zmienić.";
+        instructionText.text="Witamy w Twoich Taliach! Możesz tu stworzyć aż do 8 własnych talii, które zostaną zapisane na Twoim urządzeniu. Dzięki temu możesz korzystać z nich wielokrotnie, dopóki masz zainstalowaną naszą aplikację. Jeśli chcesz DODAĆ TALIĘ kliknij przycisk plus. Jeśli chcesz USUNĄĆ jedną z nich wystarczy że klikniesz przycisk w prawym górnym rogu danej talii. Jeśli chcesz ZMODYFIKOWAĆ talię kliknij przycisk z nazwą talii którą chcesz zmienić.";
         instructionTitle.text="Twoje Talie";
         pageNumber.text="1/6";
         pagePreviousButton.interactable=false;
@@ -56,7 +56,7 @@ public class DeckInstruction : MonoBehaviour
         switch (pageCount)
         {
             case 1:
-                instructionText.text="Witamy w Twoich Taliach! Możesz tutaj stworzyć aż do 8 własnych talii. Jeśli chcesz DODAĆ TALIĘ kliknij przycisk plus. Jeśli chcesz którąś USUNĄĆ wystarczy że klikniesz trzy kropki w prawym górnym rogu talii którą chcesz usunąć. Jeśli chcesz ZMODYFIKOWAĆ talię kliknij w przycisk z nazwą talii którą chcesz zmienić.";
+                instructionText.text= "Witamy w Twoich Taliach! Możesz tu stworzyć aż do 8 własnych talii! Jeśli chcesz DODAĆ TALIĘ kliknij przycisk plus. Jeśli chcesz USUNĄĆ jedną z nich wystarczy że klikniesz przycisk w prawym górnym rogu danej talii. Jeśli chcesz ZMODYFIKOWAĆ talię kliknij przycisk z nazwą talii którą chcesz zmienić.";
                 instructionTitle.text="Twoje Talie";
                 pageNumber.text="1/6";
                 pagePreviousButton.interactable=false;
@@ -65,7 +65,7 @@ public class DeckInstruction : MonoBehaviour
                 screenshot[pageCount-1].gameObject.SetActive(true);
                 return;
             case 2:
-                instructionText.text="Każda talia musi mieć 30 kart: 20 kart PODSTAWOWYCH i 10 kart SPECJALNYCH. Są 4 typy kart specjalnych i możesz użyć tylko jednego typu w jednej talii.";
+                instructionText.text="Każda talia może mieć maksymalnie 30 kart: 20 kart PODSTAWOWYCH i 10 kart SPECJALNYCH. Rozróżniamy 4 typy kart specjalnych: AMBASADA - kolor fioletowy, METROPOLIA - kolor czerwony, ŚRODOWISKO - kolor zielony oeaz PRZEMYSŁ - kolor żółty. Każdy typ różni się kartami jakie możesz dodać do talii, możesz używać tylko jednego typu w jednej talii.";
                 instructionTitle.text="Liczba Kart";
                 pageNumber.text="2/6";
                 pagePreviousButton.interactable=true;
@@ -77,7 +77,7 @@ public class DeckInstruction : MonoBehaviour
                 screenshot[8].gameObject.SetActive(true);
                 return;
             case 3:
-                instructionText.text="Aby DODAĆ karty do swojej talii wystarczy że klikniesz kartę którą chcesz dodać, a następnie wybierzesz ile chcesz mieć jej w talii. Każda karta ma własną wartość ile możesz maksymalnie dodać jej do talii.";
+                instructionText.text="Aby DODAĆ karty do swojej talii wystarczy że klikniesz kartę którą chcesz dodać, a następnie zmienisz licznik ilości kart w talii. Tylko niektóre kart można dodać w ilości większej niż 1.";
                 instructionTitle.text="Dodawanie Kart";
                 pageNumber.text="3/6";
                 ScrollToTop();
@@ -85,7 +85,7 @@ public class DeckInstruction : MonoBehaviour
                 screenshot[pageCount-1].gameObject.SetActive(true);
                 return;
             case 4:
-                instructionText.text="Z lewej strony ekranu możesz zobaczyć LISTĘ KART które zostały dodane do tej pory. Zobaczysz tam liczbę reprezentującą liczbę sztuk tej karty w talii, jej nazwę oraz przez kolor możesz rozpoznać jakiego typu jest ta karta.";
+                instructionText.text="Z lewej strony ekranu możesz zobaczyć LISTĘ KART które zostały dodane do tej pory. Zobaczysz tam liczbę sztuk tej karty w talii, jej nazwę oraz kolor reprezentujący jakiego typu jest ta karta.";
                 instructionTitle.text="Karty";
                 pageNumber.text="4/6";
                 ScrollToTop();
@@ -93,7 +93,7 @@ public class DeckInstruction : MonoBehaviour
                 screenshot[pageCount-1].gameObject.SetActive(true);
                 return;
             case 5:
-                instructionText.text="Gdy wybierzesz już 30 kart możesz zmienić NAZWĘ TALII klikając pole u góry ekranu po lewej, obok licznika kart w talii.";
+                instructionText.text="W każdej chwili możesz zmienić NAZWĘ TALII klikając pole u góry ekranu, obok licznika kart w talii.";
                 instructionTitle.text="Nazwa Talii";
                 pageNumber.text="5/6";
                 pageNextButton.interactable=true;
