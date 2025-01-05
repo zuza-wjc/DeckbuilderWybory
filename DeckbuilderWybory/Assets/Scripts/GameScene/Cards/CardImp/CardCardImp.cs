@@ -180,11 +180,11 @@ public class CardCardImp : MonoBehaviour
             return;
         }
 
-        ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
+        bool ignoreCostCard = await cardUtilities.CheckIgnoreCost(playerId);
 
         if (!(await cardUtilities.CheckBlockedCard(playerId)))
         {
-            if (!ignoreCost)
+            if (!ignoreCost && !ignoreCostCard)
             {
                 await dbRefPlayerStats.Child("money").SetValueAsync(playerBudget - cost);
                 playerBudget -= cost;

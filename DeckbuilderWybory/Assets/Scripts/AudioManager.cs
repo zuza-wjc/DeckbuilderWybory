@@ -45,4 +45,18 @@ public class AudioManager : MonoBehaviour
             audioSource.PlayOneShot(startTurnSound);
         }
     }
+
+    public void PlaySoundForSceneChange(AudioClip clip)
+    {
+        if (!DataTransfer.IsMuted)
+        {
+            GameObject soundPlayer = new GameObject("SceneChangeSoundPlayer");
+            AudioSource tempAudioSource = soundPlayer.AddComponent<AudioSource>();
+            tempAudioSource.clip = clip;
+            tempAudioSource.Play();
+
+            DontDestroyOnLoad(soundPlayer);
+            Destroy(soundPlayer, clip.length);
+        }
+    }
 }

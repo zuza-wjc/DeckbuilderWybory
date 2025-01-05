@@ -1,4 +1,3 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -18,14 +17,10 @@ public class SaveAndExitManager : MonoBehaviour
 
         if (audioManager != null)
         {
-            audioManager.PlayButtonClickSound();
-            StartCoroutine(LoadSceneAfterSound("Deck Building", audioManager.buttonClickSound.length / 2));
-        }
-        else
-        {
-            SceneManager.LoadScene("Deck Building");
+            audioManager.PlaySoundForSceneChange(audioManager.buttonClickSound);
         }
 
+        SceneManager.LoadScene("Deck Building");
         saveAndExitPanel.SetActive(false);
     }
 
@@ -35,20 +30,10 @@ public class SaveAndExitManager : MonoBehaviour
 
         if (audioManager != null)
         {
-            audioManager.PlayButtonClickSound();
-            StartCoroutine(LoadSceneAfterSound("Deck Building", audioManager.buttonClickSound.length / 2));
-        }
-        else
-        {
-            SceneManager.LoadScene("Deck Building");
+            audioManager.PlaySoundForSceneChange(audioManager.buttonClickSound);
         }
 
+        SceneManager.LoadScene("Deck Building");
         addCardsPanelController.SaveDeck();
-    }
-
-    private IEnumerator LoadSceneAfterSound(string sceneName, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        SceneManager.LoadScene(sceneName);
     }
 }

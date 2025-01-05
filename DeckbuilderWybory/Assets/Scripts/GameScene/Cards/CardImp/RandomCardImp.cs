@@ -69,10 +69,10 @@ public class RandomCardImp : MonoBehaviour
             return;
         }
 
-        ignoreCost = await cardUtilities.CheckIgnoreCost(playerId);
+        bool ignoreCostCard = await cardUtilities.CheckIgnoreCost(playerId);
         if (!(await cardUtilities.CheckBlockedCard(playerId)))
         {
-            if (!ignoreCost)
+            if (!ignoreCost && !ignoreCostCard)
             {
                 await DeductPlayerMoney(cost, playerBudget);
                 playerBudget -= cost;
