@@ -414,6 +414,11 @@ public class AsMuchAsCardImp : MonoBehaviour
             optionsToApply = isBonus ? (object)budgetBonusOptionsDictionary : (object)budgetOptionsDictionary;
         }
 
+        if(cardId == "AS008" && !isBonus)
+        {
+            return (dbRefPlayerStats, isBonusRegion, playerBudget, enemyId);
+        }
+
         if (optionsToApply is Dictionary<int, OptionData> optionsData)
         {
             if (optionsData?.Values == null || !optionsData.Values.Any())
