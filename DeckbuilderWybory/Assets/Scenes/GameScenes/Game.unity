@@ -7647,7 +7647,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   errorPanelController: {fileID: 950492028}
-  cardOnHandController: {fileID: 552155023}
 --- !u!1 &1040401083
 GameObject:
   m_ObjectHideFlags: 0
