@@ -917,6 +917,8 @@ public class DeckController : MonoBehaviour
 
     public async Task<bool> GetRandomCardsFromDeck(string target, int howMany, List<KeyValuePair<string, string>> cards)
     {
+        Debug.Log($"GetRandomCardsFromDeck called with target: {target}, howMany: {howMany}, cards count: {cards?.Count ?? 0}");
+
         if (string.IsNullOrEmpty(target) || howMany <= 0)
         {
             Debug.LogError("Invalid target or howMany parameter.");
@@ -925,6 +927,8 @@ public class DeckController : MonoBehaviour
         }
 
         string lobbyId = DataTransfer.LobbyId;
+        Debug.Log($"Retrieved Lobby ID: {lobbyId}");
+
         if (string.IsNullOrEmpty(lobbyId))
         {
             Debug.LogError("Lobby ID is null or empty.");
@@ -939,6 +943,8 @@ public class DeckController : MonoBehaviour
             .Child(target)
             .Child("deck");
 
+        Debug.Log($"Target deck reference path: sessions/{lobbyId}/players/{target}/deck");
+
         var targetDeckSnapshot = await targetDeckRef.GetValueAsync();
         if (!targetDeckSnapshot.Exists)
         {
@@ -947,7 +953,10 @@ public class DeckController : MonoBehaviour
             return true;
         }
 
+        Debug.Log($"Target deck found with {targetDeckSnapshot.ChildrenCount} cards.");
+
         HashSet<string> excludedInstanceIds = new(cards.Select(card => card.Key));
+        Debug.Log($"Excluded cards: {string.Join(", ", excludedInstanceIds)}");
 
         List<string> eligibleCards = new();
         foreach (var cardSnapshot in targetDeckSnapshot.Children)
@@ -962,6 +971,8 @@ public class DeckController : MonoBehaviour
             }
         }
 
+        Debug.Log($"Eligible cards found: {string.Join(", ", eligibleCards)}");
+
         if (eligibleCards.Count == 0)
         {
             Debug.LogWarning("No eligible cards available to transfer.");
@@ -970,6 +981,7 @@ public class DeckController : MonoBehaviour
         }
 
         int cardsToDraw = Math.Min(howMany, eligibleCards.Count);
+        Debug.Log($"Number of cards to draw: {cardsToDraw}");
 
         System.Random random = new();
         List<string> selectedCards = new();
@@ -978,8 +990,11 @@ public class DeckController : MonoBehaviour
         {
             int randomIndex = random.Next(eligibleCards.Count);
             selectedCards.Add(eligibleCards[randomIndex]);
+            Debug.Log($"Selected card: {eligibleCards[randomIndex]}");
             eligibleCards.RemoveAt(randomIndex);
         }
+
+        Debug.Log($"Selected cards to transfer: {string.Join(", ", selectedCards)}");
 
         foreach (string instanceId in selectedCards)
         {
@@ -990,6 +1005,8 @@ public class DeckController : MonoBehaviour
                 continue;
             }
 
+            Debug.Log($"Transferring card {instanceId}.");
+
             Dictionary<string, object> cardData = new();
             foreach (var child in cardDataSnapshot.Children)
             {
@@ -999,11 +1016,15 @@ public class DeckController : MonoBehaviour
             cardData["onHand"] = true;
             cardData["played"] = false;
 
+            Debug.Log($"Updated card data for {instanceId}: {string.Join(", ", cardData.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}");
+
             await targetDeckRef.Child(instanceId).SetValueAsync(cardData);
         }
 
+        Debug.Log("Cards transferred successfully.");
         return false;
     }
+
 
     public async Task<int> CountCardsInDeck(string playerId)
     {
