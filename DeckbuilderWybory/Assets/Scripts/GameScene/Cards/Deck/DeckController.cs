@@ -28,6 +28,7 @@ public class DeckController : MonoBehaviour
     }
 
     public ErrorPanelController errorPanelController;
+    public CardOnHandController cardOnHandController;
 
     public async Task InitializeDeck()
     {
@@ -996,6 +997,11 @@ public class DeckController : MonoBehaviour
             cardData["played"] = false;
 
             await targetDeckRef.Child(instanceId).SetValueAsync(cardData);
+        }
+
+        if (cardOnHandController != null)
+        {
+            cardOnHandController.ForceUpdateUI();
         }
 
         return false;
