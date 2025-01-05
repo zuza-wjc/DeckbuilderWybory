@@ -56,7 +56,7 @@ public class DeckInstruction : MonoBehaviour
         switch (pageCount)
         {
             case 1:
-                instructionText.text= "Witamy w Twoich Taliach! Możesz tu stworzyć aż do 8 własnych talii! Jeśli chcesz DODAĆ TALIĘ kliknij przycisk plus. Jeśli chcesz USUNĄĆ jedną z nich wystarczy że klikniesz przycisk w prawym górnym rogu danej talii. Jeśli chcesz ZMODYFIKOWAĆ talię kliknij przycisk z nazwą talii którą chcesz zmienić.";
+                instructionText.text= "Witamy w Twoich Taliach! Możesz tu stworzyć aż do 8 własnych talii, które zostaną zapisane na Twoim urządzeniu. Dzięki temu możesz korzystać z nich wielokrotnie, dopóki masz zainstalowaną naszą aplikację. Jeśli chcesz DODAĆ TALIĘ kliknij przycisk plus. Jeśli chcesz USUNĄĆ jedną z nich wystarczy że klikniesz przycisk w prawym górnym rogu danej talii. Jeśli chcesz ZMODYFIKOWAĆ talię kliknij przycisk z nazwą talii którą chcesz zmienić.";
                 instructionTitle.text="Twoje Talie";
                 pageNumber.text="1/6";
                 pagePreviousButton.interactable=false;
